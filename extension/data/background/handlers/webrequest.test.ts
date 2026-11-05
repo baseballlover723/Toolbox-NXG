@@ -119,7 +119,7 @@ describe('makeRequest', () => {
 			'toolbox-accessToken-session': {accessToken: 'token', expires: Date.now() + 1000,},
 		},)
 
-		await makeRequest({endpoint: '/api/me', oauth: true,},)
+		await makeRequest({method: 'POST', endpoint: '/api/me', oauth: true,},)
 
 		expect(fetch,).toHaveBeenCalledWith(
 			'https://oauth.reddit.com/api/me',
@@ -142,7 +142,7 @@ describe('makeRequest', () => {
 			)
 			.mockResolvedValueOnce(new Response('ok',),)
 
-		await makeRequest({endpoint: '/api/me', oauth: true,},)
+		await makeRequest({method: 'POST', endpoint: '/api/me', oauth: true,},)
 
 		expect(storageLocal.set,).toHaveBeenCalledWith({
 			'toolbox-accessToken-session': expect.objectContaining({accessToken: 'fresh',},),
@@ -157,9 +157,91 @@ describe('makeRequest', () => {
 		storageLocal.get.mockResolvedValue({},)
 		vi.mocked(fetch,).mockResolvedValueOnce(new Response('not json',),)
 
-		await expect(makeRequest({endpoint: '/api/me', oauth: true,},),).rejects.toThrow(
+		await expect(makeRequest({method: 'POST', endpoint: '/api/me', oauth: true,},),).rejects.toThrow(
 			'Error getting accessToken from /svc/shreddit/token. Response text: not json',
 		)
+	})
+
+	describe('OAuth auth mode selection', () => {
+		const validToken = () => {
+			cookies.get.mockResolvedValue(mockJwtCookie({jti: 'session',},),)
+			storageLocal.get.mockResolvedValue({
+				'toolbox-accessToken-session': {accessToken: 'token', expires: Date.now() + 1000,},
+			},)
+		}
+		const forbidden = () => new Response('forbidden', {status: 403,},)
+		const authHeaderOfCall = (index: number,) =>
+			(vi.mocked(fetch,).mock.calls[index]![1].headers as Record<string, string> | undefined)?.Authorization
+
+		it('sends reads with the session cookie only, without minting a token', async () => {
+			await makeRequest({endpoint: '/r/sub/api/info.json', oauth: true,},)
+
+			expect(fetch,).toHaveBeenCalledTimes(1,)
+			expect(fetch,).toHaveBeenCalledWith(
+				'https://oauth.reddit.com/r/sub/api/info.json',
+				expect.objectContaining({credentials: 'include',},),
+			)
+			expect(authHeaderOfCall(0,),).toBeUndefined()
+			expect(storageLocal.get,).not.toHaveBeenCalled()
+		})
+
+		it('sends /api/mod/ reads with a bearer token', async () => {
+			validToken()
+
+			await makeRequest({method: 'GET', endpoint: '/api/mod/notes', oauth: true,},)
+
+			expect(fetch,).toHaveBeenCalledTimes(1,)
+			expect(authHeaderOfCall(0,),).toBe('Bearer token',)
+		})
+
+		it('sends /api/v1/ reads with a bearer token, since they answer cookie-only requests as logged out', async () => {
+			validToken()
+
+			await makeRequest({endpoint: '/api/v1/me', oauth: true,},)
+
+			expect(fetch,).toHaveBeenCalledTimes(1,)
+			expect(authHeaderOfCall(0,),).toBe('Bearer token',)
+		})
+
+		it('retries a cookie read refused with 403 using a bearer token', async () => {
+			validToken()
+			vi.mocked(fetch,).mockResolvedValueOnce(forbidden(),)
+
+			const response = await makeRequest({endpoint: '/r/sub/about/banned/.json', oauth: true, okOnly: true,},)
+
+			expect(response.status,).toBe(200,)
+			expect(fetch,).toHaveBeenCalledTimes(2,)
+			expect(authHeaderOfCall(0,),).toBeUndefined()
+			expect(authHeaderOfCall(1,),).toBe('Bearer token',)
+		})
+
+		it('retries a bearer read refused with 403 using the session cookie', async () => {
+			validToken()
+			vi.mocked(fetch,).mockResolvedValueOnce(forbidden(),)
+
+			await makeRequest({endpoint: '/api/mod/conversations', oauth: true,},)
+
+			expect(fetch,).toHaveBeenCalledTimes(2,)
+			expect(authHeaderOfCall(0,),).toBe('Bearer token',)
+			expect(authHeaderOfCall(1,),).toBeUndefined()
+		})
+
+		it('never retries a refused mutation', async () => {
+			validToken()
+			vi.mocked(fetch,).mockResolvedValueOnce(forbidden(),)
+
+			await expect(makeRequest({method: 'POST', endpoint: '/api/remove', oauth: true, okOnly: true,},),).rejects
+				.toMatchObject({response: {status: 403,},},)
+			expect(fetch,).toHaveBeenCalledTimes(1,)
+		})
+
+		it('reports the original 403 when the bearer fallback cannot mint a token', async () => {
+			cookies.get.mockResolvedValue(null,)
+			vi.mocked(fetch,).mockResolvedValue(forbidden(),)
+
+			await expect(makeRequest({endpoint: '/r/sub/api/info.json', oauth: true, okOnly: true,},),).rejects
+				.toMatchObject({response: {status: 403,},},)
+		})
 	})
 
 	it('rejects absolute URLs outside reddit domains', async () => {

@@ -258,6 +258,36 @@ function credentialsForUrl (url: string,): RequestCredentials {
 	return hostname === 'redd.it' || hostname.endsWith('.redd.it',) ? 'omit' : 'include'
 }
 
+/** How a request to oauth.reddit.com is authenticated. */
+type OAuthMode = 'cookie' | 'bearer'
+
+/** Returns `true` for methods that only read data and so may be retried under a different auth mode. */
+function isReadMethod (method: RequestMethod | undefined,): boolean {
+	return method === undefined || method === 'GET' || method === 'HEAD'
+}
+
+/**
+ * Path prefixes of OAuth-native APIs that only recognize bearer tokens. Without one they do not
+ * always fail: `/api/v1/me` answers 200 with the logged-out shape (no `name`), which the 403
+ * fallback cannot catch, so these must never start in cookie mode.
+ */
+const bearerOnlyPrefixes = ['/api/mod/', '/api/v1/',]
+
+/**
+ * Picks the auth mode to try first for a request on oauth.reddit.com.
+ *
+ * Reddit rejects bearer tokens on some classic read endpoints (e.g. `/api/info.json` returns 403
+ * for any request carrying one), while the OAuth-native APIs in {@link bearerOnlyPrefixes} ignore
+ * the session cookie. Mutations still accept bearer tokens. Reads therefore start with the session
+ * cookie, except under those prefixes, and everything else keeps using a bearer token.
+ */
+function initialOAuthMode (method: RequestMethod | undefined, endpoint: string,): OAuthMode {
+	if (!isReadMethod(method,)) {
+		return 'bearer'
+	}
+	return bearerOnlyPrefixes.some((prefix,) => endpoint.startsWith(prefix,)) ? 'bearer' : 'cookie'
+}
+
 /** Options accepted by {@link makeRequest}. */
 export interface MakeRequestOptions {
 	/** HTTP method; defaults to `GET`. */
@@ -268,7 +298,10 @@ export interface MakeRequestOptions {
 	query?: Record<string, QueryValue> | undefined
 	/** Request body; objects are form-encoded, strings are sent as-is, `{type:'json'}` is JSON-encoded. */
 	body?: RequestBodyObject | string | {type: 'json'; data: unknown} | undefined
-	/** If `true`, attaches a Reddit OAuth bearer token and targets `oauth.reddit.com`. */
+	/**
+	 * If `true`, targets `oauth.reddit.com` and authenticates with either the session cookie or a
+	 * bearer token depending on the endpoint; reads that get a 403 are retried once with the other.
+	 */
 	oauth?: boolean | undefined
 	/** If `true`, throws for non-2xx responses. */
 	okOnly?: boolean | undefined
@@ -285,6 +318,16 @@ export interface MakeRequestOptions {
 /** An `Error` that may carry the failed `Response` for `okOnly` errors. */
 interface RequestError extends Error {
 	response?: Response
+}
+
+/** Throws a response-bearing error for non-2xx responses when `okOnly` is set; otherwise returns the response. */
+function finish (response: Response, okOnly: boolean | undefined,): Response {
+	if (okOnly && !response.ok) {
+		const error: RequestError = new Error('Response returned non-2xx status code',)
+		error.response = response
+		throw error
+	}
+	return response
 }
 
 /**
@@ -340,17 +383,6 @@ export async function makeRequest ({
 			fetchOptions.body = body
 		}
 	}
-	// If requested, fetch OAuth tokens and add `Authorization` header
-	if (oauth) {
-		try {
-			const tokens = await getOAuthTokens(cookieStoreId,)
-			fetchOptions.headers = {...fetchOptions.headers, Authorization: `Bearer ${tokens.accessToken}`,}
-		} catch (error) {
-			log.error('getOAuthTokens: ', error,)
-			throw error
-		}
-	}
-
 	// Tag the request so the Firefox cookie-rewrite listener swaps in the
 	// originating container's cookies. No-op off Firefox or for the default store.
 	const storeHeaders = tmpStoreHeaders(cookieStoreId,)
@@ -358,42 +390,76 @@ export async function makeRequest ({
 		fetchOptions.headers = {...fetchOptions.headers, ...storeHeaders,}
 	}
 
-	async function performFetch (failureMessage: string,): Promise<Response> {
+	/** Returns the fetch options for `mode`; cookie mode relies on `credentials: 'include'` alone. */
+	async function optionsForMode (mode: OAuthMode,): Promise<RequestInit> {
+		if (mode === 'cookie') {
+			return fetchOptions
+		}
 		try {
-			return await fetch(url, fetchOptions,)
+			const tokens = await getOAuthTokens(cookieStoreId,)
+			return {
+				...fetchOptions,
+				headers: {...fetchOptions.headers, Authorization: `Bearer ${tokens.accessToken}`,},
+			}
+		} catch (error) {
+			log.error('getOAuthTokens: ', error,)
+			throw error
+		}
+	}
+
+	async function performFetch (options: RequestInit, failureMessage: string,): Promise<Response> {
+		try {
+			return await fetch(url, options,)
 		} catch (error) {
 			log.error(failureMessage, error,)
 			throw error
 		}
 	}
 
-	// Perform the request, waiting first if the rate-limit budget is exhausted
-	await waitForBudget()
-	let response = await performFetch('Fetch request failed:',)
-	updateRateLimitState(response,)
-
-	// On 429, wait for Reddit's reset window and retry once.
-	// updateRateLimitState above already recorded remaining=0 and resetAt from the
-	// response headers (if present). If the 429 carried no rate-limit headers, set
-	// a 1-second minimum so waitForBudget always delays before the retry.
-	if (response.status === 429) {
-		if (rateLimitState.remaining >= 1) {
-			rateLimitState = {remaining: 0, resetAt: Date.now() + 1000,}
-		}
+	/** Sends the request, waiting first if the rate-limit budget is exhausted and retrying once on 429. */
+	async function sendWithBudget (options: RequestInit,): Promise<Response> {
 		await waitForBudget()
-		response = await performFetch('Fetch request failed on retry:',)
-		updateRateLimitState(response,)
+		let result = await performFetch(options, 'Fetch request failed:',)
+		updateRateLimitState(result,)
+
+		// updateRateLimitState above already recorded remaining=0 and resetAt from the
+		// response headers (if present). If the 429 carried no rate-limit headers, set
+		// a 1-second minimum so waitForBudget always delays before the retry.
+		if (result.status === 429) {
+			if (rateLimitState.remaining >= 1) {
+				rateLimitState = {remaining: 0, resetAt: Date.now() + 1000,}
+			}
+			await waitForBudget()
+			result = await performFetch(options, 'Fetch request failed on retry:',)
+			updateRateLimitState(result,)
+		}
+		return result
 	}
 
-	// `okOnly` means we should throw if the response has a non-2xx status
-	if (okOnly && !response.ok) {
-		const error: RequestError = new Error('Response returned non-2xx status code',)
-		error.response = response
-		throw error
+	if (!oauth) {
+		return finish(await sendWithBudget(fetchOptions,), okOnly,)
 	}
 
-	// Otherwise return the raw response
-	return response
+	const mode = initialOAuthMode(normalizedMethod, endpoint,)
+	let response = await sendWithBudget(await optionsForMode(mode,),)
+
+	// Reddit moves endpoints between cookie-only and bearer-only without notice, so a
+	// read that is refused under one mode is retried once under the other. Mutations
+	// are never retried, to avoid performing an action twice.
+	if (response.status === 403 && isReadMethod(normalizedMethod,)) {
+		const fallbackMode: OAuthMode = mode === 'cookie' ? 'bearer' : 'cookie'
+		let fallbackOptions: RequestInit | undefined
+		try {
+			fallbackOptions = await optionsForMode(fallbackMode,)
+		} catch {
+			// Token minting failed; already logged. Report the original 403.
+		}
+		if (fallbackOptions) {
+			response = await sendWithBudget(fallbackOptions,)
+		}
+	}
+
+	return finish(response, okOnly,)
 }
 
 /** Registers the `toolbox-request` message handler that proxies fetch calls. */

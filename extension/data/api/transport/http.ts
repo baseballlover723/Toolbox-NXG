@@ -39,9 +39,9 @@ export interface RequestOptions {
 	/** Query parameters as an object */
 	query?: QueryParams | undefined
 	/**
-	 * If true, the request will be sent on oauth.reddit.com, and the
-	 * `Authorization` header will be set with the OAuth access token for the
-	 * logged-in user
+	 * If true, the request will be sent on oauth.reddit.com, authenticated as
+	 * the logged-in user with either the session cookie or an OAuth access
+	 * token depending on the endpoint (see `makeRequest` in the background)
 	 */
 	oauth?: boolean | undefined
 	/**
