@@ -532,6 +532,64 @@ export function createRemovalReasonsHandlers ({
 			pendingRemoveButton.textContent = 'pending'
 		}
 
+		const onRemoved = () => {
+			if (!isAddRemovalReason) { announceRemoved(thingID, spam ?? false,) }
+			// Prefer the directly-captured element; fall back to a fullname query for paths
+			// where we didn't traverse to the thing (isToolboxRemove, shreddit shadow DOM, etc.)
+			const thing = thingElement
+				?? document.querySelector<HTMLElement>(`[data-fullname="${thingID}"]`,)
+			let resSelected: HTMLElement | null = null
+			if (thing) {
+				markRemovedFeedback(thing, null,)
+				resSelected = thing.classList.contains('res-selected',)
+					? thing
+					: thing.querySelector<HTMLElement>('.res-selected',)
+				if (resSelected) {
+					resSelected.style.background = 'rgb(220 50 50 / 20%)'
+				}
+			}
+			if (pendingRemoveButton) {
+				pendingRemoveButton.textContent = 'removed'
+				// Disabling the remove button is opt-in (off by default) so mods can still re-click it.
+				// When disabled, dim it heavily; when still enabled, just slightly darken its colour.
+				if (disableRemoveButton) {
+					pendingRemoveButton.style.opacity = '0.5'
+					if (pendingRemoveButton instanceof HTMLButtonElement) {
+						pendingRemoveButton.disabled = true
+					} else {
+						pendingRemoveButton.style.pointerEvents = 'none'
+						pendingRemoveButton.style.cursor = 'default'
+					}
+				} else {
+					pendingRemoveButton.style.filter = 'brightness(0.85)'
+				}
+			}
+			// Watch for the thing being approved so the button can be re-enabled.
+			// Observing through the factory scope guarantees the observer also
+			// disconnects at module cleanup when the thing is never un-removed.
+			if (thing && pendingRemoveButton) {
+				const stopObserving = lifecycle.observe(thing, () => {
+					if (!thing.classList.contains('spammed',)) {
+						void stopObserving()
+						pendingRemoveButton.textContent = originalRemoveButtonText
+						pendingRemoveButton.style.opacity = ''
+						pendingRemoveButton.style.filter = ''
+						if (disableRemoveButton) {
+							if (pendingRemoveButton instanceof HTMLButtonElement) {
+								pendingRemoveButton.disabled = false
+							} else {
+								pendingRemoveButton.style.pointerEvents = ''
+								pendingRemoveButton.style.cursor = ''
+							}
+						}
+						if (resSelected) {
+							resSelected.style.background = ''
+						}
+					}
+				}, {attributes: true, attributeFilter: ['class',],},)
+			}
+		}
+
 		const continueRemovalWithoutOverlay = async (link?: string,) => {
 			try {
 				// Capture a link to the item so a reviewer can see what the silent
@@ -544,7 +602,9 @@ export function createRemovalReasonsHandlers ({
 					itemKind: isComment ? 'comment' : 'post',
 					...(itemLink ? {link: itemLink,} : {}),
 				}, spam ?? false,)
-				if (outcome === 'performed') { announceRemoved(thingID, spam ?? false,) }
+				// Give the same "removed" feedback the overlay path does; otherwise the button's
+				// "pending" label is simply reset and the removal looks like it never happened.
+				if (outcome === 'performed') { onRemoved() }
 			} catch (error) {
 				log.error(`Unable to continue removal for ${thingID}:`, error,)
 			}
@@ -745,63 +805,6 @@ export function createRemovalReasonsHandlers ({
 		const previousBodyOverflow = document.body.style.overflow
 		if (!drawerMode) {
 			document.body.style.overflow = 'hidden'
-		}
-		const onRemoved = () => {
-			if (!isAddRemovalReason) { announceRemoved(thingID, spam ?? false,) }
-			// Prefer the directly-captured element; fall back to a fullname query for paths
-			// where we didn't traverse to the thing (isToolboxRemove, shreddit shadow DOM, etc.)
-			const thing = thingElement
-				?? document.querySelector<HTMLElement>(`[data-fullname="${thingID}"]`,)
-			let resSelected: HTMLElement | null = null
-			if (thing) {
-				markRemovedFeedback(thing, null,)
-				resSelected = thing.classList.contains('res-selected',)
-					? thing
-					: thing.querySelector<HTMLElement>('.res-selected',)
-				if (resSelected) {
-					resSelected.style.background = 'rgb(220 50 50 / 20%)'
-				}
-			}
-			if (pendingRemoveButton) {
-				pendingRemoveButton.textContent = 'removed'
-				// Disabling the remove button is opt-in (off by default) so mods can still re-click it.
-				// When disabled, dim it heavily; when still enabled, just slightly darken its colour.
-				if (disableRemoveButton) {
-					pendingRemoveButton.style.opacity = '0.5'
-					if (pendingRemoveButton instanceof HTMLButtonElement) {
-						pendingRemoveButton.disabled = true
-					} else {
-						pendingRemoveButton.style.pointerEvents = 'none'
-						pendingRemoveButton.style.cursor = 'default'
-					}
-				} else {
-					pendingRemoveButton.style.filter = 'brightness(0.85)'
-				}
-			}
-			// Watch for the thing being approved so the button can be re-enabled.
-			// Observing through the factory scope guarantees the observer also
-			// disconnects at module cleanup when the thing is never un-removed.
-			if (thing && pendingRemoveButton) {
-				const stopObserving = lifecycle.observe(thing, () => {
-					if (!thing.classList.contains('spammed',)) {
-						void stopObserving()
-						pendingRemoveButton.textContent = originalRemoveButtonText
-						pendingRemoveButton.style.opacity = ''
-						pendingRemoveButton.style.filter = ''
-						if (disableRemoveButton) {
-							if (pendingRemoveButton instanceof HTMLButtonElement) {
-								pendingRemoveButton.disabled = false
-							} else {
-								pendingRemoveButton.style.pointerEvents = ''
-								pendingRemoveButton.style.cursor = ''
-							}
-						}
-						if (resSelected) {
-							resSelected.style.background = ''
-						}
-					}
-				}, {attributes: true, attributeFilter: ['class',],},)
-			}
 		}
 
 		const close = showRemovalReasonsOverlay({

@@ -853,6 +853,26 @@ describe('createRemovalReasonsHandlers', () => {
 		expect(showRemovalReasonsOverlay,).not.toHaveBeenCalled()
 	})
 
+	it('labels the Toolbox remove button "removed" when a comment is removed without a popup', async () => {
+		// Comment reasons off and every reason post-only: the click removes directly, and the button
+		// must show the removal rather than resetting from "pending" back to "remove".
+		platform.isOldReddit = false
+		getApiThingInfo.mockResolvedValue(makeThingInfo('t1_comment', 'comment',),)
+		setReasons([{removePosts: true,},],)
+		document.body.innerHTML = `
+            <a class="toolbox-removal-reason-remove" data-id="t1_comment" data-subreddit="testsub">remove</a>
+        `
+		const button = document.querySelector<HTMLElement>('.toolbox-removal-reason-remove',)!
+
+		await createRemovalReasonsHandlers({...handlerSettings, commentReasons: false,},).handleClick(
+			makeClick(button,),
+		)
+
+		expect(removeThing,).toHaveBeenCalledWith('t1_comment', false,)
+		expect(showRemovalReasonsOverlay,).not.toHaveBeenCalled()
+		expect(button.textContent,).toBe('removed',)
+	})
+
 	describe('community macro data', () => {
 		/** Old Reddit remove-click on a post whose subreddit has the given reasons configured. */
 		async function clickRemoveWith (reasonText: string,) {
