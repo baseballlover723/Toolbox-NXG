@@ -19,7 +19,7 @@
 
 .tableContainer::-webkit-scrollbar-thumb {
 	background: var(--toolbox-text-muted);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .tableContainer::-webkit-scrollbar-thumb:hover {
@@ -136,7 +136,7 @@
 	background-color: var(--toolbox-button-bg);
 	color: var(--toolbox-button-text);
 	border: 1px solid var(--toolbox-button-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	font: inherit;
 	font-size: x-small;
 	line-height: 1.6;
@@ -360,8 +360,8 @@
 .drilldown {
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-divider-color);
-	box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
-	border-radius: 3px;
+	box-shadow: var(--toolbox-shadow-lg);
+	border-radius: var(--toolbox-radius-md);
 	width: 300px;
 	font-size: small;
 	z-index: 10001;
@@ -477,7 +477,7 @@ button.actionNumber:hover {
 	width: 24px;
 	height: 13px;
 	background: var(--toolbox-text-muted);
-	border-radius: 7px;
+	border-radius: var(--toolbox-radius-pill);
 	position: relative;
 	transition: background 0.15s;
 	flex-shrink: 0;
@@ -560,7 +560,7 @@ button.actionNumber:hover {
 	background-color: var(--toolbox-button-bg);
 	color: var(--toolbox-button-text);
 	border: 1px solid var(--toolbox-button-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	font: inherit;
 	font-size: x-small;
 	line-height: 1.6;
@@ -581,8 +581,8 @@ button.actionNumber:hover {
 	z-index: 10002;
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-divider-color);
-	box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
-	border-radius: 3px;
+	box-shadow: var(--toolbox-shadow-lg);
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-8);
 	max-height: 300px;
 	overflow-y: auto;
@@ -602,7 +602,7 @@ button.actionNumber:hover {
 
 .filterPopover::-webkit-scrollbar-thumb {
 	background: var(--toolbox-text-muted);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .filterPopover::-webkit-scrollbar-thumb:hover {
@@ -635,7 +635,7 @@ button.actionNumber:hover {
 	background-color: var(--toolbox-button-bg);
 	color: var(--toolbox-button-text);
 	border: 1px solid var(--toolbox-button-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	font: inherit;
 	font-size: x-small;
 	font-weight: bold;
@@ -697,7 +697,7 @@ button.actionNumber:hover {
 	width: 15px;
 	height: 15px;
 	background: var(--toolbox-chrome);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	font-size: var(--toolbox-sp-10);
 	font-weight: bold;
 	line-height: var(--toolbox-sp-15);

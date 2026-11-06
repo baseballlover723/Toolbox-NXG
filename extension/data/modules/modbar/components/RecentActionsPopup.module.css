@@ -55,7 +55,7 @@
 	color: var(--toolbox-link-color);
 	text-decoration: none;
 	background: var(--toolbox-active-mod-chip);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: 0 var(--toolbox-sp-5);
 }
 
@@ -77,7 +77,7 @@
 .chip {
 	background: none;
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-8);
 	font-size: var(--toolbox-sp-11);
 	font-family: var(--toolbox-font-family);
@@ -118,7 +118,7 @@
 
 .list::-webkit-scrollbar-thumb {
 	background: var(--toolbox-text-muted);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .list::-webkit-scrollbar-thumb:hover {
@@ -162,7 +162,7 @@
 	flex-wrap: wrap;
 	gap: var(--toolbox-sp-4);
 	padding: var(--toolbox-sp-4) var(--toolbox-sp-6);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .rowApproval {

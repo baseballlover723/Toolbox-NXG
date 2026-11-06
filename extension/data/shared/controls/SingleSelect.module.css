@@ -19,7 +19,7 @@
 	cursor: pointer;
 	background: var(--toolbox-header-button-bg);
 	border: 1px solid var(--toolbox-chrome);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	color: var(--toolbox-link-color);
 	user-select: none;
 }

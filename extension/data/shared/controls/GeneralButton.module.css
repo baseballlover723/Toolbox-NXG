@@ -6,7 +6,7 @@ button.generalButton {
 	font-size: 1em;
 	font-weight: normal;
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-8);
 	margin: 0 var(--toolbox-sp-2);
 	cursor: pointer;

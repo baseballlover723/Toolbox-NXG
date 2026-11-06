@@ -41,7 +41,7 @@
 
 .row > div::-webkit-scrollbar-thumb {
 	background: var(--toolbox-chrome);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .row > div:last-child {
@@ -94,7 +94,7 @@
 	margin: var(--toolbox-sp-6) 0;
 	background: var(--toolbox-action-bg);
 	border: 1px solid var(--toolbox-divider-color);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-text-secondary);

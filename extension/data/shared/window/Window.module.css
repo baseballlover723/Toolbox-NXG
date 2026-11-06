@@ -3,7 +3,7 @@
 	padding: 0;
 	background-color: var(--toolbox-bg);
 	border: 0;
-	box-shadow: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	box-shadow: var(--toolbox-shadow-sm);
 	display: flex;
 	flex-direction: column;
 }
@@ -88,7 +88,7 @@
 
 .content::-webkit-scrollbar-thumb {
 	background: var(--toolbox-text-muted);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .content::-webkit-scrollbar-thumb:hover {

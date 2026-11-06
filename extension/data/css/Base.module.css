@@ -5,7 +5,7 @@
 	flex-shrink: 0;
 	width: 28px;
 	height: 16px;
-	border-radius: 8px;
+	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-chrome);
 	position: relative;
 	cursor: pointer;
@@ -112,7 +112,7 @@
 	font-size: 1em;
 	line-height: var(--toolbox-sp-14);
 	background-color: var(--toolbox-action-bg);
-	border-radius: 1px;
+	border-radius: var(--toolbox-radius-xs);
 	border-width: 1px 1px 2px 2px;
 	border-color: var(--toolbox-border-color);
 	border-style: solid;
@@ -146,7 +146,7 @@
 	font-weight: bold;
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-14) var(--toolbox-sp-5);
 	border-width: 1px 1px 2px;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .actionbutton.primary:hover {
@@ -179,8 +179,8 @@
 	max-height: 65vh;
 	background-color: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
-	box-shadow: var(--toolbox-shadow-color) 0 2px 8px;
+	border-radius: var(--toolbox-radius-md);
+	box-shadow: var(--toolbox-shadow-md);
 	z-index: var(--toolbox-z-window);
 	display: flex;
 	flex-direction: column;
@@ -223,7 +223,7 @@
 	background: var(--toolbox-caution-bg);
 	border: 1px solid var(--toolbox-caution-border);
 	border-left: 3px solid var(--toolbox-caution-accent);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-10);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-caution-text);
@@ -263,7 +263,7 @@
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	line-height: 1;
 }
 
@@ -276,7 +276,7 @@
 	align-items: center;
 	gap: var(--toolbox-sp-6);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
 }

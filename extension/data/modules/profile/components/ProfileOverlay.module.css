@@ -123,7 +123,7 @@
 	height: 28px;
 	min-width: 150px;
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	color: var(--toolbox-fg);
 	font-family: var(--toolbox-font-family);
@@ -164,7 +164,7 @@
 	width: 34px;
 	height: 18px;
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 999px;
+	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-badge-bg);
 	transition: background-color 120ms ease, border-color 120ms ease;
 }
@@ -176,9 +176,9 @@
 	left: 2px;
 	width: 12px;
 	height: 12px;
-	border-radius: 999px;
+	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-bg);
-	box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+	box-shadow: var(--toolbox-shadow-xs);
 	transition: transform 120ms ease;
 }
 
@@ -203,7 +203,7 @@
 	min-height: 20px;
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 	color: var(--toolbox-text-body);
 	font-size: var(--toolbox-sp-11);
@@ -214,7 +214,7 @@
 	margin-left: var(--toolbox-sp-4);
 	padding: 0 var(--toolbox-sp-4);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: transparent;
 	color: var(--toolbox-text-link, var(--toolbox-text-body));
 	font: inherit;
@@ -245,7 +245,7 @@
 .error,
 .emptyState {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 4px;
+	border-radius: var(--toolbox-radius-lg);
 	background: var(--toolbox-bg);
 	padding: 1em;
 	margin-bottom: var(--toolbox-sp-10);
@@ -270,11 +270,11 @@
 	z-index: var(--toolbox-z-window);
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-button-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	max-height: 240px;
 	overflow-y: auto;
 	min-width: 190px;
-	box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+	box-shadow: var(--toolbox-shadow-lg);
 }
 
 .suggest table {
@@ -317,7 +317,7 @@
 	margin: 0 0 1em;
 	background-color: var(--toolbox-bg);
 	border: solid 1px var(--toolbox-surface-border);
-	border-radius: 4px;
+	border-radius: var(--toolbox-radius-lg);
 	padding: var(--toolbox-sp-2);
 }
 
@@ -377,7 +377,7 @@
 	width: 24px;
 	height: 24px;
 	object-fit: cover;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .userTrophies {
@@ -425,7 +425,7 @@
 	border: 1px solid var(--toolbox-error-border);
 	border-left: 3px solid var(--toolbox-error-color);
 	background: var(--toolbox-error-bg);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .bulkRemoveTitle {

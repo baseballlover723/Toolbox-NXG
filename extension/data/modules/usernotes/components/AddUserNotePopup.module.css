@@ -47,7 +47,7 @@
 
 .emptyHistory {
 	border: 1px dashed var(--toolbox-input-border);
-	border-radius: 6px;
+	border-radius: var(--toolbox-radius-xl);
 	color: var(--toolbox-text-secondary);
 	padding: var(--toolbox-sp-18);
 	text-align: center;
@@ -59,7 +59,7 @@
 	flex-direction: column;
 	gap: var(--toolbox-sp-1);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 6px;
+	border-radius: var(--toolbox-radius-xl);
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-8);
 	background: var(--toolbox-bg);
 }
@@ -86,7 +86,7 @@
 	z-index: 1;
 	flex: 0 0 auto;
 	border: 1px solid var(--toolbox-border-color);
-	border-radius: 999px;
+	border-radius: var(--toolbox-radius-pill);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-7);
 	font-size: 80%;
 	font-weight: bold;
@@ -154,7 +154,7 @@
 	height: 22px;
 	background: transparent;
 	border: 1px solid transparent;
-	border-radius: 4px;
+	border-radius: var(--toolbox-radius-lg);
 	cursor: pointer;
 	color: inherit;
 	padding: 0;
@@ -208,7 +208,7 @@
 
 .typeButton {
 	border: 1px solid var(--toolbox-border-color);
-	border-radius: 4px;
+	border-radius: var(--toolbox-radius-lg);
 	background: transparent;
 	cursor: pointer;
 	padding: var(--toolbox-sp-4) var(--toolbox-sp-6);

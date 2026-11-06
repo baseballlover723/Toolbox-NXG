@@ -81,7 +81,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-5);
 	cursor: pointer;
 }
@@ -173,7 +173,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-5);
 }
 
@@ -185,7 +185,7 @@
 
 .previewUserEntry {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	overflow: hidden;
 }
@@ -221,7 +221,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-5);
 }
 
@@ -266,7 +266,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-action-bg);
 	border: 1px dashed var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .incompletePreview {
@@ -292,7 +292,7 @@
 	gap: var(--toolbox-sp-6);
 	padding: var(--toolbox-sp-8) var(--toolbox-sp-10);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -312,7 +312,7 @@
 .progressTrack {
 	height: 8px;
 	overflow: hidden;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-surface-border);
 }

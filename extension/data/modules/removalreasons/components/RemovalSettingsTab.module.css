@@ -63,7 +63,7 @@
 .radioOption {
 	padding: var(--toolbox-sp-7) var(--toolbox-sp-10);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	background: var(--toolbox-action-bg);
 	cursor: default;
 }

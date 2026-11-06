@@ -39,7 +39,7 @@
 	padding: var(--toolbox-sp-9) var(--toolbox-sp-10);
 	background: var(--toolbox-action-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .summaryMain {
@@ -83,7 +83,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-5);
 }
 
@@ -180,7 +180,7 @@
 	width: 28px;
 	height: 28px;
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 }
 
@@ -208,7 +208,7 @@
 	min-height: 26px;
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	color: var(--toolbox-link-color);
 	font-size: var(--toolbox-sp-11);
@@ -267,7 +267,7 @@
 	min-height: 58px;
 	padding: var(--toolbox-sp-8) var(--toolbox-sp-9);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 }
 
@@ -303,7 +303,7 @@
 .statsSection {
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 }
 
@@ -340,7 +340,7 @@
 .statBarRow div {
 	height: 8px;
 	overflow: hidden;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	background: var(--toolbox-action-bg);
 }
 
@@ -369,7 +369,7 @@
 .userEntry {
 	flex: 0 0 auto;
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	overflow: hidden;
 }
@@ -468,7 +468,7 @@
 	text-align: center;
 	color: var(--toolbox-text-secondary);
 	border: 1px dashed var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -535,7 +535,7 @@
 	gap: 1em;
 	background: var(--toolbox-action-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-8) 1em;
 	margin-bottom: var(--toolbox-sp-4);
 }
@@ -551,7 +551,7 @@
 	background: var(--toolbox-link-color);
 	color: var(--toolbox-bg);
 	border: 0;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-10);
 	font-size: var(--toolbox-sp-11);
 	font-weight: bold;
@@ -613,14 +613,14 @@
 }
 
 .toggleBtn:first-child {
-	border-radius: 3px 0 0 3px;
+	border-radius: var(--toolbox-radius-md) 0 0 var(--toolbox-radius-md);
 }
 
 .toggleBtn:last-child {
 	/* inset shadow keeps the visual right-side border 1px inside the element,
 	   preventing subpixel clipping at an overflow:hidden boundary */
 	box-shadow: inset -1px 0 0 var(--toolbox-surface-border);
-	border-radius: 0 3px 3px 0;
+	border-radius: 0 var(--toolbox-radius-md) var(--toolbox-radius-md) 0;
 }
 
 .toggleBtnActive {

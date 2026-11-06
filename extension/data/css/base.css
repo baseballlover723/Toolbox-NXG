@@ -205,6 +205,35 @@ a {
 	--toolbox-sp-34: 2.8333em;
 	--toolbox-sp-35: 2.9167em;
 	--toolbox-sp-40: 3.3333em;
+
+	/*
+	 * Geometry tokens: corner radii and elevation shadows. Every Toolbox-owned
+	 * border-radius / drop shadow goes through these (enforced by stylelint) so a
+	 * theme can reshape the UI - e.g. square, flat chrome - from one place.
+	 * Literal exceptions: 50% (circles), 0 (resets), and rules that deliberately
+	 * match a host-page element's shape.
+	 */
+	--toolbox-radius-xs: 1px;
+	--toolbox-radius-sm: 2px;
+	--toolbox-radius-md: 3px;
+	--toolbox-radius-lg: 4px;
+	--toolbox-radius-xl: 6px;
+	--toolbox-radius-2xl: 10px;
+	/* Capsule ends regardless of element height: badges, chips, toggle tracks. */
+	--toolbox-radius-pill: 999px;
+
+	/*
+	 * Elevation shadows, lowest to highest. Inset shadows and the colored edge
+	 * markers (comment triage) are indicators, not elevation, and stay literal.
+	 * A custom property that references another is resolved where it is declared,
+	 * so tokens built on --toolbox-shadow-color must be redeclared in the dark block.
+	 */
+	--toolbox-shadow-xs: 0 1px 2px rgb(0 0 0 / 25%);
+	--toolbox-shadow-sm: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	--toolbox-shadow-md: 0 2px 8px rgb(0 0 0 / 25%);
+	--toolbox-shadow-lg: 0 4px 12px rgb(0 0 0 / 20%);
+	/* Side-docked panels: the shadow falls to the right of the panel. */
+	--toolbox-shadow-drawer: 2px 0 8px rgb(0 0 0 / 20%);
 }
 
 .toolbox-react-light-host.toolbox-scope,
@@ -317,6 +346,8 @@ body.toolbox[toolbox-warning]::before {
 	--toolbox-header-button-hover-bg: rgb(45 74 106);
 	--toolbox-border-color: rgb(58 80 104);
 	--toolbox-shadow-color: rgb(0 10 20 / 60%);
+	/* Redeclared so it picks up the dark --toolbox-shadow-color (see the :root note) */
+	--toolbox-shadow-sm: var(--toolbox-shadow-color) 0 1px 3px 1px;
 
 	--toolbox-button-bg: rgb(80 120 160 / 20%);
 	/* Opaque dark-mode counterpart - the spam/removed row tint is not theme-conditional,

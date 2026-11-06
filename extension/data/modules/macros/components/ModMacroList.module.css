@@ -13,7 +13,7 @@
 /* Individual macro card */
 .card {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 	overflow: hidden;
 }
@@ -56,7 +56,7 @@
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-4);
 	letter-spacing: 0.02em;
 }
@@ -162,7 +162,7 @@
 	gap: var(--toolbox-sp-8);
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	background: var(--toolbox-action-bg);
 }
 

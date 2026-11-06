@@ -4,6 +4,10 @@
         "color-no-hex": true,
         "color-named": "never",
         "unit-disallowed-list": ["rem"],
+        "declaration-property-value-disallowed-list": {
+            "/^border(-[a-z]+)*-radius$/": ["/\\d(px|em)/", "/--toolbox-sp-/"],
+            "box-shadow": ["/^-?\\d+(px)? -?\\d+(px)? \\d+px/", "/^var\\(--toolbox-shadow-color\\)/"]
+        },
         "custom-property-pattern": "^toolbox-.+",
         "declaration-no-important": [true, { "severity": "warning" }],
         "no-unknown-custom-properties": null,

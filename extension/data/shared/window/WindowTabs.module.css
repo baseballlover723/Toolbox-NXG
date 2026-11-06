@@ -133,7 +133,7 @@
 }
 .scrollableSection::-webkit-scrollbar-thumb {
 	background: var(--toolbox-chrome);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 /* Section header in vertical tab list */

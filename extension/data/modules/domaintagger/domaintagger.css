@@ -78,7 +78,7 @@ body.toolbox-scope .dtagger-popup .clear-domain:hover {
 	font-size: 0.75em;
 	line-height: 1.4;
 	white-space: nowrap;
-	border-radius: 8px;
+	border-radius: var(--toolbox-radius-pill);
 }
 
 /* Shreddit-specific styles */

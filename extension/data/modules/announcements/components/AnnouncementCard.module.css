@@ -11,8 +11,8 @@
 	background: var(--toolbox-bg);
 	color: var(--toolbox-text-body);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 10px;
-	box-shadow: var(--toolbox-shadow-color) 0 4px 16px 0;
+	border-radius: var(--toolbox-radius-2xl);
+	box-shadow: var(--toolbox-shadow-lg);
 }
 
 /* Close button floats over the top-right corner of the card, matching the
@@ -28,7 +28,7 @@
 	height: 20px;
 	padding: 0;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--toolbox-radius-lg);
 	background: transparent;
 	color: var(--toolbox-text-secondary);
 	font: inherit;

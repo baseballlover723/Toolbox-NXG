@@ -150,7 +150,7 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	min-width: var(--toolbox-sp-16);
 	margin-left: var(--toolbox-sp-5);
 	padding: 0 var(--toolbox-sp-5);
-	border-radius: var(--toolbox-sp-8);
+	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-accent-color);
 	color: var(--toolbox-bg);
 	font-size: var(--toolbox-sp-11);
@@ -177,7 +177,7 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	margin-bottom: var(--toolbox-sp-11);
 	bottom: 27px;
 	background-color: var(--toolbox-bg);
-	box-shadow: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	box-shadow: var(--toolbox-shadow-sm);
 	border: solid 10px var(--toolbox-header-bg);
 	padding: var(--toolbox-sp-5);
 }
@@ -230,7 +230,7 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	height: initial;
 	width: initial;
 	background-color: var(--toolbox-bg);
-	box-shadow: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	box-shadow: var(--toolbox-shadow-sm);
 	border-width: 10px;
 	border-style: solid;
 	border-color: var(--toolbox-header-bg);

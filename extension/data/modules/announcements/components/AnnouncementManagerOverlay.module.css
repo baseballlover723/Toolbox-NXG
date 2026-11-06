@@ -73,7 +73,7 @@
 
 .badge {
 	padding: 0 var(--toolbox-sp-5);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-badge-bg);
 	color: var(--toolbox-text-secondary);
 }

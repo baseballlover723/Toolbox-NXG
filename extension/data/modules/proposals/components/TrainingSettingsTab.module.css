@@ -52,7 +52,7 @@
 	color: var(--toolbox-text);
 	background: var(--toolbox-caution-bg);
 	border: 1px solid var(--toolbox-caution-border);
-	border-radius: var(--toolbox-sp-4);
+	border-radius: var(--toolbox-radius-lg);
 	padding: var(--toolbox-sp-8);
 	margin-bottom: var(--toolbox-sp-8);
 }

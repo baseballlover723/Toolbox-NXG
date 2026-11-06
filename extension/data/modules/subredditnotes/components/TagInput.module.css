@@ -7,7 +7,7 @@
 	min-height: 30px;
 	background: var(--toolbox-input-bg);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	cursor: text;
 	position: relative;
 }
@@ -31,7 +31,7 @@
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-7);
 	background: var(--toolbox-header-button-hover-bg);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 10px;
+	border-radius: var(--toolbox-radius-pill);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-fg);
 	white-space: nowrap;
@@ -88,8 +88,8 @@
 	list-style: none;
 	background: var(--toolbox-bg);
 	border: 1px solid var(--toolbox-input-border);
-	box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
-	border-radius: 2px;
+	box-shadow: var(--toolbox-shadow-md);
+	border-radius: var(--toolbox-radius-sm);
 	max-height: 180px;
 	overflow-y: auto;
 }

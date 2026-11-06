@@ -37,7 +37,7 @@
 	font-size: var(--toolbox-sp-10);
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-divider-color);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-4);
 }
 
@@ -101,7 +101,7 @@
 .statusBadge {
 	font-size: var(--toolbox-sp-10);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-4);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	flex-shrink: 0;
 	white-space: nowrap;
 }

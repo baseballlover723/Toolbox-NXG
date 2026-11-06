@@ -74,6 +74,8 @@
 	color: inherit;
 	padding: 4px 8px;
 	border: 0;
+	/* Matches Shreddit's native pill action buttons, not a Toolbox shape - stays literal. */
+	/* stylelint-disable-next-line declaration-property-value-disallowed-list */
 	border-radius: 9999px;
 	background: transparent;
 	white-space: nowrap;
@@ -301,7 +303,7 @@ body.toolbox-scope
 	text-transform: none !important;
 	letter-spacing: normal !important;
 	background-color: var(--toolbox-action-bg) !important;
-	border-radius: 1px !important;
+	border-radius: var(--toolbox-radius-xs) !important;
 	border-width: 1px 1px 2px 2px !important;
 	border-color: var(--toolbox-border-color) !important;
 	border-style: solid !important;

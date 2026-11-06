@@ -44,7 +44,7 @@
 	line-height: 1;
 	display: inline-flex;
 	align-items: center;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .settingLink:hover {
@@ -77,7 +77,7 @@
 	height: 28px;
 	padding: var(--toolbox-sp-2);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	cursor: pointer;
 	background: none;
 	box-sizing: border-box;

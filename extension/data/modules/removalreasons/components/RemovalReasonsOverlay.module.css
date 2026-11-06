@@ -37,7 +37,7 @@
 	height: 100%;
 	max-height: none;
 	border-right: 1px solid var(--toolbox-border-color);
-	box-shadow: 2px 0 8px rgb(0 0 0 / 20%);
+	box-shadow: var(--toolbox-shadow-drawer);
 }
 
 .popupBackdrop {
@@ -120,7 +120,7 @@
 	margin-bottom: var(--toolbox-sp-10);
 	background: var(--toolbox-action-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .contextMain {
@@ -174,7 +174,7 @@
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-5);
 }
 
@@ -208,7 +208,7 @@
 	padding: var(--toolbox-sp-7) var(--toolbox-sp-8);
 	margin-bottom: var(--toolbox-sp-7);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -236,7 +236,7 @@
 	margin: var(--toolbox-sp-6) 0;
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-selected-bg);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-text-secondary);
@@ -261,7 +261,7 @@
 	margin: var(--toolbox-sp-7) 0;
 	padding: var(--toolbox-sp-1);
 	border: 1px solid transparent;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .reasonCardList {
@@ -272,7 +272,7 @@
 
 .reasonCard {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	overflow: hidden;
 	cursor: pointer;
@@ -356,7 +356,7 @@
 	line-height: var(--toolbox-sp-17);
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .reasonSelected .reasonNum {
@@ -389,13 +389,13 @@
 	gap: var(--toolbox-sp-5);
 	padding: var(--toolbox-sp-1);
 	border: 1px solid transparent;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 }
 
 .deliveryOption {
 	padding: var(--toolbox-sp-7) var(--toolbox-sp-10);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -450,7 +450,7 @@
 .forcedSettingsSummary {
 	padding: var(--toolbox-sp-8) var(--toolbox-sp-10);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -473,7 +473,7 @@
 	margin-top: var(--toolbox-sp-7);
 	padding: var(--toolbox-sp-7) var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 }
 
@@ -547,7 +547,7 @@
 .noteTypeChip {
 	background: none;
 	border: 1px solid currentcolor;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
 	font-size: var(--toolbox-sp-11);
 	cursor: pointer;

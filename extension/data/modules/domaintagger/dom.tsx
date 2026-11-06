@@ -200,7 +200,7 @@ function ShredditDomainIndicator ({detail, onButtonClick,}: {
 							backgroundColor: indicatorColor,
 							color: textColor,
 							padding: '0 1px 1px',
-							borderRadius: '3px',
+							borderRadius: 'var(--toolbox-radius-md)',
 						}}
 					>
 						{domain}
@@ -216,7 +216,11 @@ function ShredditDomainIndicator ({detail, onButtonClick,}: {
 					<span
 						className="toolbox-dt-domain-text"
 						title={domainTag.note}
-						style={{border: `1px solid ${indicatorColor}`, padding: '0 1px', borderRadius: '3px',}}
+						style={{
+							border: `1px solid ${indicatorColor}`,
+							padding: '0 1px',
+							borderRadius: 'var(--toolbox-radius-md)',
+						}}
 					>
 						{domain}
 					</span>
@@ -411,7 +415,7 @@ export function createDomainTaggerHandlers (
 					Object.assign((domainEl as HTMLElement).style, {
 						backgroundColor: color,
 						padding: '0 1px 1px',
-						borderRadius: '3px',
+						borderRadius: 'var(--toolbox-radius-md)',
 						color: textColor,
 					},)
 					const anchor = domainEl.querySelector('a',)
@@ -424,7 +428,7 @@ export function createDomainTaggerHandlers (
 					Object.assign((domainEl as HTMLElement).style, {
 						border: `1px solid ${color}`,
 						padding: '0 1px',
-						borderRadius: '3px',
+						borderRadius: 'var(--toolbox-radius-md)',
 					},)
 					break
 				case 'post_title': {

@@ -64,5 +64,5 @@
 	padding: var(--toolbox-sp-15);
 	background: var(--toolbox-action-bg);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 }

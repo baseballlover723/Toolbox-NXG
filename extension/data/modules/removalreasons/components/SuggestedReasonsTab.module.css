@@ -17,7 +17,7 @@
 
 .card {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 	overflow: hidden;
 }
@@ -99,7 +99,7 @@
 .automodNote {
 	margin: 0 0 var(--toolbox-sp-7);
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-7);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-selected-bg);
 	font-size: var(--toolbox-sp-11);
 	opacity: 0.9;
@@ -154,7 +154,7 @@
 	gap: var(--toolbox-sp-4);
 	padding: var(--toolbox-sp-7);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	max-height: 180px;
 	overflow-y: auto;
 }

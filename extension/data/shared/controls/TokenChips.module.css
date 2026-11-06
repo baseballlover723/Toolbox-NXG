@@ -20,7 +20,7 @@
 .chip {
 	background: none;
 	border: 1px solid currentcolor;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
 	font-size: var(--toolbox-sp-11);
 	font-family: monospace;

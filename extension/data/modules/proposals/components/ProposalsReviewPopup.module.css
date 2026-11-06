@@ -16,7 +16,7 @@
 	max-height: none;
 	max-width: initial;
 	border-right: 1px solid var(--toolbox-border-color);
-	box-shadow: 2px 0 8px rgb(0 0 0 / 20%);
+	box-shadow: var(--toolbox-shadow-drawer);
 }
 
 /* Make the Window content slot flex so the workspace fills the drawer. */
@@ -67,7 +67,7 @@
 	min-width: 0;
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-4);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-text);
 	background: var(--toolbox-bg);
@@ -89,7 +89,7 @@
 	margin: 0 var(--toolbox-sp-8) var(--toolbox-sp-5);
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-error-color);
 	background: var(--toolbox-caution-bg);
@@ -148,7 +148,7 @@
 /* Small item-kind chip (Post / Comment / User) at the head of a list row. */
 .itemKind {
 	padding: 0 var(--toolbox-sp-4);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-10);
 	font-weight: normal;
 	text-transform: uppercase;
@@ -256,7 +256,7 @@
 
 .usernoteChip {
 	padding: 0 var(--toolbox-sp-4);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-10);
 	white-space: nowrap;
 	background: var(--toolbox-header-button-hover-bg);
@@ -266,7 +266,7 @@
 .reasonBody {
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-12);
 	background: var(--toolbox-header-button-bg);
 	overflow-wrap: break-word;
@@ -292,7 +292,7 @@
 	align-items: flex-start;
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-error-color);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	font-size: var(--toolbox-sp-11);
 	background: var(--toolbox-caution-bg);
 }
@@ -316,7 +316,7 @@
 	gap: var(--toolbox-sp-4);
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: var(--toolbox-sp-3);
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-header-button-bg);
 }
 

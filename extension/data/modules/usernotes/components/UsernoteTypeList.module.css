@@ -12,7 +12,7 @@
 /* Individual type card */
 .card {
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-action-bg);
 	overflow: hidden;
 }
@@ -38,7 +38,7 @@
 .typePreview {
 	display: inline-block;
 	border: 1px solid currentcolor;
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-5);
 	max-width: 100%;
 	white-space: nowrap;
@@ -54,7 +54,7 @@
 .usageChip {
 	flex-shrink: 0;
 	border: 1px solid var(--toolbox-surface-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-5);
 	font-size: var(--toolbox-sp-11);
 	color: var(--toolbox-text-secondary);
@@ -145,7 +145,7 @@
 	height: 28px;
 	padding: var(--toolbox-sp-2);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	cursor: pointer;
 	background: none;
 	box-sizing: border-box;
@@ -191,7 +191,7 @@
 	height: 28px;
 	padding: 0 var(--toolbox-sp-4);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-input-bg);
 	color: var(--toolbox-fg);
 	font-size: inherit;
@@ -233,7 +233,7 @@
 	height: 28px;
 	padding: 0 var(--toolbox-sp-4);
 	border: 1px solid var(--toolbox-input-border);
-	border-radius: 3px;
+	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-input-bg);
 	color: var(--toolbox-fg);
 	font-size: inherit;

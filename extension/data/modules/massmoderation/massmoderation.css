@@ -9,7 +9,7 @@
 	font-weight: bold;
 	padding: 0 var(--toolbox-sp-3) var(--toolbox-sp-3);
 	margin: var(--toolbox-sp-3);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	display: inline-block;
 	order: -1;
 }

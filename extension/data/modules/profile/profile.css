@@ -26,7 +26,7 @@
 	display: inline-block;
 	margin-left: 6px;
 	padding: 0 6px;
-	border-radius: 9px;
+	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-caution-accent);
 	color: rgb(255 255 255);
 	font-size: 11px;

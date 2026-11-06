@@ -9,7 +9,7 @@ button.actionButton {
 	font-size: 1em;
 	line-height: var(--toolbox-sp-14);
 	background-color: var(--toolbox-action-bg);
-	border-radius: 1px;
+	border-radius: var(--toolbox-radius-xs);
 	border-width: 1px 1px 2px 2px;
 	border-color: var(--toolbox-border-color);
 	border-style: solid;
@@ -43,7 +43,7 @@ button.actionButton.inline:active {
 	font-weight: bold;
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-14) var(--toolbox-sp-5);
 	border-width: 1px 1px 2px;
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 }
 
 .actionButton.primary:hover {

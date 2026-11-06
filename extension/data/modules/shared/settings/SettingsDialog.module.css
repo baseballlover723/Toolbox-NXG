@@ -22,7 +22,7 @@
 	align-items: center;
 	flex: none;
 	padding: var(--toolbox-sp-2);
-	border-radius: 2px;
+	border-radius: var(--toolbox-radius-sm);
 	color: var(--toolbox-text-secondary);
 	text-decoration: none;
 	line-height: 1;
@@ -114,7 +114,7 @@
 	border-left: 3px solid var(--toolbox-error-color);
 	background: var(--toolbox-error-bg);
 	color: var(--toolbox-error-text);
-	border-radius: 1px;
+	border-radius: var(--toolbox-radius-xs);
 }
 
 .aboutContent {
@@ -149,7 +149,7 @@
 	background: none;
 	border: 1px solid var(--toolbox-button-border);
 	border-left-width: 3px;
-	border-radius: 1px;
+	border-radius: var(--toolbox-radius-xs);
 	color: var(--toolbox-link-color);
 	cursor: pointer;
 	font-size: var(--toolbox-sp-11);
