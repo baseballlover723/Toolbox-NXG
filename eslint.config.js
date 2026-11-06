@@ -131,7 +131,7 @@ export default tseslint.config(
 			'docs/**',
 			'tests/**',
 			'node_modules/**',
-			'.venv/**',
+			'**/.venv/**',
 			'.idea/**',
 			'.settings/**',
 			'.vscode/**',
