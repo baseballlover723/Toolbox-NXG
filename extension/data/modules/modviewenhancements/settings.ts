@@ -70,6 +70,15 @@ export const settings = defineSettings(
 				'Also highlight bracketed bot/automod report matches outside the mod queue (e.g. subreddit listings and comment pages, when viewed as a mod). Old Reddit only.',
 			oldReddit: true,
 		},
+		{
+			id: 'showSubscriberCount',
+			sharedPolicy: 'raw',
+			type: 'boolean',
+			default: true,
+			description:
+				'Show the subscriber count in the subreddit sidebar. Reddit no longer displays it on old Reddit, but still reports it.',
+			oldReddit: true,
+		},
 	] as const,
 )
 

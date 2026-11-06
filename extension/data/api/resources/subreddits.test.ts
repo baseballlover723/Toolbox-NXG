@@ -11,6 +11,7 @@ import {
 	getModLog,
 	getModLogByPath,
 	getModLogEntries,
+	getSubredditAbout,
 	getSubredditListing,
 } from './subreddits'
 
@@ -50,5 +51,26 @@ describe('subreddits API', () => {
 
 		expect(apiOauthGetJSON.mock.calls,).toContainEqual(['/r/a+b/about/modqueue.json', {limit: '100',},],)
 		expect(apiOauthGetJSON.mock.calls,).toContainEqual(['/r/mod/about/unmoderated.json', {limit: '50',},],)
+	})
+})
+
+describe('getSubredditAbout', () => {
+	it('maps title, description and subscriber count from about.json', async () => {
+		apiOauthGetJSON.mockResolvedValueOnce({
+			data: {title: 'Test Sub', public_description: 'A sub', subscribers: 4321,},
+		},)
+		await expect(getSubredditAbout('testsub',),).resolves.toEqual({
+			title: 'Test Sub',
+			publicDescription: 'A sub',
+			subscribers: 4321,
+		},)
+		expect(apiOauthGetJSON,).toHaveBeenCalledWith('/r/testsub/about.json',)
+	})
+
+	it('reports a null count when the field is missing or not a number', async () => {
+		apiOauthGetJSON.mockResolvedValueOnce({data: {},},)
+		await expect(getSubredditAbout('a',),).resolves.toMatchObject({subscribers: null,},)
+		apiOauthGetJSON.mockResolvedValueOnce({data: {subscribers: 'lots',},},)
+		await expect(getSubredditAbout('b',),).resolves.toMatchObject({subscribers: null,},)
 	})
 })

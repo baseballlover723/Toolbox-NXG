@@ -20,6 +20,8 @@ Mod View Enhancements applies passive visual enhancements to moderated content. 
 
 **Highlight AutoModerator regex matches** — when AutoModerator's report or action reason contains text in square brackets (commonly used to echo regex match groups), those words are highlighted in the displayed reason. By default this applies on the mod queue; an optional setting extends it to subreddit listings and comment pages when you browse them as a moderator _(old Reddit)_.
 
+**Sidebar subscriber count** _(old Reddit)_ — restores the subscriber count to the subreddit sidebar. Reddit stopped displaying it on old Reddit but still reports it through its API, so toolbox fetches it and shows it under the subscribe button.
+
 ## Settings
 
 | Setting                                   | Default       | Description                                                                       |
@@ -32,3 +34,4 @@ Mod View Enhancements applies passive visual enhancements to moderated content. 
 | Bot approved checkmark                    | AutoModerator | Bot usernames that get a distinct approve checkmark _(old Reddit)_                |
 | Highlight AutoModerator regex matches     | On            | Highlight bracketed text in automod action/report reasons                         |
 | Highlight regex matches outside the queue | Off           | Also highlight bracketed report matches on subreddit/comment pages _(old Reddit)_ |
+| Show sidebar subscriber count             | On            | Show the subscriber count in the subreddit sidebar _(old Reddit)_                 |

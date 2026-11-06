@@ -25,6 +25,11 @@ export function getCurrentSubredditName (): string | null {
 	return document.querySelector('.side .titlebox h1.redditname a',)?.textContent?.trim() ?? null
 }
 
+/** Returns the sidebar `.side .titlebox` element shown on subreddit pages, or `null`. */
+export function getSidebarTitlebox (): HTMLElement | null {
+	return document.querySelector<HTMLElement>('.side .titlebox',)
+}
+
 /** Returns the page-level `.menuarea` element, or `null`. */
 export function getMenuarea (): Element | null {
 	return document.querySelector('.menuarea',)

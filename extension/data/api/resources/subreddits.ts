@@ -108,6 +108,11 @@ export interface SubredditAbout {
 	title: string
 	/** The short public description shown in the sidebar. */
 	publicDescription: string
+	/**
+	 * The subscriber count, or `null` when the response omits it. Reddit no longer renders this
+	 * in old Reddit's sidebar, but `about.json` still reports it.
+	 */
+	subscribers: number | null
 }
 
 /** One entry from a subreddit's public rules list. */
@@ -119,19 +124,23 @@ export interface SubredditRule {
 }
 
 /**
- * Reads a subreddit's display title and public description.
+ * Reads a subreddit's display title, public description and subscriber count.
  *
  * Both are public, so this works for any subreddit the moderator can see, and neither
  * changes often - callers that need it per-removal should cache.
  * @param subreddit The bare subreddit name.
  */
 export async function getSubredditAbout (subreddit: string,): Promise<SubredditAbout> {
-	const response = await apiOauthGetJSON<{data?: {title?: string; public_description?: string}}>(
+	const response = await apiOauthGetJSON<
+		{data?: {title?: string; public_description?: string; subscribers?: unknown}}
+	>(
 		`/r/${subreddit}/about.json`,
 	)
+	const subscribers = response.data?.subscribers
 	return {
 		title: response.data?.title ?? '',
 		publicDescription: response.data?.public_description ?? '',
+		subscribers: typeof subscribers === 'number' && Number.isFinite(subscribers,) ? subscribers : null,
 	}
 }
 

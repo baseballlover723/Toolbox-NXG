@@ -10,6 +10,7 @@ import {
 	getNestedCommentDistinguishToggles,
 	getQueueEmptyMessage,
 	getQueueTabMenu,
+	getSidebarTitlebox,
 	getSiteTable,
 	getUnseenContentThings,
 } from './page'
@@ -67,6 +68,18 @@ describe('getCurrentSubredditName', () => {
 
 	it('returns null when the sidebar titlebox is absent', () => {
 		expect(getCurrentSubredditName(),).toBeNull()
+	})
+})
+
+describe('getSidebarTitlebox', () => {
+	it('returns the sidebar titlebox', () => {
+		document.body.innerHTML = `<div class="side"><div class="titlebox"></div></div>`
+		expect(getSidebarTitlebox()?.classList.contains('titlebox',),).toBe(true,)
+	})
+
+	it('ignores a titlebox outside the sidebar', () => {
+		document.body.innerHTML = `<div class="titlebox"></div>`
+		expect(getSidebarTitlebox(),).toBeNull()
 	})
 })
 

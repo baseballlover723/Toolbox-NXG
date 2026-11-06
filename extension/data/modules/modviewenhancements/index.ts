@@ -8,6 +8,7 @@ import {isOldReddit,} from '../../util/infra/platform'
 import {isShredditModQueuePage,} from '../../util/reddit/pageContext'
 import {onSharedMutation,} from '../../util/ui/dom'
 import {createModViewEnhancementsHandlers,} from './dom'
+import {createSubscriberCountHandlers,} from './features/subscriberCount'
 import {settings,} from './settings'
 import type {ModViewEnhancementsSettings,} from './settings'
 
@@ -26,6 +27,7 @@ function init (options: ModViewEnhancementsSettings,) {
 	const mve = createModViewEnhancementsHandlers(options,)
 
 	lifecycle.mount(mve.cleanup,)
+	lifecycle.mount(createSubscriberCountHandlers(options.showSubscriberCount,).cleanup,)
 
 	if (isOldReddit) {
 		lifecycle.on(window, 'TBNewThings', mve.handleNewThings,)

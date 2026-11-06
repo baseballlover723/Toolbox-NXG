@@ -23,3 +23,8 @@ shreddit-post.toolbox-subreddit-color {
 	border-left: solid 3px var(--toolbox-sub-color)
 		!important; /* stylelint-disable-line declaration-no-important -- overrides Tailwind border-* utility on shreddit-post */
 }
+
+/* Restored sidebar subscriber count (old Reddit); block so it sits on its own line like the native one did */
+.toolbox-subscriber-count {
+	display: block;
+}
