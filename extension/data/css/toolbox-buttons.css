@@ -127,19 +127,6 @@ body.toolbox-scope shreddit-comment.toolbox-mod-actions-present shreddit-mod-inl
 	display: none !important;
 }
 
-/* Hide the native mod-actions shield (the 🛡 dropdown of mod actions) on COMMENTS only - the Toolbox
-   row already duplicates these for comments. Posts keep their shield (not everything in the post one
-   is duplicated in the Toolbox row). The comment shield is lazy-loaded, so target both its menu
-   element (mirroring the post's `shreddit-post-mod-actions-menu`) and the `mod-overflow-menu` slot it
-   occupies inside `mod-content-actions`; scoped to `.toolbox-mod-actions-present` (so the shield only
-   hides while the Toolbox mod row that replaces it is mounted), and hidden even when the native row is
-   expanded (nothing in it needs reaching). */
-body.toolbox-scope shreddit-comment.toolbox-mod-actions-present shreddit-comment-mod-actions-menu,
-body.toolbox-scope shreddit-comment.toolbox-mod-actions-present mod-content-actions [slot="mod-overflow-menu"] {
-	/* stylelint-disable-next-line declaration-no-important -- Reddit sets inline/utility display; specificity alone can't win. */
-	display: none !important;
-}
-
 /* Comment Actions module: the Toolbox row recreates vote/reply/report/share for comments, so collapse
    the native `shreddit-comment-action-row` to a single row (eliminates the scroll layout jump). Scoped
    to `.toolbox-comment-row-replaced` (added by the Comment Actions Expand toggle - CommentExtras - so
