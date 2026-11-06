@@ -343,6 +343,27 @@ describe('queue modtools auto-refresh', () => {
 		expect(updateCounters,).not.toHaveBeenCalled()
 	})
 
+	it('hides an item whose mod-log entry predates the queue render when it is removed', async () => {
+		// e.g. a comment AutoModerator filtered: the queue renders with a removal already in the log,
+		// which the baseline sync records - that must not be mistaken for "already counted".
+		setQueueHtml('remove',)
+		getModLog.mockResolvedValue({
+			items: [{data: {target_fullname: 't3_x', action: 'removelink', mod: 'AutoModerator',},},],
+			cursor: null,
+		},)
+		const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, {
+			...settings,
+			hideActionedItems: true,
+		},)
+		await handlers.syncModlogActions()
+		expect(updateCounters,).not.toHaveBeenCalled()
+
+		handlers.handleThingRemoved(removedEvent('t3_x',),)
+
+		expect(document.querySelector('.thing',)!.classList.contains('toolbox-mm-hidden',),).toBe(true,)
+		expect(updateCounters,).toHaveBeenCalledWith({modqueueCount: 4,},)
+	})
+
 	it('decrements the modbar count by the number of items actioned via the toolbar', async () => {
 		document.body.innerHTML = `
 			<div id="siteTable" class="sitetable">

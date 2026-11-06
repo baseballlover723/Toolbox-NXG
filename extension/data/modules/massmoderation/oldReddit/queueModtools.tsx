@@ -739,7 +739,8 @@ export function createModtoolsHandlers (
 	 * other mods, or by this user on another queue page. Each queue item newly approved/removed/
 	 * spammed gets the matching color, its action buttons replaced with an "Approved/Removed by <mod>"
 	 * status, and the modbar count decremented. Items already actioned locally (or reconciled on a
-	 * previous run) carry the `toolbox-modlog-actioned` marker and are skipped so each counts once.
+	 * previous run) carry the `toolbox-modlog-actioned` marker and are skipped so each counts once;
+	 * items whose log entry predates the queue render carry `toolbox-modlog-preexisting` instead.
 	 *
 	 * The first run an item is present for only establishes its baseline (`toolbox-modlog-baselined`):
 	 * much of the queue is there *because* something already removed it - AutoModerator, the spam
@@ -779,6 +780,7 @@ export function createModtoolsHandlers (
 
 			getThings().forEach((thing,) => {
 				if (thing.classList.contains('toolbox-modlog-actioned',)) { return }
+				if (thing.classList.contains('toolbox-modlog-preexisting',)) { return }
 				const fullname = getThingFullname(thing,)
 				if (!fullname) { return }
 				const entry = actionsByFullname.get(fullname,)
@@ -787,8 +789,11 @@ export function createModtoolsHandlers (
 				if (!entry) { return }
 				if (!baselined) {
 					// Pre-existing state the queue was already rendered with - record it so later runs
-					// skip the item, but leave its appearance and the modbar count alone.
-					thing.classList.add('toolbox-modlog-actioned',)
+					// skip the item, but leave its appearance and the modbar count alone. This is a
+					// separate marker from `toolbox-modlog-actioned`: the item is still in the queue and
+					// uncounted, so a later local removal (e.g. of an AutoModerator-filtered comment)
+					// must still resolve, hide, and count it.
+					thing.classList.add('toolbox-modlog-preexisting',)
 					return
 				}
 				applyModlogActionToThing(thing, entry.family, entry.spam, entry.mod,)
