@@ -49,6 +49,34 @@ describe('importSettings', () => {
 		expect(writeSettings,).not.toHaveBeenCalled()
 	})
 
+	it('falls back to the 6.x tbsettings page when the sub has no NXG backup page', async () => {
+		getWikiReadPath.mockResolvedValueOnce('toolbox-nxg/user-settings',)
+		readFromWiki
+			.mockResolvedValueOnce({ok: false, reason: 'no_page',},)
+			.mockResolvedValueOnce({ok: true, data: {'Utils.lastVersion': 300,},},)
+
+		await importSettings('mysettings',)
+
+		expect(readFromWiki,).toHaveBeenNthCalledWith(1, 'mysettings', 'toolbox-nxg/user-settings', true,)
+		expect(readFromWiki,).toHaveBeenNthCalledWith(2, 'mysettings', 'tbsettings', true,)
+		expect(writeSettings,).toHaveBeenCalledWith({'Toolbox.Utils.lastVersion': 300,},)
+	})
+
+	it('does not fall back when the NXG backup page exists but cannot be read', async () => {
+		getWikiReadPath.mockResolvedValueOnce('toolbox-nxg/user-settings',)
+		readFromWiki.mockResolvedValueOnce({ok: false, reason: 'no_wiki_permission',},)
+
+		await expect(importSettings('mysettings',),).rejects.toThrow(/no_wiki_permission/,)
+		expect(readFromWiki,).toHaveBeenCalledOnce()
+	})
+
+	it('does not read tbsettings twice when it is already the read path', async () => {
+		readFromWiki.mockResolvedValueOnce({ok: false, reason: 'no_page',},)
+
+		await expect(importSettings('testsub',),).rejects.toThrow(/no_page/,)
+		expect(readFromWiki,).toHaveBeenCalledOnce()
+	})
+
 	it('imports settings and adds Toolbox. prefix when version >= 300', async () => {
 		readFromWiki.mockResolvedValue({
 			ok: true,

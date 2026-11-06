@@ -178,6 +178,6 @@ Each note in the NXG format has a per-user `index` (assigned from `nextIndex` an
 
 ## Personal settings
 
-Personal settings are stored in browser extension storage, not the wiki. Toolbox-NXG is a separate extension, so bring them across by restoring a settings backup (the `tbsettings` wiki page; `toolbox-nxg/user-settings` once the backup subreddit is on the NXG layout). The backup format is unchanged, and backups from Toolbox versions older than 3.0 are rejected.
+Personal settings are stored in browser extension storage, not the wiki. Toolbox-NXG is a separate extension, so bring them across by restoring a settings backup from the subreddit you used for backups in 6.x. NXG reads `toolbox-nxg/user-settings`, and when that page doesn't exist yet it reads the 6.x `tbsettings` page instead, so an existing 6.x backup restores as-is. The next export writes `toolbox-nxg/user-settings`. The backup format is unchanged, and backups from Toolbox versions older than 3.0 are rejected.
 
 On every startup NXG renames stored keys for modules whose ids changed (for example `Toolbox.RReasons.*` to `Toolbox.RemovalReasons.*`, `Toolbox.PNotes.*` to `Toolbox.SubredditNotes.*`, `Toolbox.DTagger.*` to `Toolbox.DomainTagger.*`), copies the relevant `Toolbox.QueueTools.*` settings to the split-out `MassModeration` and `ModViewEnhancements` modules, maps `Toolbox.Notifier.enabled: false` to `Toolbox.Notifier.showNotifications: false`, and on a version change deletes settings for removed features. No manual steps are needed.

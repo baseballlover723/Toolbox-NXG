@@ -5,6 +5,7 @@ import {utils,} from '../../framework/moduleIds'
 import {purifyObject,} from '../data/purify'
 import {getTime,} from '../data/time'
 import createLogger from '../infra/logging'
+import {OLD_WIKI_PATHS,} from '../wiki/wikiConstants'
 import {getWikiReadPath, getWikiWritePaths,} from '../wiki/wikiPaths'
 import {getSettings, updateSettings, writeSettings,} from './settings'
 
@@ -45,13 +46,21 @@ export async function exportSettings (subreddit: string,): Promise<void> {
 }
 
 /**
- * Restores settings from the `tbsettings` wiki page of the given subreddit.
+ * Restores settings from the settings backup page of the given subreddit, falling back
+ * to the Toolbox 6.x `tbsettings` page when the sub has no NXG backup yet.
  * Sanitizes the imported data with DOMPurify before writing.
  * @throws When the imported settings cannot be verified (e.g. version too old or wiki unreadable).
  */
 export async function importSettings (subreddit: string,): Promise<void> {
 	const page = await getWikiReadPath('userSettings', subreddit,)
-	const response = await readFromWiki<Record<string, unknown>>(subreddit, page, true,)
+	let response = await readFromWiki<Record<string, unknown>>(subreddit, page, true,)
+	// A sub whose only 6.x data was the settings backup (the usual personal "settings sub")
+	// is set up as a fresh NXG sub, which never copies tbsettings across - so its NXG backup
+	// page doesn't exist yet. Read the 6.x page instead; the next export creates the NXG one.
+	if (!response.ok && response.reason === 'no_page' && page !== OLD_WIKI_PATHS.userSettings) {
+		log.debug(`No NXG settings backup in /r/${subreddit}; trying ${OLD_WIKI_PATHS.userSettings}`,)
+		response = await readFromWiki<Record<string, unknown>>(subreddit, OLD_WIKI_PATHS.userSettings, true,)
+	}
 	if (!response.ok) {
 		log.debug('Error loading wiki page',)
 		// Throw rather than return: the caller reports success on a silent return,
