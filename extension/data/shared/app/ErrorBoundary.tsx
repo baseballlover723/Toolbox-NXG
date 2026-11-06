@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
 			return (
 				<span
 					title={this.state.error.message}
-					style={{color: '#c00', fontSize: '0.9167em', cursor: 'help',}}
+					style={{color: 'var(--toolbox-error-color)', fontSize: 'var(--toolbox-fs-11)', cursor: 'help',}}
 				>
 					[TB error{this.props.name ? ` in ${this.props.name}` : ''}]
 				</span>

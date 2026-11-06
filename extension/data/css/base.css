@@ -135,6 +135,8 @@ a {
 	/* Solid state backgrounds for action buttons and injected DOM elements */
 	--toolbox-approve-bg: rgb(209 234 191);
 	--toolbox-remove-bg: rgb(237 189 190);
+	/* Neither-approve-nor-remove actions (e.g. ignore reports) beside the two above */
+	--toolbox-neutral-action-bg: rgb(213 213 213);
 	--toolbox-banned-bg: rgb(250 128 114);
 
 	/* Positive action icon colors - more vivid than --toolbox-success-text for icon use */

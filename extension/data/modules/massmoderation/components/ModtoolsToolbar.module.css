@@ -36,48 +36,38 @@
 /* border-color matches background to suppress the dark surface-border that would show as a visible
    outline on these light-colored buttons in dark mode, making them appear larger than siblings */
 button.negative {
+	--toolbox-mm-action-bg: var(--toolbox-remove-bg);
+
 	background-color: var(--toolbox-remove-bg);
 	border-color: var(--toolbox-remove-bg);
 	color: rgb(0 0 0);
 }
 button.positive {
+	--toolbox-mm-action-bg: var(--toolbox-approve-bg);
+
 	background-color: var(--toolbox-approve-bg);
 	border-color: var(--toolbox-approve-bg);
 	color: rgb(0 0 0);
 }
-/* intentional: hardcoded neutral grey for remove/ignore actions - not a theme variable */
 button.neutral {
-	background-color: rgb(213 213 213);
-	border-color: rgb(213 213 213);
+	--toolbox-mm-action-bg: var(--toolbox-neutral-action-bg);
+
+	background-color: var(--toolbox-neutral-action-bg);
+	border-color: var(--toolbox-neutral-action-bg);
 	color: rgb(0 0 0);
 }
 
-/* intentional: hover and pressed states are hard-coded darkened shades of the semantic base colors */
+/* Hover and pressed states are derived by darkening each button's base color, so a theme that
+   changes the base tokens gets matching states for free. Each color class sets --toolbox-mm-action-bg. */
 /* :not(:disabled) because these buttons are now always mounted and greyed out until items are
    selected - without it, hovering an inert action button lights it up as though it were live */
-button.negative:hover:not(:disabled) {
-	background-color: rgb(201 161 162);
-	border-color: rgb(201 161 162);
+button:is(.negative, .positive, .neutral):hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--toolbox-mm-action-bg), rgb(0 0 0) 15%);
+	border-color: color-mix(in srgb, var(--toolbox-mm-action-bg), rgb(0 0 0) 15%);
 }
-button.positive:hover:not(:disabled) {
-	background-color: rgb(178 199 162);
-	border-color: rgb(178 199 162);
-}
-button.neutral:hover:not(:disabled) {
-	background-color: rgb(181 181 181);
-	border-color: rgb(181 181 181);
-}
-button.negative.pressed {
-	background-color: rgb(136 107 108);
-	border-color: rgb(136 107 108);
-}
-button.positive.pressed {
-	background-color: rgb(132 148 121);
-	border-color: rgb(132 148 121);
-}
-button.neutral.pressed {
-	background-color: rgb(158 156 156);
-	border-color: rgb(158 156 156);
+button:is(.negative, .positive, .neutral).pressed {
+	background-color: color-mix(in srgb, var(--toolbox-mm-action-bg), rgb(0 0 0) 40%);
+	border-color: color-mix(in srgb, var(--toolbox-mm-action-bg), rgb(0 0 0) 40%);
 }
 
 /* placeholder to give .pressed a module export (combined with color classes above) */
