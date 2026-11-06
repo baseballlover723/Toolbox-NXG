@@ -138,7 +138,7 @@
 
 /* Section header in vertical tab list */
 .sectionHeader {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	color: var(--toolbox-text-secondary);
@@ -156,7 +156,7 @@
 	border: none;
 	border-bottom: 1px solid var(--toolbox-surface-border);
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;

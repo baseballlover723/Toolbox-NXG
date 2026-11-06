@@ -55,7 +55,7 @@
 
 .table {
 	composes: basetable from "../../../css/Base.module.css";
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .table th,
@@ -72,7 +72,7 @@
 	border-bottom: 1px solid var(--toolbox-surface-border);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
@@ -96,7 +96,7 @@
 	border: 1px solid var(--toolbox-divider-color);
 	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 

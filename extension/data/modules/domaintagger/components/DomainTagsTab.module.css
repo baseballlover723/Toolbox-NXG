@@ -10,7 +10,7 @@
 
 .fieldLabel {
 	display: block;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 }
@@ -24,7 +24,7 @@
 }
 
 .previewTitle {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -42,7 +42,7 @@
 .previewTable th {
 	text-align: left;
 	padding: var(--toolbox-sp-4) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	border-bottom: 1px solid var(--toolbox-surface-border);
@@ -63,13 +63,13 @@
 	display: inline-block;
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-8);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	white-space: nowrap;
 }
 
 .noTags {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-input-focus);
 	font-style: italic;
 	margin: 0;
@@ -113,7 +113,7 @@
 	display: flex;
 	align-items: center;
 	gap: var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 	cursor: pointer;
 	user-select: none;

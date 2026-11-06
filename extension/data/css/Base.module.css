@@ -76,7 +76,7 @@
 }
 
 .secondaryitalic {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 }
@@ -110,7 +110,7 @@
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-6) var(--toolbox-sp-5) var(--toolbox-sp-5);
 	font-family: var(--toolbox-font-family);
 	font-size: 1em;
-	line-height: var(--toolbox-sp-14);
+	line-height: var(--toolbox-fs-14);
 	background-color: var(--toolbox-action-bg);
 	border-radius: var(--toolbox-radius-xs);
 	border-width: 1px 1px 2px 2px;
@@ -225,7 +225,7 @@
 	border-left: 3px solid var(--toolbox-caution-accent);
 	border-radius: var(--toolbox-radius-sm);
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-10);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-caution-text);
 }
 

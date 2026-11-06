@@ -8,7 +8,7 @@
 }
 
 .sectionTitle {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -23,7 +23,7 @@
 
 .fieldLabel {
 	display: block;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 	margin-bottom: var(--toolbox-sp-3);
@@ -47,7 +47,7 @@
 
 /* Descriptive text under a section title */
 .sectionDesc {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	margin: 0 0 var(--toolbox-sp-8);
 	font-style: italic;
@@ -94,7 +94,7 @@
 }
 
 .subNote {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 	margin: 0 0 0 var(--toolbox-sp-34);
@@ -102,7 +102,7 @@
 
 /* Sub-section label inside "both" card */
 .subGroupLabel {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -128,7 +128,7 @@
 }
 
 .advancedFieldLabel {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 }
@@ -138,14 +138,14 @@
 }
 
 .tokenHint {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	margin: var(--toolbox-sp-8) 0 0;
 	font-style: italic;
 }
 
 .warning {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-error-color);
 	font-style: italic;
 }

@@ -22,7 +22,7 @@
 	border: 1px solid currentcolor;
 	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-family: monospace;
 	/* Buttons don't inherit text color by default (UA `buttontext` is near-black),
 	   which made chips unreadable on dark themes. */

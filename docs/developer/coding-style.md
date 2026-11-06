@@ -16,12 +16,12 @@ npm run lint:css  # check CSS linting (stylelint)
 npm run typecheck # type-check without emitting (tsc)
 ```
 
-| Tool                                                        | Enforces                                                                                                          |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [dprint](https://dprint.dev/)                               | Formatting: indentation, line width, quotes, semicolons, trailing commas                                          |
-| [ESLint](https://eslint.org/)                               | Code quality: variable declarations, arrow callbacks, strict equality, import rules                               |
-| [stylelint](https://stylelint.io/)                          | CSS quality: no hex colors, no named colors, no `rem`, `--toolbox-*` custom property naming, radius/shadow tokens |
-| [TypeScript](https://www.typescriptlang.org/) (strict mode) | Type safety, unused locals, optional property exactness                                                           |
+| Tool                                                        | Enforces                                                                                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [dprint](https://dprint.dev/)                               | Formatting: indentation, line width, quotes, semicolons, trailing commas                                                      |
+| [ESLint](https://eslint.org/)                               | Code quality: variable declarations, arrow callbacks, strict equality, import rules                                           |
+| [stylelint](https://stylelint.io/)                          | CSS quality: no hex colors, no named colors, no `rem`, `--toolbox-*` custom property naming, radius/shadow tokens, type scale |
+| [TypeScript](https://www.typescriptlang.org/) (strict mode) | Type safety, unused locals, optional property exactness                                                                       |
 
 ---
 
@@ -521,6 +521,17 @@ box-shadow: var(--toolbox-shadow-md);
 /* incorrect */
 border-radius: 3px;
 box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+```
+
+**Type scale** — `font-size`, `line-height`, and `font` use the `--toolbox-fs-*` tokens (`fs-N` = N px at the 12px base, `1em` for 12), never the `--toolbox-sp-*` spacing scale. The two scales have the same values today, but keeping them apart lets spacing be retuned without resizing text.
+
+```css
+/* correct */
+font-size: var(--toolbox-fs-11);
+padding: var(--toolbox-sp-4);
+
+/* incorrect */
+font-size: var(--toolbox-sp-11);
 ```
 
 **`!important`** _(warning)_ — Every use of `!important` is flagged. See the manual section below for when it is acceptable.

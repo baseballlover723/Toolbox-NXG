@@ -15,7 +15,7 @@
 .option label {
 	display: inline-block;
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	cursor: pointer;
 	background: var(--toolbox-header-button-bg);
 	border: 1px solid var(--toolbox-chrome);

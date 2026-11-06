@@ -21,7 +21,7 @@
 
 .previewHeading {
 	margin: var(--toolbox-sp-5) 0;
-	font-size: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-14);
 	font-weight: bold;
 }
 

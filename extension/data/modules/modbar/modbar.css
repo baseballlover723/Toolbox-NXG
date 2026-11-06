@@ -153,8 +153,8 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	border-radius: var(--toolbox-radius-pill);
 	background: var(--toolbox-accent-color);
 	color: var(--toolbox-bg);
-	font-size: var(--toolbox-sp-11);
-	line-height: var(--toolbox-sp-16);
+	font-size: var(--toolbox-fs-11);
+	line-height: var(--toolbox-fs-16);
 	text-align: center;
 }
 
@@ -236,7 +236,7 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	border-color: var(--toolbox-header-bg);
 	border-image: initial;
 	padding: var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .toolbox-scope .toolbox-modbar-hide-tooltip td {

@@ -207,6 +207,22 @@ a {
 	--toolbox-sp-40: 3.3333em;
 
 	/*
+	 * Type scale: --toolbox-fs-N = N pixels at the 12px base font size, for
+	 * font-size and line-height. Kept apart from the spacing scale so spacing can
+	 * be retuned (e.g. a denser theme) without resizing text; stylelint rejects
+	 * --toolbox-sp-* in font properties. As with sp, there is no fs-12 - use `1em`.
+	 */
+	--toolbox-fs-8: 0.6667em;
+	--toolbox-fs-10: 0.8333em;
+	--toolbox-fs-11: 0.9167em;
+	--toolbox-fs-13: 1.0833em;
+	--toolbox-fs-14: 1.1667em;
+	--toolbox-fs-15: 1.25em;
+	--toolbox-fs-16: 1.3333em;
+	--toolbox-fs-17: 1.4167em;
+	--toolbox-fs-18: 1.5em;
+
+	/*
 	 * Geometry tokens: corner radii and elevation shadows. Every Toolbox-owned
 	 * border-radius / drop shadow goes through these (enforced by stylelint) so a
 	 * theme can reshape the UI - e.g. square, flat chrome - from one place.

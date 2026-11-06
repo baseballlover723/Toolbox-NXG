@@ -8,7 +8,7 @@
 }
 
 .sectionTitle {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -19,7 +19,7 @@
 }
 
 .sectionDesc {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	margin: 0 0 var(--toolbox-sp-8);
 	font-style: italic;
@@ -36,7 +36,7 @@
 
 /* Status / empty / error line */
 .status {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -48,7 +48,7 @@
 
 /* Prominent warning shown when 6.x compatibility writes are on */
 .compatWarning {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text);
 	background: var(--toolbox-caution-bg);
 	border: 1px solid var(--toolbox-caution-border);

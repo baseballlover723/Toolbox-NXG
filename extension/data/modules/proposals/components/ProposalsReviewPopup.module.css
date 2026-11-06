@@ -68,7 +68,7 @@
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-4);
 	border: 1px solid var(--toolbox-surface-border);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text);
 	background: var(--toolbox-bg);
 }
@@ -76,7 +76,7 @@
 /* "Showing X of Y" count under the filter bar. */
 .resultCount {
 	padding: 0 var(--toolbox-sp-8) var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -90,7 +90,7 @@
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-error-color);
 	background: var(--toolbox-caution-bg);
 }
@@ -149,7 +149,7 @@
 .itemKind {
 	padding: 0 var(--toolbox-sp-4);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: normal;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -160,7 +160,7 @@
 /* One-line reason/note preview in a list row. */
 .itemExcerpt {
 	overflow: hidden;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	color: var(--toolbox-text);
@@ -168,7 +168,7 @@
 
 .itemMeta,
 .itemStatus {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -180,7 +180,7 @@
 /* Subreddit grouping label in the cross-sub list. */
 .sectionLabel {
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -202,7 +202,7 @@
 }
 
 .detailTitle {
-	font-size: var(--toolbox-sp-16);
+	font-size: var(--toolbox-fs-16);
 	font-weight: bold;
 }
 
@@ -211,7 +211,7 @@
 	grid-template-columns: auto 1fr;
 	gap: var(--toolbox-sp-4) var(--toolbox-sp-8);
 	margin: 0;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .detailMeta dt {
@@ -223,7 +223,7 @@
 }
 
 .detailNote {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 /* "What happens on accept" panel. */
@@ -234,7 +234,7 @@
 }
 
 .sectionHeading {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -257,7 +257,7 @@
 .usernoteChip {
 	padding: 0 var(--toolbox-sp-4);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	white-space: nowrap;
 	background: var(--toolbox-header-button-hover-bg);
 }
@@ -267,7 +267,7 @@
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-surface-border);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-12);
+	font-size: 1em;
 	background: var(--toolbox-header-button-bg);
 	overflow-wrap: break-word;
 }
@@ -281,7 +281,7 @@
 }
 
 .warn {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-error-color);
 }
 
@@ -293,14 +293,14 @@
 	padding: var(--toolbox-sp-8);
 	border: 1px solid var(--toolbox-error-color);
 	border-radius: var(--toolbox-radius-md);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	background: var(--toolbox-caution-bg);
 }
 
 .alertIcon {
 	flex: none;
 	color: var(--toolbox-error-color);
-	font-size: var(--toolbox-sp-16);
+	font-size: var(--toolbox-fs-16);
 }
 
 .alertBody {
@@ -325,7 +325,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -338,7 +338,7 @@
 }
 
 .targetBody {
-	font-size: var(--toolbox-sp-12);
+	font-size: 1em;
 	overflow-wrap: break-word;
 }
 
@@ -363,7 +363,7 @@
 	border: none;
 	background: transparent;
 	cursor: pointer;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-link-color, var(--toolbox-text-secondary));
 }
 
@@ -387,14 +387,14 @@
 	background: transparent;
 	text-align: left;
 	cursor: pointer;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text);
 }
 
 /* The chevron in the author toggle: a right-arrow that rotates down when expanded. */
 .authorToggleIcon {
-	font-size: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-14);
 	transition: transform 100ms ease;
 }
 
@@ -429,7 +429,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-12);
+	font-size: 1em;
 }
 
 .rejectForm {

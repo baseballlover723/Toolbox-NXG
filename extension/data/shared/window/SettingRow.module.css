@@ -27,7 +27,7 @@
 }
 
 .label {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 	font-weight: bold;
 }
@@ -60,7 +60,7 @@
 }
 
 .valueNote {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	margin: var(--toolbox-sp-4) 0 0;
 	font-style: italic;

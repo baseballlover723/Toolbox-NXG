@@ -44,13 +44,13 @@
 }
 
 .hint {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 }
 
 .error {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-error-color);
 }
 

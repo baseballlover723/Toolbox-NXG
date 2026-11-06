@@ -206,7 +206,7 @@ body.toolbox-scope
 	background-color: var(--toolbox-button-bg-solid);
 	/* stylelint-disable declaration-block-no-redundant-longhand-properties -- font shorthand with var() in font-family is stored as pending substitution; if the variable resolves late, font-weight/line-height drop and Reddit's inherited bold/line-height wins */
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: normal;
 	font-style: normal;
 	font-variant: normal;

@@ -51,7 +51,7 @@
 .sectionTitle {
 	display: block;
 	margin-bottom: var(--toolbox-sp-4);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -59,7 +59,7 @@
 }
 
 .summaryTitle {
-	font-size: var(--toolbox-sp-15);
+	font-size: var(--toolbox-fs-15);
 	font-weight: bold;
 	overflow-wrap: anywhere;
 }
@@ -78,7 +78,7 @@
 /* stylelint-disable-next-line no-descending-specificity */
 .userTitle span,
 .modInfo {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
@@ -211,7 +211,7 @@
 	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-bg);
 	color: var(--toolbox-link-color);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	cursor: pointer;
 }
@@ -273,7 +273,7 @@
 
 /* stylelint-disable-next-line no-descending-specificity -- .statCard is not inside .toolbar; no actual cascade conflict */
 .statCard span {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -285,12 +285,12 @@
 	flex-wrap: wrap;
 	gap: var(--toolbox-sp-6);
 	align-items: baseline;
-	font-size: var(--toolbox-sp-18);
+	font-size: var(--toolbox-fs-18);
 	color: var(--toolbox-action-text);
 }
 
 .statCard small {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -352,7 +352,7 @@
 
 .statBarRow strong,
 .statListRow span:last-child {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 }
@@ -452,7 +452,7 @@
 }
 
 .noteType {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -516,7 +516,7 @@
 	padding: 0;
 	color: var(--toolbox-link-color);
 	font-weight: bold;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	cursor: pointer;
 }
 
@@ -526,7 +526,7 @@
 
 .separator {
 	color: var(--toolbox-surface-border);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .undoBanner {
@@ -553,7 +553,7 @@
 	border: 0;
 	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-10);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	cursor: pointer;
 }
@@ -588,7 +588,7 @@
 /* stylelint-disable-next-line no-descending-specificity -- .archivedToggle is not inside .toolbar label; no cascade conflict */
 .archivedToggle > span {
 	display: block;
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -607,7 +607,7 @@
 	background: var(--toolbox-bg);
 	color: var(--toolbox-text-body);
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	cursor: pointer;
 	white-space: nowrap;
 }

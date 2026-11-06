@@ -698,9 +698,9 @@ button.actionNumber:hover {
 	height: 15px;
 	background: var(--toolbox-chrome);
 	border-radius: var(--toolbox-radius-sm);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
-	line-height: var(--toolbox-sp-15);
+	line-height: var(--toolbox-fs-15);
 	text-align: center;
 	color: var(--toolbox-bg);
 	vertical-align: middle;

@@ -1,7 +1,7 @@
 /* Mirrors the light-DOM .toolbox-general-button shape for React-owned inline controls. */
 button.generalInlineButton {
 	background-color: var(--toolbox-button-bg);
-	font: normal normal normal normal var(--toolbox-sp-11) 15px var(--toolbox-font-family);
+	font: normal normal normal normal var(--toolbox-fs-11) 15px var(--toolbox-font-family);
 	margin: 0 2px;
 	color: var(--toolbox-button-text);
 	border-width: 0 0 0 3px;

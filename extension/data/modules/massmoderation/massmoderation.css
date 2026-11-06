@@ -5,7 +5,7 @@
 	); /* intentional: orange badge distinguishes queue-count items visually from other list elements */
 
 	color: var(--toolbox-bg);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	padding: 0 var(--toolbox-sp-3) var(--toolbox-sp-3);
 	margin: var(--toolbox-sp-3);
@@ -26,7 +26,7 @@
 	border-left: 2px solid var(--toolbox-button-border);
 	padding: var(--toolbox-sp-3);
 	background-color: var(--toolbox-bg);
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 }
 
 .toolbox-scope .toolbox-sort-subs:hover {
@@ -79,7 +79,7 @@ body.toolbox-mm-active .menuarea {
 }
 .toolbox-sub-group-header {
 	font-weight: bold;
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-6);
 	border-bottom: 2px solid var(--toolbox-surface-border);
 	color: var(--toolbox-text-heading);
@@ -101,7 +101,7 @@ body.toolbox-mm-active .menuarea {
 }
 .toolbox-new-items-header {
 	font-weight: bold;
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	padding: var(--toolbox-sp-3) var(--toolbox-sp-6);
 	border-bottom: 2px solid var(--toolbox-accent-color);
 	color: var(--toolbox-text-heading);

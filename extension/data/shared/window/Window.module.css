@@ -29,7 +29,7 @@
 	flex: 1;
 	display: flex;
 	justify-content: center;
-	font-size: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-14);
 	font-weight: bold;
 	padding: 0;
 	margin: 0 var(--toolbox-sp-10);

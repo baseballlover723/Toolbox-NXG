@@ -64,7 +64,7 @@
 	flex-direction: column;
 	gap: var(--toolbox-sp-3);
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 }
 
@@ -101,7 +101,7 @@
 	padding: var(--toolbox-sp-5) var(--toolbox-sp-7);
 	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-selected-bg);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	opacity: 0.9;
 }
 
@@ -126,20 +126,20 @@
 .fieldLabel {
 	display: block;
 	margin-bottom: var(--toolbox-sp-2);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 }
 
 .fieldHint {
 	margin: calc(-1 * var(--toolbox-sp-5)) 0 0;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 }
 
 .reasonListLabel {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 	margin-bottom: calc(-1 * var(--toolbox-sp-4));

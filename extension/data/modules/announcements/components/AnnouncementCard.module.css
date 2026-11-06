@@ -55,7 +55,7 @@
 /* Small muted publish date, tucked just under the headline. */
 .date {
 	margin: 2px 0 0;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 

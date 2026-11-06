@@ -10,7 +10,7 @@
 }
 
 .fieldLabel {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-muted);
 	white-space: nowrap;
 	padding-top: 2px;
@@ -26,13 +26,13 @@
 }
 
 .stats {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-muted);
 	margin: var(--toolbox-sp-4) 0;
 }
 
 .note {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 	margin: var(--toolbox-sp-4) 0;
 }

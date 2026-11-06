@@ -39,7 +39,7 @@
 	gap: var(--toolbox-sp-3);
 	border-top: 1px solid var(--toolbox-divider-color);
 	padding-top: var(--toolbox-sp-6);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 

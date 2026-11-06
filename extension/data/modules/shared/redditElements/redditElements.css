@@ -30,20 +30,20 @@
 }
 
 .toolbox-scope .toolbox-parent {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	margin-bottom: var(--toolbox-sp-5);
-	line-height: var(--toolbox-sp-18);
+	line-height: var(--toolbox-fs-18);
 }
 
 .toolbox-scope .toolbox-parent .toolbox-link-title {
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 }
 
 .toolbox-scope .toolbox-more-comments {
 	margin: var(--toolbox-sp-5);
 	padding: var(--toolbox-sp-5);
 	display: block;
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 }
 
 .toolbox-scope .toolbox-more-comments a {
@@ -110,12 +110,12 @@
 }
 
 .toolbox-scope .toolbox-submission-title a {
-	font-size: var(--toolbox-sp-16);
+	font-size: var(--toolbox-fs-16);
 }
 
 .toolbox-scope .toolbox-submission-title .toolbox-domain,
 .toolbox-scope .toolbox-submission-title .toolbox-domain a {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 }
 
 .toolbox-scope .toolbox-self-expando-button {
@@ -178,7 +178,7 @@
 .toolbox-scope .toolbox-stamp {
 	border: 1px solid;
 	display: inline-block;
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	line-height: 1.4em;
 	padding: 0 var(--toolbox-sp-4);
 }
@@ -189,13 +189,13 @@
 }
 
 .toolbox-scope .toolbox-tagline {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	padding: var(--toolbox-sp-3);
 }
 
 .toolbox-scope .toolbox-submission-buttons,
 .toolbox-scope .toolbox-comment-buttons {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	margin-left: var(--toolbox-sp-8);
 	margin-bottom: var(--toolbox-sp-8);
 }
@@ -239,7 +239,7 @@
 	   size) adds an unwanted gap above the first line of the body text. */
 	margin-top: 0;
 	margin-bottom: var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	line-height: 1.32;
 }
 
@@ -310,14 +310,14 @@
 
 .toolbox-scope .toolbox-submission .toolbox-self-expando .md ol,
 .toolbox-scope .toolbox-comment .toolbox-comment-body .md ol {
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	list-style-type: decimal;
 	padding-left: var(--toolbox-sp-40);
 }
 
 .toolbox-scope .toolbox-submission .toolbox-self-expando .md ul,
 .toolbox-scope .toolbox-comment .toolbox-comment-body .md ul {
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	list-style-type: disc;
 	padding-left: var(--toolbox-sp-40);
 }
@@ -330,7 +330,7 @@
 
 .toolbox-scope .toolbox-submission .toolbox-self-expando .md h1,
 .toolbox-scope .toolbox-comment .toolbox-comment-body .md h1 {
-	font-size: var(--toolbox-sp-18);
+	font-size: var(--toolbox-fs-18);
 	font-weight: bold;
 	margin-top: var(--toolbox-sp-10);
 	margin-bottom: var(--toolbox-sp-3);
@@ -543,5 +543,5 @@ body.toolbox-scope a.toolbox-big-button.toolbox-submission-button-approve {
 .toolbox-scope .toolbox-submission-data,
 .toolbox-scope .toolbox-comment-data {
 	margin: var(--toolbox-sp-5);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 }

@@ -6,6 +6,7 @@
         "unit-disallowed-list": ["rem"],
         "declaration-property-value-disallowed-list": {
             "/^border(-[a-z]+)*-radius$/": ["/\\d(px|em)/", "/--toolbox-sp-/"],
+            "/^(font|font-size|line-height)$/": ["/--toolbox-sp-/"],
             "box-shadow": ["/^-?\\d+(px)? -?\\d+(px)? \\d+px/", "/^var\\(--toolbox-shadow-color\\)/"]
         },
         "custom-property-pattern": "^toolbox-.+",

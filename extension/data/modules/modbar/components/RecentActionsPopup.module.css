@@ -42,7 +42,7 @@
 	flex-shrink: 0;
 	background-color: var(--toolbox-active-mods-bg);
 	border-bottom: 1px solid var(--toolbox-active-mods-border);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .activeModsLabel {
@@ -79,7 +79,7 @@
 	border: 1px solid var(--toolbox-input-border);
 	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-family: var(--toolbox-font-family);
 	cursor: pointer;
 	color: var(--toolbox-text-body);
@@ -196,13 +196,13 @@
 }
 
 .sub {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
 .author,
 .mod {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-link-color);
 	text-decoration: none;
 }
@@ -218,7 +218,7 @@
 }
 
 .link {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-link-color);
 	text-decoration: none;
 	max-width: 150px;
@@ -232,7 +232,7 @@
 }
 
 .time {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-muted);
 	white-space: nowrap;
 }

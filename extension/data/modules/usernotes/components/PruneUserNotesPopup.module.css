@@ -33,7 +33,7 @@
 
 .sectionTitle {
 	margin-bottom: var(--toolbox-sp-6);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -42,7 +42,7 @@
 
 .sectionDesc {
 	margin-bottom: var(--toolbox-sp-6);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -76,7 +76,7 @@
 	gap: var(--toolbox-sp-5);
 	align-items: center;
 	min-height: 24px;
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-bg);
@@ -114,7 +114,7 @@
 
 .kindHint {
 	margin-top: var(--toolbox-sp-6);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -123,7 +123,7 @@
 	align-items: center;
 	gap: var(--toolbox-sp-5);
 	flex-wrap: wrap;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .optionsRow {
@@ -141,7 +141,7 @@
 }
 
 .inlineOptionLabel {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -168,7 +168,7 @@
 }
 
 .previewStats span {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
@@ -216,7 +216,7 @@
 
 .previewUserTitle span,
 .modInfo {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
@@ -249,7 +249,7 @@
 }
 
 .noteType {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -271,7 +271,7 @@
 
 .incompletePreview {
 	margin-top: var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 	text-align: center;
@@ -301,7 +301,7 @@
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 

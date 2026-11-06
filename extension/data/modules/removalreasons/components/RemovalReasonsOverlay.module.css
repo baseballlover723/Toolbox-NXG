@@ -129,7 +129,7 @@
 }
 
 .contextEyebrow {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -138,7 +138,7 @@
 
 .sectionTitle,
 .subGroupLabel {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -147,7 +147,7 @@
 
 .contextTitle {
 	display: block;
-	font-size: var(--toolbox-sp-13);
+	font-size: var(--toolbox-fs-13);
 	font-weight: bold;
 	color: var(--toolbox-action-text);
 	text-decoration: none;
@@ -169,7 +169,7 @@
 .contextMeta span,
 .contextMeta a,
 .contextBadge {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
@@ -238,7 +238,7 @@
 	border: 1px solid var(--toolbox-surface-border);
 	border-radius: var(--toolbox-radius-md);
 	background: var(--toolbox-selected-bg);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -249,7 +249,7 @@
 	padding: 0;
 	cursor: pointer;
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-accent-color);
 }
 
@@ -352,8 +352,8 @@
 	height: 17px;
 	display: inline-block;
 	text-align: center;
-	font-size: var(--toolbox-sp-10);
-	line-height: var(--toolbox-sp-17);
+	font-size: var(--toolbox-fs-10);
+	line-height: var(--toolbox-fs-17);
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
 	border-radius: var(--toolbox-radius-sm);
@@ -431,7 +431,7 @@
 
 .subNote,
 .fieldHint {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 	margin: 0 0 0 var(--toolbox-sp-34);
@@ -480,7 +480,7 @@
 .fieldLabel {
 	display: block;
 	margin-bottom: var(--toolbox-sp-4);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 }
@@ -549,7 +549,7 @@
 	border: 1px solid currentcolor;
 	border-radius: var(--toolbox-radius-md);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	cursor: pointer;
 	font-family: inherit;
 	opacity: 0.6;

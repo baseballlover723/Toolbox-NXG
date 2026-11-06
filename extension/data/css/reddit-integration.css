@@ -209,7 +209,7 @@ body.toolbox-scope.toolbox-scope .toolbox-input:focus-visible {
 	z-index: 6000;
 	padding: 0;
 	background-color: var(--toolbox-button-hover-bg);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-button-text);
 	border: 1px solid var(--toolbox-button-border);
 	text-align: left;

@@ -2,7 +2,7 @@
 /* This runs inside a shadow root, so no .toolbox-scope prefix is needed. */
 
 .table {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	text-align: left;
 	color: var(--toolbox-fg);
 	margin: var(--toolbox-sp-5) 0;

@@ -134,7 +134,7 @@
 	display: block;
 	margin-top: var(--toolbox-sp-3);
 	color: var(--toolbox-text-body);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .noteAuthor {
@@ -173,7 +173,7 @@
 
 .editorHeader h3 {
 	margin: 0 0 var(--toolbox-sp-4);
-	font-size: var(--toolbox-sp-16);
+	font-size: var(--toolbox-fs-16);
 	line-height: 1.2;
 	overflow-wrap: anywhere;
 }
@@ -188,14 +188,14 @@
 .titleInput {
 	flex: 1;
 	min-width: 0;
-	font-size: var(--toolbox-sp-15);
+	font-size: var(--toolbox-fs-15);
 	font-weight: 600;
 }
 
 .editorMeta {
 	display: block;
 	color: var(--toolbox-text-body);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .tagInput {
@@ -222,7 +222,7 @@
 	background: none;
 	border: none;
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -254,7 +254,7 @@
 	background: none;
 	border: none;
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-link-color);
 	cursor: pointer;
 	padding: 0;
@@ -279,7 +279,7 @@
 	border: 1px solid var(--toolbox-input-border);
 	border-radius: var(--toolbox-radius-pill);
 	font-family: var(--toolbox-font-family);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-7);
 	cursor: pointer;
@@ -309,7 +309,7 @@
 }
 
 .tagChipCount {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	opacity: 0.75;
 }
 
@@ -328,7 +328,7 @@
 	background: var(--toolbox-header-button-hover-bg);
 	border: 1px solid var(--toolbox-input-border);
 	border-radius: var(--toolbox-radius-pill);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-text-body);
 	line-height: 1.4;
 }
@@ -403,7 +403,7 @@
 .landing {
 	min-height: 260px;
 	padding: var(--toolbox-sp-20);
-	font-size: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-14);
 	line-height: 2;
 	display: flex;
 	flex-direction: column;

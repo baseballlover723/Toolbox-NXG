@@ -39,7 +39,7 @@
 }
 
 .filterCount {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-muted);
 	white-space: nowrap;
 }
@@ -54,7 +54,7 @@
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 .row {
@@ -125,8 +125,8 @@
 	font-family: var(--toolbox-font-family);
 	font-variant-numeric: tabular-nums;
 	font-weight: bold;
-	font-size: var(--toolbox-sp-8);
-	line-height: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-8);
+	line-height: var(--toolbox-fs-14);
 	text-align: center;
 }
 

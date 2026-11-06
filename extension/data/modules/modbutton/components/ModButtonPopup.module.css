@@ -34,7 +34,7 @@
 }
 
 .currentBadge {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-divider-color);
 	border-radius: var(--toolbox-radius-sm);
@@ -56,7 +56,7 @@
 	padding: 0 var(--toolbox-sp-2);
 	cursor: pointer;
 	color: var(--toolbox-link-color);
-	font-size: var(--toolbox-sp-14);
+	font-size: var(--toolbox-fs-14);
 	line-height: 1;
 	flex-shrink: 0;
 	opacity: 0.45;
@@ -79,7 +79,7 @@
 	border: none;
 	cursor: pointer;
 	padding: var(--toolbox-sp-4) var(--toolbox-sp-6);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 }
 
@@ -99,7 +99,7 @@
 
 /* Status badges */
 .statusBadge {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	padding: var(--toolbox-sp-1) var(--toolbox-sp-4);
 	border-radius: var(--toolbox-radius-sm);
 	flex-shrink: 0;
@@ -172,7 +172,7 @@
 /* override GeneralButton's filled background for unselected preset state */
 :global(button).banDurationPreset {
 	background: none;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 }
 
 :global(button).banDurationPreset:hover {
@@ -200,7 +200,7 @@
 }
 
 .notesSuggestError {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-error-color);
 	display: block;
 	margin-bottom: var(--toolbox-sp-3);
@@ -235,7 +235,7 @@
 
 .flairCharCount {
 	margin-left: var(--toolbox-sp-4);
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -276,7 +276,7 @@
 
 .modmailFieldLabel {
 	display: block;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-body);
 	margin-top: var(--toolbox-sp-5);
 	margin-bottom: var(--toolbox-sp-2);
@@ -337,7 +337,7 @@
 }
 
 .globalExcludeNote {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	color: var(--toolbox-text-secondary);
 }
 
@@ -365,7 +365,7 @@
 
 .removalNotice {
 	margin: var(--toolbox-sp-4) 0 0;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);
 	font-style: italic;
 }

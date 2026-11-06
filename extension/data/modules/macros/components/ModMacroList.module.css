@@ -52,7 +52,7 @@
 }
 
 .contextBadge {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	color: var(--toolbox-text-secondary);
 	background: var(--toolbox-badge-bg);
@@ -101,7 +101,7 @@
 	border: none;
 	padding: 0;
 	cursor: pointer;
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-accent-color);
 	font-family: var(--toolbox-font-family);
 }
@@ -113,7 +113,7 @@
 .noText {
 	display: block;
 	padding: var(--toolbox-sp-6) var(--toolbox-sp-8);
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-input-focus);
 	font-style: italic;
 }
@@ -144,7 +144,7 @@
 }
 
 .editFieldLabel {
-	font-size: var(--toolbox-sp-11);
+	font-size: var(--toolbox-fs-11);
 	font-weight: bold;
 	color: var(--toolbox-text-body);
 }
@@ -173,7 +173,7 @@
 }
 
 .actionGroupLabel {
-	font-size: var(--toolbox-sp-10);
+	font-size: var(--toolbox-fs-10);
 	font-weight: bold;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
