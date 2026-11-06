@@ -94,11 +94,11 @@ Use the composer where possible. When editing the wiki by hand:
 2. Choose an `id` that won't collide with past entries, in the `YYYY-MM-DD-N` form the composer uses.
 3. Set `publishAt` to the current time in epoch seconds (or a future time to schedule the note).
 4. Add a `link` if there's a post or changelog to point to.
-5. Add the new note to the `notes` array in the wiki. Do not remove old entries — users who haven't loaded Toolbox yet still need them.
+5. Add the new note to the `notes` array in the wiki. Leave entries that still apply in place — a note is only shown while it is in the list, so removing one hides it from everyone who hasn't seen it yet.
 6. Save the wiki page. The change takes effect on the next page load for anyone who hasn't seen the note (once `publishAt` has passed).
 
 ---
 
 ## Retiring old announcements
 
-Old notes stay in the wiki indefinitely — removing them (by hand or from **Manage announcements**) is harmless (users who already saw them won't see them again regardless), but there's no reason to do so either. Trim the list if it grows unwieldy.
+Removing a note (by hand or from **Manage announcements**) hides it from everyone who hasn't seen it yet; users who already saw it are unaffected. There is no age limit, so every note left in the list is shown to each new install as well. Retire notes once they no longer apply, so new users aren't greeted by a backlog of outdated announcements.
