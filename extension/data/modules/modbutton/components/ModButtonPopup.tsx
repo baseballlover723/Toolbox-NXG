@@ -1,6 +1,6 @@
 /** Multi-tab popup for performing mod actions (ban, flair, modmail, etc.) on a Reddit user. */
 
-import {ChangeEvent, useEffect, useEffectEvent, useMemo, useRef, useState,} from 'react'
+import {type ChangeEvent, useEffect, useEffectEvent, useMemo, useRef, useState,} from 'react'
 
 import {getFlairSelector, getUserFlairTemplates,} from '../../../api/resources/flair'
 import {getCurrentUser,} from '../../../api/resources/me'

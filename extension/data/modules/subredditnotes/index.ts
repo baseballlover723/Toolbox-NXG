@@ -5,7 +5,7 @@ import {subredditNotes,} from '../../framework/moduleIds'
 import createLogger from '../../util/infra/logging'
 import {isEmbedded,} from '../../util/infra/platform'
 import {createNotesModbarSlot,} from './dom'
-import {settings, SubredditNotesSettings,} from './settings'
+import {settings, type SubredditNotesSettings,} from './settings'
 
 const log = createLogger('SubredditNotes',)
 

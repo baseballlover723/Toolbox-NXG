@@ -1,7 +1,7 @@
 /** Async wrapper that fetches the latest native mod note and renders a ModNotesBadge. */
 
 import {useFetched,} from '../../../util/ui/hooks'
-import {ModNote,} from '../../shared/modnotes/schema'
+import {type ModNote,} from '../../shared/modnotes/schema'
 import {ModNotesBadge,} from './ModNotesBadge'
 
 /** Props for the ModNotesUserRoot component. */

@@ -7,7 +7,7 @@ import {domainTagger,} from '../../framework/moduleIds'
 import {isOldReddit,} from '../../util/infra/platform'
 import {onSharedMutation,} from '../../util/ui/dom'
 import {createDomainTaggerHandlers,} from './dom'
-import {DomainTaggerSettings, settings,} from './settings'
+import {type DomainTaggerSettings, settings,} from './settings'
 
 export default new Module<DomainTaggerSettings>({
 	name: 'Domain Tagger',

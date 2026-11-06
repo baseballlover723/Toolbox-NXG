@@ -4,7 +4,7 @@
  * recently added item that requested attention.
  */
 
-import {createSlice, PayloadAction,} from '@reduxjs/toolkit'
+import {createSlice, type PayloadAction,} from '@reduxjs/toolkit'
 
 import type {icons,} from '../util/ui/icons'
 

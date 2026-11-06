@@ -7,7 +7,7 @@ import {minutesToMilliseconds,} from '../../util/data/time'
 import {isEmbedded,} from '../../util/infra/platform'
 import {getModuleSettingAsync,} from '../../util/persistence/settings'
 import {createNotifierHandlers, toModmailCategoryCount,} from './poll'
-import {NotifierSettings, settings,} from './settings'
+import {type NotifierSettings, settings,} from './settings'
 
 // Always enabled: the poll it runs is the only source of the modbar's queue and
 // modmail counters, which must keep updating even when the user has turned

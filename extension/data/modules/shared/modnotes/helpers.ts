@@ -2,7 +2,7 @@
 
 import {getInfo,} from '../../../api/resources/things'
 import {link,} from '../../../util/reddit/pageContext'
-import {ModNote,} from './schema'
+import {type ModNote,} from './schema'
 
 const submissionFullnamesCache = Object.create(null,) as Record<string, Promise<string>>
 

@@ -1,5 +1,5 @@
 /** Settings definitions for the Mod View Enhancements module. */
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 import {iconBot,} from './botIcon'
 
 export const settings = defineSettings(

@@ -6,7 +6,7 @@ import {useMemo,} from 'react'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
-import {RenderedReason,} from './RemovalReasonsOverlay.helpers'
+import {type RenderedReason,} from './RemovalReasonsOverlay.helpers'
 import css from './RemovalReasonsOverlay.module.css'
 
 /** Props for the SortableReasonCard component. */

@@ -3,7 +3,7 @@
 import {
 	closestCenter,
 	DndContext,
-	DragEndEvent,
+	type DragEndEvent,
 	KeyboardSensor,
 	PointerSensor,
 	useSensor,
@@ -22,7 +22,7 @@ import {useState,} from 'react'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
 import {TextInput,} from '../../../shared/controls/NormalInput'
-import {SortModeRef, SortToggleButton, useSortMode,} from '../../../shared/controls/SortToggleButton'
+import {type SortModeRef, SortToggleButton, useSortMode,} from '../../../shared/controls/SortToggleButton'
 import {negativeTextFeedback, positiveTextFeedback,} from '../../../store/feedback'
 import {
 	autoContrastColor,
@@ -35,7 +35,7 @@ import {
 import createLogger from '../../../util/infra/logging'
 import {type TriggerRef, useMountEffect, useTriggerRef,} from '../../../util/ui/hooks'
 import {type ConfigState, generateConfigId,} from '../../../util/wiki/schemas/config/schema'
-import {countNotesByType, defaultUsernoteTypes, UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
+import {countNotesByType, defaultUsernoteTypes, type UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
 import {refreshClassicConfigInlineFields, unsyncedClassicEditsWarning,} from '../../config/moduleapi'
 import {getSubredditColors, getUserNotes, updateUserNotes,} from '../../shared/usernotes/moduleapi'
 import {retypeNotes,} from '../../shared/usernotes/noteMutations'

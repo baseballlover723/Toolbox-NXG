@@ -15,7 +15,7 @@ import {
 	isShredditModQueuePage,
 	isSubCommentsPage,
 	isUserPage,
-	TBPageContext,
+	type TBPageContext,
 } from '../../util/reddit/pageContext'
 import {getThingInfo,} from '../../util/reddit/thingInfo'
 import {drawPosition,} from '../../util/ui/drawPosition'

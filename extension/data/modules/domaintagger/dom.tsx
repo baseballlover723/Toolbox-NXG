@@ -28,7 +28,7 @@ import {DomainTaggerPopup,} from './components/DomainTaggerPopup'
 import {findTagForDomain,} from './matching'
 import {getDomainTagsData, incrementDomainStat, saveDomainTag,} from './moduleapi'
 import {type DomainTag, type DomainTagsData,} from './schema'
-import {DomainTaggerSettings,} from './settings'
+import {type DomainTaggerSettings,} from './settings'
 
 const log = createLogger('DTagger',)
 

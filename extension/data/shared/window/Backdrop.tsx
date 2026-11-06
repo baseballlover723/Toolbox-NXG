@@ -1,6 +1,6 @@
 /** Full-viewport backdrop that closes on outside click or Escape key press. */
 
-import {MouseEvent, ReactNode, useEffect,} from 'react'
+import {type MouseEvent, type ReactNode, useEffect,} from 'react'
 import {useEscapeKey,} from '../../util/ui/hooks'
 import {classes,} from '../../util/ui/reactMount'
 import css from './Backdrop.module.css'

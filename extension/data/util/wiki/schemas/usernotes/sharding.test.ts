@@ -1,6 +1,6 @@
 import {describe, expect, it,} from 'vitest'
 
-import {UserNotesData, UsernotesUser,} from './schema'
+import {type UserNotesData, type UsernotesUser,} from './schema'
 import {
 	hashUsername,
 	initialManifest,
@@ -10,7 +10,7 @@ import {
 	pickSplitBoundary,
 	shardIndexForHash,
 	shardPageName,
-	UsernotesManifest,
+	type UsernotesManifest,
 } from './sharding'
 
 /** Builds a user with a single note. */

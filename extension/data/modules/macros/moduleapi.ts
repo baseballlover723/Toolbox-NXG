@@ -2,7 +2,7 @@
 
 import type {ToolboxConfig,} from '../../util/wiki/schemas/config/schema'
 import {getConfig, reloadConfigFromWiki, saveToolboxConfig,} from '../config/moduleapi'
-import {MacroConfig,} from './schema'
+import {type MacroConfig,} from './schema'
 
 /**
  * Retrieves the macro list for the given subreddit from its toolbox wiki config.

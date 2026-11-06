@@ -10,7 +10,7 @@ import {link,} from '../../../util/reddit/pageContext'
 import {useMountEffect,} from '../../../util/ui/hooks'
 import {mountReactInBody,} from '../../../util/ui/reactMount'
 
-import {QueueBaseUrls, QueueOverlayHandle, QueueType,} from '../schema'
+import {type QueueBaseUrls, type QueueOverlayHandle, type QueueType,} from '../schema'
 import css from './QueueOverlay.module.css'
 
 /** Props for the QueueOverlay component. */

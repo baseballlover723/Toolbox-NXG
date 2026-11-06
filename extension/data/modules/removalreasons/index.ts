@@ -6,7 +6,7 @@ import type {ProposedAction,} from '../../util/wiki/schemas/proposals/schema'
 import {registerReplayHandler,} from '../shared/proposals/gateway'
 import {createRemovalReasonsHandlers,} from './dom'
 import {replayRemovalProposal,} from './proposalAdapter'
-import {RemovalReasonsSettings, settings,} from './settings'
+import {type RemovalReasonsSettings, settings,} from './settings'
 
 // Replay an accepted removal-reason proposal by reconstructing the submission
 // params (re-fetching item metadata from the proposal's itemId) and running the

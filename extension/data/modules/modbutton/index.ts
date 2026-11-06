@@ -4,7 +4,7 @@ import {createLifecycle,} from '../../framework/lifecycle'
 import {Module,} from '../../framework/module'
 import {modButton,} from '../../framework/moduleIds'
 import {createModButtonHandlers,} from './dom'
-import {ModButtonSettings, settings,} from './settings'
+import {type ModButtonSettings, settings,} from './settings'
 
 const self = new Module<ModButtonSettings>({
 	name: 'Mod Button',

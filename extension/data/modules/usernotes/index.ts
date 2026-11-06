@@ -3,7 +3,7 @@
 import {createLifecycle,} from '../../framework/lifecycle'
 import {Module,} from '../../framework/module'
 import {createNotesDisplay, createNotesManager,} from './dom'
-import {settings, UserNotesSettings,} from './settings'
+import {settings, type UserNotesSettings,} from './settings'
 
 const self = new Module<UserNotesSettings>({
 	name: 'Usernotes',

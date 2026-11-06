@@ -1,6 +1,6 @@
 /** CSV export utility for usernotes data. */
 
-import {UsernotesUser,} from '../../util/wiki/schemas/usernotes/schema'
+import {type UsernotesUser,} from '../../util/wiki/schemas/usernotes/schema'
 
 function cell (value: string,): string {
 	if (value.includes(',',) || value.includes('"',) || value.includes('\n',)) {

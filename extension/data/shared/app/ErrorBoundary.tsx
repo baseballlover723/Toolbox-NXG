@@ -1,6 +1,6 @@
 /** React error boundary that catches render errors and displays a fallback instead of crashing the tree. */
 
-import {Component, ErrorInfo, ReactNode,} from 'react'
+import {Component, type ErrorInfo, type ReactNode,} from 'react'
 import createLogger from '../../util/infra/logging'
 
 const log = createLogger('ErrorBoundary',)

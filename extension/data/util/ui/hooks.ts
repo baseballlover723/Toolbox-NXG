@@ -3,7 +3,7 @@
 import {type EffectCallback, useCallback, useEffect, useLayoutEffect, useRef, useState,} from 'react'
 import {useSelector,} from 'react-redux'
 
-import {RootState,} from '../../store'
+import {type RootState,} from '../../store'
 
 /** A ref whose `.current` a parent calls to trigger a child's action (save, add, import). */
 export type TriggerRef = {current: (() => void) | null}

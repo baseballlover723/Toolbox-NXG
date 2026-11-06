@@ -2,7 +2,7 @@
 import type {CommentData, RedditThing, SubmissionData,} from '../../api/resources/things'
 import {aboutUser,} from '../../api/resources/users'
 import {getUserComments, getUserSubmissions,} from '../../api/resources/users'
-import {CommentHistoryData, SubmissionHistoryData, UserInfo,} from './schema'
+import {type CommentHistoryData, type SubmissionHistoryData, type UserInfo,} from './schema'
 
 /**
  * Fetches basic account information for a Reddit user.

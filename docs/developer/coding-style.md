@@ -181,12 +181,15 @@ When in doubt, spell it out.
 
 ### Import style
 
-Use `import type` for type-only imports. This is required — it helps bundlers
-tree-shake and signals intent:
+Mark type-only imports as such: `import type` when everything imported is a type, or an
+inline `type` on the individual names in an import that also brings in values. It signals
+which imports have runtime effects. ESLint enforces this (`consistent-type-imports`), and
+`npm run lint:fix` rewrites violations:
 
 ```ts
 import {useState,} from 'react'
 import type {ReactNode,} from 'react'
+import {Component, type ErrorInfo,} from 'react'
 ```
 
 ### Types vs. interfaces

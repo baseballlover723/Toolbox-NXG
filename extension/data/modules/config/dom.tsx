@@ -3,11 +3,11 @@ import {addContextItem, removeContextItem,} from '../../store/contextMenu'
 
 import {isModSub,} from '../../api/resources/modSubs'
 import {ActionButton,} from '../../shared/controls/ActionButton'
-import {SortModeRef, SortToggleButton,} from '../../shared/controls/SortToggleButton'
+import {type SortModeRef, SortToggleButton,} from '../../shared/controls/SortToggleButton'
 import {negativeTextFeedback,} from '../../store/feedback'
-import {TBPageContext,} from '../../util/reddit/pageContext'
+import {type TBPageContext,} from '../../util/reddit/pageContext'
 import type {TriggerRef,} from '../../util/ui/hooks'
-import {config as defaultConfig, ConfigState, isConfigValidVersion,} from '../../util/wiki/schemas/config/schema'
+import {config as defaultConfig, type ConfigState, isConfigValidVersion,} from '../../util/wiki/schemas/config/schema'
 import {
 	listRetiredUsernoteShardPages,
 	listUsernoteShardPages,

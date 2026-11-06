@@ -1,7 +1,7 @@
 /** One selectable subreddit row in the ModButtonPopup Role tab, with status badges and a pin toggle. */
 
 import {classes,} from '../../../util/ui/reactMount'
-import {SubStatus,} from '../schema'
+import {type SubStatus,} from '../schema'
 import css from './ModButtonPopup.module.css'
 
 /** Renders small inline badges showing the target user's ban/mod/contributor/muted status for a subreddit. */

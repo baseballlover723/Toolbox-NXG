@@ -5,7 +5,7 @@ import {getRemovalReasonParser,} from '../../shared/removalReasons/parser'
 import {
 	composeReasonText,
 	getDomainLink,
-	RenderedReason,
+	type RenderedReason,
 	renderReasonHtml,
 	settingToReasonType,
 } from './RemovalReasonsOverlay.helpers'

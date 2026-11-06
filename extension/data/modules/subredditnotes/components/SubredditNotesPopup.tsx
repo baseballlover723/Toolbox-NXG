@@ -1,5 +1,5 @@
 /** Popup window for creating, viewing, and editing shared subreddit wiki-based notes. */
-import {ReactNode, useEffect, useEffectEvent, useMemo, useRef, useState,} from 'react'
+import {type ReactNode, useEffect, useEffectEvent, useMemo, useRef, useState,} from 'react'
 
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {ActionSelect,} from '../../../shared/controls/ActionSelect'

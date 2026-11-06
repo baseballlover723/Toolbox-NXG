@@ -1,6 +1,6 @@
 /** Horizontal tab bar with ARIA role="tablist" semantics. */
 
-import {ReactNode,} from 'react'
+import {type ReactNode,} from 'react'
 import {classes,} from '../../util/ui/reactMount'
 import css from './TabBar.module.css'
 

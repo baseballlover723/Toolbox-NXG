@@ -15,14 +15,14 @@ import {nowInSeconds,} from '../../../util/data/time'
 import {getCache, setCache,} from '../../../util/persistence/cache'
 import {mountPopup,} from '../../../util/ui/reactMount'
 import {
-	ArchivedMode,
+	type ArchivedMode,
 	formatArchiveAttribution,
 	isNoteActive,
-	PruneOptions,
-	PruneProgress,
-	UserNoteColor,
-	UserNoteEntry,
-	UsernotesUser,
+	type PruneOptions,
+	type PruneProgress,
+	type UserNoteColor,
+	type UserNoteEntry,
+	type UsernotesUser,
 } from '../../../util/wiki/schemas/usernotes/schema'
 import {SHARD_SOFT_LIMIT_BYTES,} from '../../../util/wiki/schemas/usernotes/sharding'
 import {withArchived,} from '../../shared/usernotes/archived'
@@ -36,9 +36,9 @@ import {
 	getUserNotesStatistics,
 	sortUsers,
 	statLabel,
-	UserNotesManagerPreferences,
-	UserNotesManagerSortKey,
-	UsernotesStorageInfo,
+	type UserNotesManagerPreferences,
+	type UserNotesManagerSortKey,
+	type UsernotesStorageInfo,
 	usernotesWikiMaxBytes,
 } from './UserNotesManagerOverlay.helpers'
 

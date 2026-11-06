@@ -6,7 +6,7 @@ import {getModmailParticipant,} from '../../../api/resources/modmail'
 import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import createLogger from '../../../util/infra/logging'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
-import {normalizeRecentActivity, SidebarActivityItem,} from '../schema'
+import {normalizeRecentActivity, type SidebarActivityItem,} from '../schema'
 import css from './UserSidebarPanel.module.css'
 
 const log = createLogger('modmail',)

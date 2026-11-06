@@ -1,6 +1,6 @@
 /** Module settings definitions for the Syntax Highlighter module. */
 
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[

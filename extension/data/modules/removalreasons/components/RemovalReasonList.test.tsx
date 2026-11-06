@@ -74,7 +74,7 @@ vi.mock('@dnd-kit/sortable', async () => {
 
 import type {ConfigState,} from '../../../util/wiki/schemas/config/schema'
 import type {RemovalReason,} from '../schema'
-import {formOwnedKeys, RemovalReasonList,} from './RemovalReasonList'
+import {type formOwnedKeys, RemovalReasonList,} from './RemovalReasonList'
 
 let container: HTMLDivElement
 let root: Root

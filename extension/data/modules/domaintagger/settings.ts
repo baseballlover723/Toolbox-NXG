@@ -1,5 +1,5 @@
 /** Settings definitions for the Domain Tagger module. */
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[

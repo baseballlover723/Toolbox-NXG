@@ -7,7 +7,7 @@ import {commentTriage,} from '../../framework/moduleIds'
 import {isCommentsPage, isMod,} from '../../util/reddit/pageContext'
 import {createCommentTriageHandlers,} from './dom'
 import {createOldRedditAdapter,} from './platformInterface'
-import {CommentTriageSettings, settings,} from './settings'
+import {type CommentTriageSettings, settings,} from './settings'
 
 export default new Module<CommentTriageSettings>({
 	name: 'Comment Triage',

@@ -1,6 +1,6 @@
 /** Controlled User Flair tab content for the ModButtonPopup: template select plus text/class inputs. */
 
-import {ChangeEvent,} from 'react'
+import {type ChangeEvent,} from 'react'
 
 import {TextInput,} from '../../../shared/controls/NormalInput'
 import {SelectInput,} from '../../../shared/controls/SelectInput'

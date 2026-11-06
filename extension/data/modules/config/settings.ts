@@ -1,5 +1,5 @@
 /** Setting definitions and inferred settings type for the Config module. */
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 // The Config module has no global user settings: the only former setting
 // (whether to show retired usernote shard pages) is now a per-subreddit field

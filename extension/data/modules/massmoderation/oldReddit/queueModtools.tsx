@@ -25,7 +25,7 @@ import {
 } from '../../../dom/oldReddit/things'
 import {provideLocation, renderAtLocation,} from '../../../dom/uiLocations'
 import {createLifecycle,} from '../../../framework/lifecycle'
-import {Module,} from '../../../framework/module'
+import {type Module,} from '../../../framework/module'
 import {betterButtons, massModeration,} from '../../../framework/moduleIds'
 import {negativeTextFeedback,} from '../../../store/feedback'
 import {formatRelativeTime,} from '../../../util/data/time'

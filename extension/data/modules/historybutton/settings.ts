@@ -1,5 +1,5 @@
 /** Settings definitions for the History Button module. */
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[

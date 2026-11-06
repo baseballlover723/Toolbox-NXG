@@ -1,5 +1,5 @@
 /** Settings definitions for the Profile Pro module. */
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 import {getSettingAsync,} from '../../util/persistence/settings'
 
 export const settings = defineSettings(

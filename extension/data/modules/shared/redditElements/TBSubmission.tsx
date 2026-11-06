@@ -10,7 +10,7 @@ import {link,} from '../../../util/reddit/pageContext'
 import {stringToColor,} from '../../../util/reddit/reddit-domain'
 import {deriveThingStatus,} from './deriveStatus'
 import {buildAuthorAttrs, getVoteState, ThingReports, useFilteredFromQueue,} from './thingParts'
-import {SubmissionOptions,} from './types'
+import {type SubmissionOptions,} from './types'
 
 /** Props for the TBSubmission component. */
 interface TBSubmissionProps {

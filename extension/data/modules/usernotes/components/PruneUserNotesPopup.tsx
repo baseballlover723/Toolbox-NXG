@@ -8,11 +8,11 @@ import {NumberInput,} from '../../../shared/controls/NumberInput'
 import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {daysToMilliseconds,} from '../../../util/data/time'
 import {
-	ArchivedMode,
-	PruneOptions,
-	PruneProgress,
-	UserNoteColor,
-	UsernotesUser,
+	type ArchivedMode,
+	type PruneOptions,
+	type PruneProgress,
+	type UserNoteColor,
+	type UsernotesUser,
 } from '../../../util/wiki/schemas/usernotes/schema'
 import {createPrunePreview, normalizeKindKey, type NoteStats, statLabel,} from './UserNotesManagerOverlay.helpers'
 

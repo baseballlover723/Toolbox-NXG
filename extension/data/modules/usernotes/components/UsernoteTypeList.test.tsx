@@ -31,7 +31,7 @@ const getSubredditColors = vi.hoisted(() => vi.fn())
 vi.mock('../../shared/usernotes/moduleapi', () => ({getSubredditColors, getUserNotes, updateUserNotes,}),)
 ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true
 
-import {SortModeRef,} from '../../../shared/controls/SortToggleButton'
+import {type SortModeRef,} from '../../../shared/controls/SortToggleButton'
 import type {ConfigState,} from '../../../util/wiki/schemas/config/schema'
 import {defaultUsernoteTypes,} from '../../../util/wiki/schemas/usernotes/schema'
 import type {UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'

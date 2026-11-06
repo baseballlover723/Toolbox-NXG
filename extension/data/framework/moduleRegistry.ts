@@ -12,7 +12,7 @@ import {getSettingFrom, getSettings,} from '../util/persistence/settings'
 import {exportSettings, importSettings,} from '../util/persistence/settingsPortability'
 import {mountReactInBody,} from '../util/ui/reactMount'
 import {throwIfErrors,} from './lifecycle'
-import {Module,} from './module'
+import {type Module,} from './module'
 import {utils,} from './moduleIds'
 
 const log = createLogger('TBModule',)

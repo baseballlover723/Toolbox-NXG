@@ -14,13 +14,13 @@
 
 import {
 	htmlFieldsToTokens,
-	InteractiveToken,
+	type InteractiveToken,
 	parseReasonSegments,
 	substituteTokenValues,
 	tokenToLegacyHtml,
 } from '../../../util/wiki/schemas/shared/tokens'
-import {getRemovalReasonParser,} from '../../shared/removalReasons/parser'
-import {RemovalReason,} from '../schema'
+import {type getRemovalReasonParser,} from '../../shared/removalReasons/parser'
+import {type RemovalReason,} from '../schema'
 
 /** Counter for generating unique radio group `name` attributes across all rendered reason cards. */
 let radioGroupCounter = 0

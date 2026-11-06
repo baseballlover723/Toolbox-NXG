@@ -3,9 +3,9 @@
  * action button delegation, "load more comments" handling, and toolbox container tagging.
  */
 
-import {ReactNode,} from 'react'
+import {type ReactNode,} from 'react'
 import {flushSync,} from 'react-dom'
-import {createRoot, Root,} from 'react-dom/client'
+import {createRoot, type Root,} from 'react-dom/client'
 
 import {getMoreComments,} from '../../api/resources/comments'
 import type {CommentData, RedditMoreChildren, RedditThing, SubmissionData,} from '../../api/resources/things'

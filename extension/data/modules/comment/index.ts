@@ -15,7 +15,7 @@ import {createHideModCommentsHandlers,} from './oldReddit/hideModComments'
 import {createHideOldCommentsHandlers, createHideOldCommentsSetup,} from './oldReddit/hideOldComments'
 import {createSpamToggleHandlers,} from './oldReddit/spamToggle'
 import {createOldRedditCommentAdapter,} from './platformInterface'
-import {CommentsSettings, settings,} from './settings'
+import {type CommentsSettings, settings,} from './settings'
 
 export default new Module<CommentsSettings>({
 	name: 'Comments',

@@ -42,13 +42,13 @@ import {
 	defaultSubject,
 	isDrawerDisplayMode,
 	type NoteDestination,
-	RemovalReason,
+	type RemovalReason,
 	type RemovalReasonsConfig,
 	type RemovalReasonsData,
 	type RemovalReasonsOverlaySettings,
 	resolveDisplayMode,
 } from './schema'
-import {RemovalReasonsSettings,} from './settings'
+import {type RemovalReasonsSettings,} from './settings'
 import {extractReportReasons, matchSuggestedReasons,} from './suggested'
 
 const log = createLogger('RReasons',)

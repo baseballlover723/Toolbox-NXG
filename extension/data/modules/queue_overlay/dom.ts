@@ -2,7 +2,7 @@
 import {notifier,} from '../../framework/moduleIds'
 import {getSettingAsync,} from '../../util/persistence/settings'
 import {showQueueOverlay,} from './components/QueueOverlay'
-import {QueueBaseUrls, QueueType,} from './schema'
+import {type QueueBaseUrls, type QueueType,} from './schema'
 
 /** Event handlers created by `createQueueOverlayHandlers` for lifecycle delegation. */
 export interface QueueOverlayHandlers {

@@ -38,7 +38,7 @@ import {
 	NEW_WIKI_PATHS,
 	OLD_NOTE_PAGE_PREFIX,
 	OLD_WIKI_PATHS,
-	WikiPageName,
+	type WikiPageName,
 } from './wikiConstants'
 import {LAYOUT_CACHE_KEY, sessionLayouts, setCachedWikiLayout,} from './wikiLayoutCache'
 import type {WikiLayout,} from './wikiLayoutCache'

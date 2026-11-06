@@ -8,7 +8,7 @@ import {negativeTextFeedback, positiveTextFeedback,} from '../../store/feedback'
 import {replaceTokens,} from '../../util/data/string'
 import {RedditPlatform,} from '../../util/infra/platform'
 import {MacroSelect,} from '../macros/components/MacroSelect'
-import {MacroConfig, ThingInfo,} from '../macros/schema'
+import {type MacroConfig, type ThingInfo,} from '../macros/schema'
 import {UserSidebarPanel,} from './components/UserSidebarPanel'
 import type {ModmailSettings,} from './settings'
 

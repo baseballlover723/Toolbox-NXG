@@ -1,6 +1,6 @@
 /** Full-page modal dialog: scroll-locking backdrop + centered window shell in one component. */
 
-import {ReactNode,} from 'react'
+import {type ReactNode,} from 'react'
 import {Backdrop,} from './Backdrop'
 import {Window,} from './Window'
 

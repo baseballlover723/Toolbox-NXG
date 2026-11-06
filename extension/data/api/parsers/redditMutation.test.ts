@@ -6,7 +6,7 @@ const apiOauthPOST = vi.hoisted(() => vi.fn())
 
 vi.mock('../transport/http', () => ({apiOauthPOST,}),)
 
-import {parseRedditApiResponse, postRedditApi, postRedditApiVoid, RedditApiError,} from './redditMutation'
+import {parseRedditApiResponse, postRedditApi, postRedditApiVoid, type RedditApiError,} from './redditMutation'
 
 function jsonResponse (body: unknown,): Response {
 	return new Response(JSON.stringify(body,), {headers: {'content-type': 'application/json',},},)

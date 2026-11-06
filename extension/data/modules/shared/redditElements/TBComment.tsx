@@ -13,7 +13,7 @@ import {link,} from '../../../util/reddit/pageContext'
 import {stringToColor,} from '../../../util/reddit/reddit-domain'
 import {deriveThingStatus,} from './deriveStatus'
 import {buildAuthorAttrs, getVoteState, ThingReports, useFilteredFromQueue,} from './thingParts'
-import {CommentOptions,} from './types'
+import {type CommentOptions,} from './types'
 
 /** Props for the TBComment component. */
 interface TBCommentProps {

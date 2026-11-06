@@ -31,18 +31,18 @@ import {
 	defaultUsernoteTypes,
 	isNoteActive,
 	notesSchema,
-	RawUsernotesBlob,
+	type RawUsernotesBlob,
 	seededTypesRepair,
-	UserNoteColor,
-	UserNoteEntry,
-	UserNotesData,
-	UsernotesUser,
+	type UserNoteColor,
+	type UserNoteEntry,
+	type UserNotesData,
+	type UsernotesUser,
 } from '../../../util/wiki/schemas/usernotes/schema'
 import {readShardedUsernotes, writeShardedUsernotes,} from '../../../util/wiki/schemas/usernotes/sharded'
 import {OLD_WIKI_PATHS,} from '../../../util/wiki/wikiConstants'
 import {recoverLegacyUsernoteColors,} from '../../../util/wiki/wikiMigration'
 import {compatMirrorEnabled, resolveWikiLayout,} from '../../../util/wiki/wikiPaths'
-import {ModNote, PendingNoteRequest,} from '../modnotes/schema'
+import {type ModNote, type PendingNoteRequest,} from '../modnotes/schema'
 import {type FoundUser, resolveDualKeyUser,} from './noteMutations'
 
 const log = createLogger('TBUsernotes',)

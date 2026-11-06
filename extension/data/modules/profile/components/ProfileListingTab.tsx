@@ -2,7 +2,7 @@
 import {useEffect, useEffectEvent, useRef, useState,} from 'react'
 
 import {getModSubs,} from '../../../api/resources/modSubs'
-import {BanState, getBanState,} from '../../../api/resources/relationships'
+import {type BanState, getBanState,} from '../../../api/resources/relationships'
 import {getUserPage,} from '../../../api/resources/users'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {neutralTextFeedback, positiveTextFeedback,} from '../../../store/feedback'

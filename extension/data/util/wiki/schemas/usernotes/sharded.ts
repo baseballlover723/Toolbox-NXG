@@ -21,7 +21,7 @@ import {byteLength,} from '../../../data/encoding'
 import createLogger from '../../../infra/logging'
 import {NEW_WIKI_PATHS,} from '../../wikiConstants'
 import {buildShardPayload, decodeNotesShard, encodeNotesShard, isNxgUsernotesShardPage,} from './codec'
-import {NxgUsernotesShardPage, UserNotesData, UsernotesUser,} from './schema'
+import {type NxgUsernotesShardPage, type UserNotesData, type UsernotesUser,} from './schema'
 import {
 	hashUsername,
 	initialManifest,
@@ -32,7 +32,7 @@ import {
 	SHARD_HARD_LIMIT_BYTES,
 	SHARD_SOFT_LIMIT_BYTES,
 	shardPageName,
-	UsernotesManifest,
+	type UsernotesManifest,
 } from './sharding'
 
 const log = createLogger('TBUsernotesSharded',)

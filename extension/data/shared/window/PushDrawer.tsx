@@ -14,7 +14,7 @@
  * overlapping.
  */
 
-import {ReactNode, useEffect, useState,} from 'react'
+import {type ReactNode, useEffect, useState,} from 'react'
 import {useEscapeKey,} from '../../util/ui/hooks'
 
 /** Props for the PushDrawer component. */

@@ -30,15 +30,15 @@ import {getApiThingInfo,} from '../../util/reddit/thingInfo'
 import {drawPosition,} from '../../util/ui/drawPosition'
 import {navigateToSubredditPage, reloadPage,} from '../../util/ui/navigation'
 import {
-	ExistingNote,
+	type ExistingNote,
 	isNoteActive,
 	notesMaxSchema,
 	notesMinSchema,
 	notesSchema,
-	PruneOptions,
-	PruneProgress,
-	UserNoteEntry,
-	UserNotesData,
+	type PruneOptions,
+	type PruneProgress,
+	type UserNoteEntry,
+	type UserNotesData,
 } from '../../util/wiki/schemas/usernotes/schema'
 import {getSessionStorageInfo,} from '../../util/wiki/schemas/usernotes/sharded'
 import {OLD_WIKI_PATHS,} from '../../util/wiki/wikiConstants'
@@ -65,7 +65,7 @@ import {
 	shouldPruneNoteByArchived,
 	type UsernotesStorageInfo,
 } from './components/UserNotesManagerOverlay.helpers'
-import {UserNotesSettings,} from './settings'
+import {type UserNotesSettings,} from './settings'
 
 const log = createLogger('UserNotes',)
 

@@ -1,6 +1,6 @@
 /** Settings definitions and inferred type for the Modmail module. */
 
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[

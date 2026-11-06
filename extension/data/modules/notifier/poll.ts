@@ -12,7 +12,7 @@ import {getTime,} from '../../util/data/time'
 import createLogger from '../../util/infra/logging'
 import {events,} from '../../util/reddit/events'
 import {notification,} from '../../util/ui/notifications'
-import {NotifierSettings,} from './settings'
+import {type NotifierSettings,} from './settings'
 import {updateCounters,} from './store'
 
 /**

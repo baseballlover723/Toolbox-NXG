@@ -2,7 +2,7 @@
 
 // Utilities for mounting React content into shadow DOM and vanilla DOM contexts.
 
-import {ReactElement, ReactNode,} from 'react'
+import {type ReactElement, type ReactNode,} from 'react'
 import {createRoot,} from 'react-dom/client'
 import {onDOMAttach,} from './dom'
 import {clampIntoViewport,} from './drawPosition'

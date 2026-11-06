@@ -1,10 +1,10 @@
 /** Generic tabbed configuration overlay component used by the Config module to display subreddit settings. */
-import {Component, ReactNode, useState,} from 'react'
+import {Component, type ReactNode, useState,} from 'react'
 import {Provider,} from 'react-redux'
 
 import {utils,} from '../../../framework/moduleIds'
 import {TabbedDialog,} from '../../../shared/window/TabbedDialog'
-import {WindowTabItem,} from '../../../shared/window/WindowTabs'
+import {type WindowTabItem,} from '../../../shared/window/WindowTabs'
 import store from '../../../store'
 import {useSetting,} from '../../../util/ui/hooks'
 import {mountReactInBody,} from '../../../util/ui/reactMount'

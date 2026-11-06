@@ -22,7 +22,7 @@ import {
 	extractLegacyUsernoteColors,
 	isConfigValidVersion,
 	normalizeConfig,
-	ToolboxConfig,
+	type ToolboxConfig,
 } from '../../util/wiki/schemas/config/schema'
 import {NXG_USERNOTES_FORMAT,} from '../../util/wiki/schemas/usernotes/schema'
 import {

@@ -35,10 +35,10 @@ import {decodeUsernotesV6, noteIdentityKey,} from './codec'
 import {
 	isNoteActive,
 	LEGACY_DELETION_ARCHIVER,
-	RawUsernotesBlob,
-	UserNoteEntry,
-	UserNotesData,
-	UsernotesUser,
+	type RawUsernotesBlob,
+	type UserNoteEntry,
+	type UserNotesData,
+	type UsernotesUser,
 } from './schema'
 
 /** The 6.x edits found by diffing the legacy page against the stored NXG state. */

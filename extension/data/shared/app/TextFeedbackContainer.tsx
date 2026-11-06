@@ -8,7 +8,7 @@
 
 import {AnimatePresence, motion,} from 'framer-motion'
 import {useSelector,} from 'react-redux'
-import {RootState,} from '../../store'
+import {type RootState,} from '../../store'
 import {classes,} from '../../util/ui/reactMount'
 import css from './TextFeedbackContainer.module.css'
 

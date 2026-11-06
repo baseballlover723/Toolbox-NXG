@@ -7,7 +7,7 @@ import {ActionButton,} from '../../shared/controls/ActionButton'
 import {RedditPlatform,} from '../../util/infra/platform'
 import {createEditor, createKeyboardShortcutsHelper,} from '../../util/ui/codemirrorSetup'
 import type {SyntaxSettings,} from './settings'
-import {SyntaxTheme, syntaxThemes,} from './syntaxThemes'
+import {type SyntaxTheme, syntaxThemes,} from './syntaxThemes'
 
 /** The raw detail object passed through a stylesheet/wiki editor UILocationContext. */
 interface EditorDetail {

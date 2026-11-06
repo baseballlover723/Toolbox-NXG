@@ -12,7 +12,7 @@
  * `sharded.ts`.
  */
 
-import {defaultUsernoteTypes, UserNoteColor, UserNotesData, UsernotesUser,} from './schema'
+import {defaultUsernoteTypes, type UserNoteColor, type UserNotesData, type UsernotesUser,} from './schema'
 
 /** Manifest format marker; identifies the page as a shard manifest. */
 export const USERNOTES_MANIFEST_FORMAT = 'tbun-manifest'

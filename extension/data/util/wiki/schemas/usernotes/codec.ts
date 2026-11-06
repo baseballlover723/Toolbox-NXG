@@ -21,24 +21,24 @@ import type {TbUsernoteDecompressMessage, TbUsernoteDecompressResponse,} from '.
 import {htmlDecode, zlibDeflate,} from '../../../data/encoding'
 import {coerceEpochSeconds,} from '../../../data/time'
 import {
-	ConstantPools,
-	DecompressedBlob,
+	type ConstantPools,
+	type DecompressedBlob,
 	defaultUsernoteTypes,
-	DeflatedNote,
-	DeflatedUser,
+	type DeflatedNote,
+	type DeflatedUser,
 	isNoteActive,
-	NoteAttribution,
+	type NoteAttribution,
 	NXG_USERNOTES_FORMAT,
 	NXG_USERNOTES_VER,
-	NxgShardNote,
-	NxgShardPayload,
-	NxgUsernotesShardPage,
-	RawUsernotesBlob,
+	type NxgShardNote,
+	type NxgShardPayload,
+	type NxgUsernotesShardPage,
+	type RawUsernotesBlob,
 	seededTypesRepair,
-	UserNoteColor,
-	UserNoteEntry,
-	UserNotesData,
-	UsernotesUser,
+	type UserNoteColor,
+	type UserNoteEntry,
+	type UserNotesData,
+	type UsernotesUser,
 } from './schema'
 
 // --- Shared link squashing -------------------------------------------------

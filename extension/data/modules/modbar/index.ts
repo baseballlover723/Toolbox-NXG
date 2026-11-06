@@ -9,7 +9,7 @@ import {setSettingAsync,} from '../../util/persistence/settings'
 import {createModbarHandlers,} from './dom'
 import {createSettingsNavigationHandlers,} from './features/settingsNavigation'
 import {createShredditPinnedOffsetHandlers,} from './features/shredditPinnedOffset'
-import {ModbarSettings, settings,} from './settings'
+import {type ModbarSettings, settings,} from './settings'
 
 let resolveModbarExists: ((value: void | PromiseLike<void>,) => void) | null = null
 

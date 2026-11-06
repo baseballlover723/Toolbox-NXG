@@ -35,7 +35,7 @@ import {
 	readShardedUsernotes,
 	writeShardedUsernotes,
 } from './sharded'
-import {hashUsername, UsernotesManifest,} from './sharding'
+import {hashUsername, type UsernotesManifest,} from './sharding'
 
 const MANIFEST_PAGE = 'toolbox-nxg/usernotes'
 

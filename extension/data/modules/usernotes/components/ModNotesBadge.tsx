@@ -3,7 +3,7 @@
 import {AuthorButton,} from '../../../shared/controls/AuthorButton'
 import {classes,} from '../../../util/ui/reactMount'
 import css from '../../shared/modnotes/modnotes.module.css'
-import {labelColors, ModNote,} from '../../shared/modnotes/schema'
+import {labelColors, type ModNote,} from '../../shared/modnotes/schema'
 
 /** Props for the ModNotesBadge component. */
 interface ModNotesBadgeProps {

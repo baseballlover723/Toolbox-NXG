@@ -4,7 +4,7 @@ import {Module,} from '../../framework/module'
 import {devtools,} from '../../framework/moduleIds'
 import {removeContextItem,} from '../../store/contextMenu'
 import {addCommentTesterContextItem, registerApiInfoButtons, showCommentUITester,} from './dom'
-import {DevToolsSettings, settings,} from './settings'
+import {type DevToolsSettings, settings,} from './settings'
 
 export default new Module<DevToolsSettings>({
 	name: 'Developer Tools',

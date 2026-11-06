@@ -5,7 +5,7 @@ import {createLifecycle,} from '../../framework/lifecycle'
 import {Module,} from '../../framework/module'
 import {modmail,} from '../../framework/moduleIds'
 import {createModmailHandlers,} from './dom'
-import {ModmailSettings, settings,} from './settings'
+import {type ModmailSettings, settings,} from './settings'
 
 const self = new Module<ModmailSettings>({
 	name: 'Modmail',

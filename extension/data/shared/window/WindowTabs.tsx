@@ -1,6 +1,6 @@
 /** Flexible tab panel with optional vertical layout, section headers, and scrollable sections. */
 
-import {ReactNode, useEffect, useId, useState,} from 'react'
+import {type ReactNode, useEffect, useId, useState,} from 'react'
 import {classes,} from '../../util/ui/reactMount'
 import css from './WindowTabs.module.css'
 

@@ -6,7 +6,7 @@ import {
 	getModeratorListResult,
 	getMuteState,
 } from '../../../api/resources/relationships'
-import {ActionKind, SubStatus,} from '../schema'
+import {type ActionKind, type SubStatus,} from '../schema'
 
 /** Reddit character limit for the internal ban note. */
 export const maxBanReasonLength = 300

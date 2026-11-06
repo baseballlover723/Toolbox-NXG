@@ -5,7 +5,7 @@ import {createPortal,} from 'react-dom'
 import {useDispatch, useSelector,} from 'react-redux'
 
 import {genSettings,} from '../../framework/moduleIds'
-import {RootState,} from '../../store'
+import {type RootState,} from '../../store'
 import {clearAttention,} from '../../store/contextMenuSlice'
 import {useSetting,} from '../../util/ui/hooks'
 import {Icon,} from '../controls/Icon'

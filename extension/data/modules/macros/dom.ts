@@ -22,15 +22,15 @@ import {replaceTokens,} from '../../util/data/string'
 import {runInReplay,} from '../../util/infra/captureGuard'
 import createLogger from '../../util/infra/logging'
 import {RedditPlatform,} from '../../util/infra/platform'
-import {postSite, TBPageContext,} from '../../util/reddit/pageContext'
+import {postSite, type TBPageContext,} from '../../util/reddit/pageContext'
 import {getApiThingInfo, getThingInfo,} from '../../util/reddit/thingInfo'
 import {html,} from '../../util/ui/dom'
 import {requestCounterRefresh,} from '../notifier/store'
 import {isTrainingCaptureActive,} from '../shared/proposals/gateway'
 import {showMacroEditPopup,} from './components/MacroEditPopup'
 import {MacroSelect,} from './components/MacroSelect'
-import {MacroConfig, ThingInfo,} from './schema'
-import {MacrosSettings,} from './settings'
+import {type MacroConfig, type ThingInfo,} from './schema'
+import {type MacrosSettings,} from './settings'
 
 const log = createLogger('ModMacros',)
 

@@ -10,10 +10,10 @@
  * converge to the same rendered output.
  */
 
-import {Fragment, ReactNode, useEffect, useReducer,} from 'react'
+import {Fragment, type ReactNode, useEffect, useReducer,} from 'react'
 
 import {type Lifecycle,} from '../framework/lifecycle'
-import {RedditPlatform,} from '../util/infra/platform'
+import {type RedditPlatform,} from '../util/infra/platform'
 import {mountToTarget,} from '../util/ui/reactMount'
 
 // -- Types ---------------------------------------------------------------------

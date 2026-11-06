@@ -7,7 +7,7 @@ import {Module,} from '../../framework/module'
 import {macros,} from '../../framework/moduleIds'
 import {isOldReddit,} from '../../util/infra/platform'
 import {createMacrosHandlers,} from './dom'
-import {MacrosSettings, settings,} from './settings'
+import {type MacrosSettings, settings,} from './settings'
 
 export default new Module<MacrosSettings>({
 	name: 'Mod Macros',

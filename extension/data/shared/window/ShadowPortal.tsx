@@ -20,7 +20,7 @@
  * same mechanism every other toolbox shadow mount relies on.
  */
 
-import {ReactNode, useEffect, useState,} from 'react'
+import {type ReactNode, useEffect, useState,} from 'react'
 import {createPortal,} from 'react-dom'
 
 import {applyStylesToShadow,} from '../../util/ui/reactMount'

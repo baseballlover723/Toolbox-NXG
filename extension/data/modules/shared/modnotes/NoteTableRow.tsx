@@ -6,7 +6,7 @@ import {link,} from '../../../util/reddit/pageContext'
 import {useFetched,} from '../../../util/ui/hooks'
 import {getContextURL,} from './helpers'
 import css from './modnotes.module.css'
-import {labelColors, labelNames, ModNote, typeNames,} from './schema'
+import {labelColors, labelNames, type ModNote, typeNames,} from './schema'
 
 /** Props for the NoteTableRow component. */
 interface NoteTableRowProps {

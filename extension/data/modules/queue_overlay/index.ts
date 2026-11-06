@@ -7,7 +7,7 @@ import {queueOverlay,} from '../../framework/moduleIds'
 import {currentPlatform, isEmbedded, RedditPlatform,} from '../../util/infra/platform'
 import {isModpage,} from '../../util/reddit/pageContext'
 import {createQueueOverlayHandlers,} from './dom'
-import {QueueOverlaySettings, settings,} from './settings'
+import {type QueueOverlaySettings, settings,} from './settings'
 
 export default new Module<QueueOverlaySettings>({
 	name: 'Queue Overlay',

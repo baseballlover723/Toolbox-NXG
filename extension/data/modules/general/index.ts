@@ -2,7 +2,7 @@
 import {createLifecycle,} from '../../framework/lifecycle'
 import {Module,} from '../../framework/module'
 import {createClassicThemeHandlers,} from './dom'
-import {GenSettings, settings,} from './settings'
+import {type GenSettings, settings,} from './settings'
 
 const self = new Module<GenSettings>({
 	name: 'General Settings',

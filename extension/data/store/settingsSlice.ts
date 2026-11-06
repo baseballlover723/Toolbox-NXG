@@ -8,7 +8,7 @@ import {createSlice, type PayloadAction,} from '@reduxjs/toolkit'
 import browser from 'webextension-polyfill'
 
 import createLogger from '../util/infra/logging'
-import {getSettings, SettingsObject,} from '../util/persistence/settings'
+import {getSettings, type SettingsObject,} from '../util/persistence/settings'
 import {type AppThunk,} from './index'
 
 enum SettingsInitialLoadState {

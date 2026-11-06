@@ -11,7 +11,7 @@ import {createModSaveHandlers,} from './features/modSave'
 import {createRemoveButtonsHandlers,} from './features/removeButtons'
 import {createRemoveConfirmationHandlers,} from './features/removeConfirmation'
 import {createStickyButtonHandlers,} from './features/stickyButtons'
-import {BetterButtonsSettings, settings,} from './settings'
+import {type BetterButtonsSettings, settings,} from './settings'
 
 export default new Module<BetterButtonsSettings>({
 	name: 'Better Buttons',

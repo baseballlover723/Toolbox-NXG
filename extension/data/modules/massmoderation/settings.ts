@@ -1,6 +1,6 @@
 /** User-facing settings definitions for the Mass Moderation module. */
 
-import {defineSettings, InferSettings,} from '../../framework/module'
+import {defineSettings, type InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[

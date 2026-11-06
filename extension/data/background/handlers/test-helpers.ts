@@ -1,7 +1,7 @@
 /** Shared test helpers for background message-handler suites: handler lookup and
  * mock JWT cookie construction. */
 
-import {vi,} from 'vitest'
+import {type vi,} from 'vitest'
 
 /**
  * Returns a `handlerFor` function bound to the given `registerMessageHandler` mock.

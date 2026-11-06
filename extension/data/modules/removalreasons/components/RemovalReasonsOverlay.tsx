@@ -7,14 +7,14 @@
 import {
 	closestCenter,
 	DndContext,
-	DragEndEvent,
+	type DragEndEvent,
 	KeyboardSensor,
 	PointerSensor,
 	useSensor,
 	useSensors,
 } from '@dnd-kit/core'
 import {arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy,} from '@dnd-kit/sortable'
-import {ReactNode, useEffect, useMemo, useRef, useState,} from 'react'
+import {type ReactNode, useEffect, useMemo, useRef, useState,} from 'react'
 import {removalReasons,} from '../../../framework/moduleIds'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {CheckboxInput,} from '../../../shared/controls/CheckboxInput'
@@ -38,7 +38,7 @@ import {
 	htmlFieldsToTokens,
 	type LiteralChoiceProblem,
 } from '../../../util/wiki/schemas/shared/tokens'
-import {UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
+import {type UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
 import {requestCounterRefresh,} from '../../notifier/store'
 import {
 	labelColors,
@@ -59,10 +59,10 @@ import {freezeRemovalParams,} from '../proposalAdapter'
 import {
 	isDrawerDisplayMode,
 	type NoteDestination,
-	RemovalReason,
-	RemovalReasonsData,
-	RemovalReasonsDisplayMode,
-	RemovalReasonsOverlaySettings,
+	type RemovalReason,
+	type RemovalReasonsData,
+	type RemovalReasonsDisplayMode,
+	type RemovalReasonsOverlaySettings,
 } from '../schema'
 import {
 	composeReasonText,

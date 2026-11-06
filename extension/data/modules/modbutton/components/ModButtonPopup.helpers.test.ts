@@ -7,7 +7,7 @@ import {describe, expect, it, vi,} from 'vitest'
 vi.mock('webextension-polyfill', () => ({
 	default: {runtime: {getURL: (path: string,) => `chrome-extension://fake/${path}`,},},
 }),)
-import {SubStatus,} from '../schema'
+import {type SubStatus,} from '../schema'
 import {hasPermission, isActionApplicable, notApplicableReason,} from './ModButtonPopup.helpers'
 
 function status (overrides: Partial<SubStatus> = {},): SubStatus {

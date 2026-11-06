@@ -1,6 +1,6 @@
 /** Generic Toolbox window/panel component with optional drag, toolbar, footer, and close button. */
 
-import {MouseEventHandler, ReactNode, useId, useRef,} from 'react'
+import {type MouseEventHandler, type ReactNode, useId, useRef,} from 'react'
 import {useMountLayoutEffect,} from '../../util/ui/hooks'
 import {classes,} from '../../util/ui/reactMount'
 

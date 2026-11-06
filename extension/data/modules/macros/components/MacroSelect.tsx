@@ -5,7 +5,7 @@ import {useState,} from 'react'
 import {ActionSelect,} from '../../../shared/controls/ActionSelect'
 import {useFetched,} from '../../../util/ui/hooks'
 import {getMacroConfig,} from '../moduleapi'
-import {MacroConfig,} from '../schema'
+import {type MacroConfig,} from '../schema'
 
 const macros = 'TB-MACROS'
 

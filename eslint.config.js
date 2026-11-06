@@ -50,6 +50,14 @@ const sourceRules = {
 	// A hard gate so new explicit `any`/`as any` can't creep back in.
 	// Genuine boundary anys carry an inline eslint-disable with a justification.
 	'@typescript-eslint/no-explicit-any': 'error',
+	// Type-only imports must say so (`import type {X,}`, or `{type X,}` in a mixed import),
+	// so a reader can tell which imports have runtime effects. Syntactic, so it works without
+	// type information; `--fix` rewrites violations. `import()` type annotations stay allowed:
+	// they are Vitest's idiom for typing mocks (`importOriginal<typeof import('...')>()`).
+	'@typescript-eslint/consistent-type-imports': ['error', {
+		fixStyle: 'inline-type-imports',
+		disallowTypeAnnotations: false,
+	},],
 	'no-var': 'error',
 	'no-warning-comments': [
 		'error',

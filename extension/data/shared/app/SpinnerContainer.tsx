@@ -2,7 +2,7 @@
 
 import {useEffect,} from 'react'
 import {useSelector,} from 'react-redux'
-import {RootState,} from '../../store'
+import {type RootState,} from '../../store'
 import css from './SpinnerContainer.module.css'
 
 /** Renders a loading indicator when the spinner count in the Redux store is greater than zero. */

@@ -20,7 +20,11 @@ import {nowInSeconds,} from '../../../util/data/time'
 import createLogger from '../../../util/infra/logging'
 import {useSetting,} from '../../../util/ui/hooks'
 import {mountPopup,} from '../../../util/ui/reactMount'
-import {ExistingNote, formatArchiveAttribution, UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
+import {
+	type ExistingNote,
+	formatArchiveAttribution,
+	type UserNoteColor,
+} from '../../../util/wiki/schemas/usernotes/schema'
 import {withArchived,} from '../../shared/usernotes/archived'
 import {noteTypeColorStyle,} from '../../shared/usernotes/noteTypeColorStyle'
 import {

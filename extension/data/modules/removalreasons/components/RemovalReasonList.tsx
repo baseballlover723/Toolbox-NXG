@@ -3,7 +3,7 @@
 import {
 	closestCenter,
 	DndContext,
-	DragEndEvent,
+	type DragEndEvent,
 	KeyboardSensor,
 	PointerSensor,
 	useSensor,
@@ -25,7 +25,7 @@ import {ActionSelect,} from '../../../shared/controls/ActionSelect'
 import {CheckboxInput,} from '../../../shared/controls/CheckboxInput'
 import {Icon,} from '../../../shared/controls/Icon'
 import {TextInput,} from '../../../shared/controls/NormalInput'
-import {SortModeRef, useSortMode,} from '../../../shared/controls/SortToggleButton'
+import {type SortModeRef, useSortMode,} from '../../../shared/controls/SortToggleButton'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
 import {TokenChips,} from '../../../shared/controls/TokenChips'
 import {formatRelativeTime,} from '../../../util/data/time'

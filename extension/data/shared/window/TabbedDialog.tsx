@@ -1,9 +1,9 @@
 /** Modal dialog with a vertical sidebar tab list, used as the shell for the Toolbox settings dialog. */
 
-import {ReactNode, useState,} from 'react'
+import {type ReactNode, useState,} from 'react'
 import {FullPageDialog,} from './FullPageDialog'
 import css from './TabbedDialog.module.css'
-import {isSection, WindowTab, WindowTabItem, WindowTabs,} from './WindowTabs'
+import {isSection, type WindowTab, type WindowTabItem, WindowTabs,} from './WindowTabs'
 
 /**
  * Renders a modal dialog with a vertical tab sidebar.
