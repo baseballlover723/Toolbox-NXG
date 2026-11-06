@@ -96,7 +96,7 @@ To create or update a note:
 
 To archive a note without deleting it, set `archived: true` in the index entry and leave the content page untouched.
 
-To delete a note permanently, remove it from the index's `notes` array and optionally delete the note's wiki page. NXG never propagates deletions from the legacy mirror into the NXG index (a missing legacy entry is indistinguishable from a failed mirror write), so deletions performed via the legacy `notes/index` will not remove entries from the NXG index.
+To delete a note permanently, remove it from the index's `notes` array. Its wiki page stays behind, since Reddit's wiki API cannot delete pages. NXG lists notes from the index, so it ignores the orphaned page - unless the index page itself goes missing, in which case NXG rebuilds the index from the subreddit's wiki page list and the page reappears as a note. NXG never propagates deletions from the legacy mirror into the NXG index (a missing legacy entry is indistinguishable from a failed mirror write), so deletions performed via the legacy `notes/index` will not remove entries from the NXG index.
 
 ## Reconciliation with the legacy index
 

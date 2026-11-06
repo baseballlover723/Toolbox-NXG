@@ -10,7 +10,7 @@ Usernotes appear next to usernames throughout Reddit — in post listings, comme
 
 ## Adding a note
 
-Click the usernotes tag next to a username (or the note icon in the Profile Pro overlay) to open the usernotes popup. In the **Add Toolbox note** section, choose a type, enter the note text, and optionally include a link to the relevant post or comment. Click **Save for /r/...** (followed by the subreddit name) to write the note to the wiki.
+Click the usernotes tag next to a username to open the usernotes popup. In the **Add Toolbox note** section, choose a type, enter the note text, and optionally include a link to the relevant post or comment. Click **Save for /r/...** (followed by the subreddit name) to write the note to the wiki.
 
 A new note can also be created automatically alongside a removal reason or mod action when the relevant option is selected in the removal reasons dialog.
 
