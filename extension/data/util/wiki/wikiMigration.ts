@@ -9,7 +9,9 @@
  * unknown subset of pages written.
  */
 
+import {getCurrentUser,} from '../../api/resources/me'
 import {isModSub,} from '../../api/resources/modSubs'
+import {canEditWiki, getModPermissions,} from '../../api/resources/relationships'
 import {getWikiPages, getWikiRevisions, postToWiki, readFromWiki, readWikiRevision,} from '../../api/resources/wiki'
 import {utils,} from '../../framework/moduleIds'
 import {unescapeJSON,} from '../data/encoding'
@@ -184,13 +186,65 @@ async function copyNotePageNewerWins (
 	}
 }
 
+/** Failure reason recorded when Reddit rejects a wiki write with HTTP 403. */
+export const noWikiWritePermissionReason = 'no wiki write permission'
+
+/** Failure reason recorded when the viewer moderates the sub but lacks the `wiki` permission. */
+export const noWikiPermissionReason = 'you do not have wiki permission on this subreddit'
+
 /** Turns a thrown wiki write error into a short human-readable reason string. */
 function describeError (error: unknown,): string {
 	const response = (error as {response?: Response}).response
-	if (response?.status === 403) { return 'no wiki write permission' }
+	if (response?.status === 403) { return noWikiWritePermissionReason }
 	if (response?.status === 413) { return 'page too large' }
 	if (response?.status) { return `write failed (HTTP ${response.status})` }
 	return error instanceof Error ? error.message : String(error,)
+}
+
+/**
+ * Returns `true` when the current user can edit the subreddit's wiki. Being
+ * listed as a moderator is not enough: alumni and no-permission moderators
+ * still appear in the moderated-subs listing but cannot write wiki pages.
+ * @param subreddit The subreddit to check.
+ * @throws When the current user or the moderator listing cannot be fetched.
+ */
+export async function hasWikiWritePermission (subreddit: string,): Promise<boolean> {
+	const user = await getCurrentUser()
+	return canEditWiki(await getModPermissions(subreddit, user,),)
+}
+
+/**
+ * Write-permission pre-check shared by every multi-page copy: only moderators
+ * with wiki permission can create or overwrite the pages. A 403 on the first
+ * write would also abort, but this catches the common case without burning a
+ * write attempt. Records a failure against `page` in `result` when denied.
+ * @returns `true` when the run may proceed.
+ */
+async function checkCanWrite (subreddit: string, page: string, result: WikiMigrationResult,): Promise<boolean> {
+	let moderatesSub = false
+	try {
+		moderatesSub = await isModSub(subreddit,)
+	} catch (error) {
+		log.warn(`Could not determine mod status for /r/${subreddit}:`, error,)
+	}
+	if (!moderatesSub) {
+		result.failed.push({page, reason: 'you do not moderate this subreddit',},)
+		return false
+	}
+
+	let canWrite = false
+	try {
+		canWrite = await hasWikiWritePermission(subreddit,)
+	} catch (error) {
+		log.warn(`Could not determine wiki permission for /r/${subreddit}:`, error,)
+		result.failed.push({page, reason: 'could not check your moderator permissions',},)
+		return false
+	}
+	if (!canWrite) {
+		result.failed.push({page, reason: noWikiPermissionReason,},)
+		return false
+	}
+	return true
 }
 
 /**
@@ -407,19 +461,7 @@ export async function migrateSubredditToNxg (
 ): Promise<WikiMigrationResult> {
 	const result: WikiMigrationResult = {copied: [], skipped: [], failed: [],}
 
-	// Permission pre-check: only mods can create the NXG pages. A wiki-perms
-	// 403 on the first write also aborts below, but this catches the common
-	// case without burning a write attempt.
-	let moderatesSub = false
-	try {
-		moderatesSub = await isModSub(subreddit,)
-	} catch (error) {
-		log.warn(`Could not determine mod status for /r/${subreddit}:`, error,)
-	}
-	if (!moderatesSub) {
-		result.failed.push({page: NEW_WIKI_PATHS.settings, reason: 'you do not moderate this subreddit',},)
-		return result
-	}
+	if (!await checkCanWrite(subreddit, NEW_WIKI_PATHS.settings, result,)) { return result }
 
 	// Step 1 (required): the main config. A missing or tombstoned toolbox page
 	// yields a minimal NXG config - the toolbox-nxg page must exist either
@@ -624,16 +666,7 @@ export async function migrateSubredditToNxg (
 export async function bootstrapFreshSub (subreddit: string,): Promise<WikiMigrationResult> {
 	const result: WikiMigrationResult = {copied: [], skipped: [], failed: [],}
 
-	let moderatesSub = false
-	try {
-		moderatesSub = await isModSub(subreddit,)
-	} catch (error) {
-		log.warn(`Could not determine mod status for /r/${subreddit}:`, error,)
-	}
-	if (!moderatesSub) {
-		result.failed.push({page: NEW_WIKI_PATHS.settings, reason: 'you do not moderate this subreddit',},)
-		return result
-	}
+	if (!await checkCanWrite(subreddit, NEW_WIKI_PATHS.settings, result,)) { return result }
 
 	const nxgConfig: Record<string, unknown> = {...defaultToolboxConfig, [COMPAT_WRITES_KEY]: false,}
 	try {
@@ -667,16 +700,7 @@ export async function bootstrapFreshSub (subreddit: string,): Promise<WikiMigrat
 export async function copyNxgToLegacy (subreddit: string,): Promise<WikiMigrationResult> {
 	const result: WikiMigrationResult = {copied: [], skipped: [], failed: [],}
 
-	let moderatesSub = false
-	try {
-		moderatesSub = await isModSub(subreddit,)
-	} catch (error) {
-		log.warn(`Could not determine mod status for /r/${subreddit}:`, error,)
-	}
-	if (!moderatesSub) {
-		result.failed.push({page: OLD_WIKI_PATHS.settings, reason: 'you do not moderate this subreddit',},)
-		return result
-	}
+	if (!await checkCanWrite(subreddit, OLD_WIKI_PATHS.settings, result,)) { return result }
 
 	// Required: the main config. The legacy copy gets the classic v1 schema -
 	// escape()-encoded text fields, limited-HTML fill-in fields, and no NXG

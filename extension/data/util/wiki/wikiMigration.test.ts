@@ -9,6 +9,7 @@ const getWikiPages = vi.hoisted(() => vi.fn())
 const getWikiRevisions = vi.hoisted(() => vi.fn())
 const readWikiRevision = vi.hoisted(() => vi.fn())
 const isModSub = vi.hoisted(() => vi.fn())
+const getModPermissions = vi.hoisted(() => vi.fn())
 const getCache = vi.hoisted(() => vi.fn())
 const setCache = vi.hoisted(() => vi.fn())
 const clearCache = vi.hoisted(() => vi.fn())
@@ -49,6 +50,11 @@ vi.mock(
 	() => ({readFromWiki, postToWiki, getWikiPages, getWikiRevisions, readWikiRevision,}),
 )
 vi.mock('../../api/resources/modSubs', () => ({isModSub,}),)
+vi.mock('../../api/resources/me', () => ({getCurrentUser: () => Promise.resolve('testmod',),}),)
+vi.mock('../../api/resources/relationships', () => ({
+	getModPermissions,
+	canEditWiki: (permissions: string[],) => permissions.includes('all',) || permissions.includes('wiki',),
+}),)
 vi.mock('../../framework/moduleIds', () => ({utils: 'utils',}),)
 vi.mock('../../store/feedback', () => ({negativeTextFeedback: vi.fn(),}),)
 vi.mock('./schemas/config/schema', async (importOriginal,) => ({
@@ -138,6 +144,7 @@ beforeEach(async () => {
 	setCache.mockResolvedValue(undefined,)
 	clearCache.mockResolvedValue(undefined,)
 	isModSub.mockResolvedValue(true,)
+	getModPermissions.mockResolvedValue(['all',],)
 	postToWiki.mockResolvedValue(undefined,)
 	getWikiPages.mockResolvedValue([],)
 	clearSessionShardState()
@@ -204,6 +211,38 @@ describe('migrateSubredditToNxg', () => {
 
 	it('aborts without writes when the user does not moderate the sub', async () => {
 		isModSub.mockResolvedValue(false,)
+		mockWikiPages({toolbox: {},},)
+
+		const result = await migrateSubredditToNxg('sub',)
+
+		expect(result.failed,).toHaveLength(1,)
+		expect(postToWiki,).not.toHaveBeenCalled()
+	})
+
+	it('aborts without writes when the user moderates the sub but lacks wiki permission', async () => {
+		getModPermissions.mockResolvedValue(['posts', 'mail',],)
+		mockWikiPages({toolbox: {},},)
+
+		const result = await migrateSubredditToNxg('sub',)
+
+		expect(result.failed,).toEqual([
+			{page: 'toolbox-nxg', reason: 'you do not have wiki permission on this subreddit',},
+		],)
+		expect(postToWiki,).not.toHaveBeenCalled()
+	})
+
+	it('proceeds for a moderator holding just the wiki permission', async () => {
+		getModPermissions.mockResolvedValue(['wiki',],)
+		mockWikiPages({toolbox: {},},)
+
+		const result = await migrateSubredditToNxg('sub',)
+
+		expect(result.failed,).toEqual([],)
+		expect(postToWiki,).toHaveBeenCalled()
+	})
+
+	it('aborts without writes when the permission lookup fails', async () => {
+		getModPermissions.mockRejectedValue(new Error('network',),)
 		mockWikiPages({toolbox: {},},)
 
 		const result = await migrateSubredditToNxg('sub',)
@@ -455,6 +494,15 @@ describe('bootstrapFreshSub', () => {
 			'wikiLayoutCache',
 			expect.objectContaining({sub: expect.anything(),},),
 		)
+	})
+
+	it('aborts without writes for an alumnus / no-permission moderator', async () => {
+		getModPermissions.mockResolvedValue([],)
+
+		const result = await bootstrapFreshSub('sub',)
+
+		expect(result.failed[0]?.reason,).toBe('you do not have wiki permission on this subreddit',)
+		expect(postToWiki,).not.toHaveBeenCalled()
 	})
 
 	it('reports a write failure without recording the layout', async () => {

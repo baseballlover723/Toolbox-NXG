@@ -66,6 +66,9 @@ vi.mock('../../api/resources/removalReasons', () => ({
 }),)
 
 vi.mock('../../api/resources/subreddits', () => ({getSubredditAbout, getSubredditRules,}),)
+// The wiki layout resolver (reached through the real wiki modules) imports me.ts,
+// whose module-level user-details fetch would reject without a browser runtime.
+vi.mock('../../api/resources/me', () => ({getCurrentUser: () => Promise.resolve('testmod',),}),)
 vi.mock('./features/syncNativeReasons', () => ({
 	syncNativeReasons,
 }),)

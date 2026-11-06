@@ -37,7 +37,7 @@ export type WikiLayout = {
 	 */
 	nxgMissing?: boolean
 	/** Why this sub is stuck on legacy reads (only when state is `'legacyFallback'`). */
-	fallbackReason?: 'notMod' | 'bootstrapFailed' | 'resolveError'
+	fallbackReason?: 'notMod' | 'noWikiPerms' | 'bootstrapFailed' | 'resolveError'
 	/**
 	 * Set when the viewer does not moderate the sub: layout resolution skipped all
 	 * wiki reads (Toolbox has no business reading a non-moderated sub's config /

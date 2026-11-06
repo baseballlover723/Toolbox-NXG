@@ -18,7 +18,14 @@ function shortStatus (layout: WikiLayout,): string {
 	if (layout.nxgMissing) { return 'NXG pages missing!' }
 	switch (layout.state) {
 		case 'legacyFallback':
-			return layout.fallbackReason === 'notMod' ? 'Legacy (not a moderator)' : 'Legacy (setup pending)'
+			switch (layout.fallbackReason) {
+				case 'notMod':
+					return 'Legacy (not a moderator)'
+				case 'noWikiPerms':
+					return 'Legacy (no wiki permission)'
+				default:
+					return 'Legacy (setup pending)'
+			}
 		case 'nxg':
 			return layout.compatibilityWrites ? 'NXG + 6.x compatibility' : 'NXG only'
 	}
@@ -31,10 +38,16 @@ function describeLayout (layout: WikiLayout,): string {
 	}
 	switch (layout.state) {
 		case 'legacyFallback':
-			return layout.fallbackReason === 'notMod'
-				? 'Using the Toolbox 6.x wiki pages read-only: only moderators can create the toolbox-nxg pages.'
-				: 'Using the Toolbox 6.x wiki pages. The toolbox-nxg pages could not be created yet; '
-					+ 'setup retries automatically, or run it now with the button below.'
+			switch (layout.fallbackReason) {
+				case 'notMod':
+					return 'Using the Toolbox 6.x wiki pages read-only: only moderators can create the toolbox-nxg pages.'
+				case 'noWikiPerms':
+					return 'Using the Toolbox 6.x wiki pages read-only: creating the toolbox-nxg pages needs the '
+						+ 'wiki moderator permission, which you do not have here.'
+				default:
+					return 'Using the Toolbox 6.x wiki pages. The toolbox-nxg pages could not be created yet; '
+						+ 'setup retries automatically, or run it now with the button below.'
+			}
 		case 'nxg':
 			return `${
 				layout.compatibilityWrites
@@ -157,21 +170,22 @@ function WikiLayoutRow ({subreddit, initialLayout,}: {subreddit: string; initial
 			{expanded && layout && (
 				<div className={css.wikiLayoutRowBody}>
 					<p>{describeLayout(layout,)}</p>
-					{layout.state === 'legacyFallback' && layout.fallbackReason !== 'notMod' && (
-						<div className={css.backupActions}>
-							<ActionButton
-								type="button"
-								disabled={busy}
-								onClick={() =>
-									void runOperation(
-										() => migrateSubredditToNxg(subreddit,),
-										`/r/${subreddit} set up on the NXG wiki layout`,
-									)}
-							>
-								Retry setup
-							</ActionButton>
-						</div>
-					)}
+					{layout.state === 'legacyFallback' && layout.fallbackReason !== 'notMod'
+						&& layout.fallbackReason !== 'noWikiPerms' && (
+							<div className={css.backupActions}>
+								<ActionButton
+									type="button"
+									disabled={busy}
+									onClick={() =>
+										void runOperation(
+											() => migrateSubredditToNxg(subreddit,),
+											`/r/${subreddit} set up on the NXG wiki layout`,
+										)}
+								>
+									Retry setup
+								</ActionButton>
+							</div>
+						)}
 					{isNxg && !compatOn && (
 						<div className={css.backupActions}>
 							{confirming === 'restore'

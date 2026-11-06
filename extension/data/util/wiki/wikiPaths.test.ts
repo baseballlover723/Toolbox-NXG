@@ -10,13 +10,20 @@ const negativeTextFeedback = vi.hoisted(() => vi.fn())
 const isModSub = vi.hoisted(() => vi.fn())
 const migrateSubredditToNxg = vi.hoisted(() => vi.fn())
 const bootstrapFreshSub = vi.hoisted(() => vi.fn())
+const hasWikiWritePermission = vi.hoisted(() => vi.fn())
 
 vi.mock('../../api/resources/wiki', () => ({readFromWiki,}),)
 vi.mock('../../api/resources/modSubs', () => ({isModSub,}),)
 vi.mock('../../framework/moduleIds', () => ({utils: 'utils',}),)
 vi.mock('../../store/feedback', () => ({negativeTextFeedback,}),)
 vi.mock('../persistence/cache', () => ({getCache, setCache,}),)
-vi.mock('./wikiMigration', () => ({migrateSubredditToNxg, bootstrapFreshSub,}),)
+vi.mock('./wikiMigration', () => ({
+	migrateSubredditToNxg,
+	bootstrapFreshSub,
+	hasWikiWritePermission,
+	noWikiPermissionReason: 'you do not have wiki permission on this subreddit',
+	noWikiWritePermissionReason: 'no wiki write permission',
+}),)
 vi.mock('../infra/logging', () => ({
 	default: () => ({debug: vi.fn(), warn: vi.fn(), error: vi.fn(),}),
 }),)
@@ -54,6 +61,7 @@ beforeEach(async () => {
 	// runs for moderators (or opt-in reads). Default to "moderates"; the dedicated
 	// non-mod / opt-in tests flip this to false.
 	isModSub.mockResolvedValue(true,)
+	hasWikiWritePermission.mockResolvedValue(true,)
 	migrateSubredditToNxg.mockResolvedValue({copied: ['toolbox-nxg',], skipped: [], failed: [],},)
 	bootstrapFreshSub.mockResolvedValue({copied: ['toolbox-nxg',], skipped: [], failed: [],},)
 	await clearWikiLayoutCache()
@@ -207,6 +215,64 @@ describe('resolveWikiLayout', () => {
 			'wikiLayoutCache',
 			expect.objectContaining({sub: expect.anything(),},),
 		)
+	})
+
+	it('skips the bootstrap silently and persists noWikiPerms for a listed mod without wiki permission', async () => {
+		mockWikiPages({toolbox: {domainTags: [],},},)
+		hasWikiWritePermission.mockResolvedValue(false,)
+
+		const layout = await resolveWikiLayout('sub',)
+
+		expect(migrateSubredditToNxg,).not.toHaveBeenCalled()
+		expect(bootstrapFreshSub,).not.toHaveBeenCalled()
+		expect(negativeTextFeedback,).not.toHaveBeenCalled()
+		expect(layout,).toMatchObject({state: 'legacyFallback', fallbackReason: 'noWikiPerms',},)
+		expect(setCache,).toHaveBeenCalledWith('utils', 'wikiLayoutCache', {sub: layout,},)
+		expect(await getWikiReadPath('settings', 'sub',),).toBe('toolbox',)
+	})
+
+	it('skips the fresh-sub bootstrap silently (session-only) without wiki permission', async () => {
+		mockWikiPages({},)
+		hasWikiWritePermission.mockResolvedValue(false,)
+
+		const layout = await resolveWikiLayout('sub',)
+
+		expect(bootstrapFreshSub,).not.toHaveBeenCalled()
+		expect(negativeTextFeedback,).not.toHaveBeenCalled()
+		expect(layout,).toMatchObject({state: 'nxg', compatibilityWrites: false,},)
+		expect(setCache,).not.toHaveBeenCalledWith(
+			'utils',
+			'wikiLayoutCache',
+			expect.objectContaining({sub: expect.anything(),},),
+		)
+	})
+
+	it('skips the bootstrap for the session without a toast when the permission lookup throws', async () => {
+		mockWikiPages({toolbox: {domainTags: [],},},)
+		hasWikiWritePermission.mockRejectedValue(new Error('network',),)
+
+		const layout = await resolveWikiLayout('sub',)
+
+		expect(migrateSubredditToNxg,).not.toHaveBeenCalled()
+		expect(negativeTextFeedback,).not.toHaveBeenCalled()
+		expect(layout,).toMatchObject({state: 'legacyFallback',},)
+		expect(setCache,).not.toHaveBeenCalledWith(
+			'utils',
+			'wikiLayoutCache',
+			expect.objectContaining({sub: expect.anything(),},),
+		)
+	})
+
+	it('treats a wiki-permission 403 during the bootstrap as noWikiPerms without a toast', async () => {
+		mockWikiPages({toolbox: {domainTags: [],},},)
+		migrateSubredditToNxg.mockResolvedValue(
+			{copied: [], skipped: [], failed: [{page: 'toolbox-nxg', reason: 'no wiki write permission',},],},
+		)
+
+		const layout = await resolveWikiLayout('sub',)
+
+		expect(negativeTextFeedback,).not.toHaveBeenCalled()
+		expect(layout,).toMatchObject({state: 'legacyFallback', fallbackReason: 'noWikiPerms',},)
 	})
 
 	it('coalesces concurrent first touches into a single bootstrap', async () => {

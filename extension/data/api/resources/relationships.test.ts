@@ -12,9 +12,11 @@ import {
 	addContributor,
 	addModerator,
 	banUser,
+	canEditWiki,
 	getBanState,
 	getContributorState,
 	getModeratorListResult,
+	getModPermissions,
 	getMuteState,
 	removeContributor,
 	removeModerator,
@@ -65,6 +67,22 @@ describe('relationships API', () => {
 			targetIsMod: true,
 			currentUserPermissions: ['all',],
 		},)
+	})
+
+	it('returns the current user mod permissions, or [] when absent from the listing', async () => {
+		apiOauthGetJSON
+			.mockResolvedValueOnce({data: {children: [{name: 'CurrentMod', mod_permissions: ['wiki', 'posts',],},],},},)
+			.mockResolvedValueOnce({data: {children: [],},},)
+
+		await expect(getModPermissions('testsub', 'currentmod',),).resolves.toEqual(['wiki', 'posts',],)
+		await expect(getModPermissions('testsub', 'alumnus',),).resolves.toEqual([],)
+	})
+
+	it('allows wiki edits only with the all or wiki permission', () => {
+		expect(canEditWiki(['all',],),).toBe(true,)
+		expect(canEditWiki(['posts', 'wiki',],),).toBe(true,)
+		expect(canEditWiki(['posts', 'mail',],),).toBe(false,)
+		expect(canEditWiki([],),).toBe(false,)
 	})
 
 	it('posts unfriend/friend calls for unban, contributor, and moderator actions', async () => {

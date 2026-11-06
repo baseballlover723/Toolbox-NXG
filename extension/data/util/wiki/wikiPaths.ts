@@ -42,7 +42,13 @@ import {
 } from './wikiConstants'
 import {LAYOUT_CACHE_KEY, sessionLayouts, setCachedWikiLayout,} from './wikiLayoutCache'
 import type {WikiLayout,} from './wikiLayoutCache'
-import {bootstrapFreshSub, migrateSubredditToNxg,} from './wikiMigration'
+import {
+	bootstrapFreshSub,
+	hasWikiWritePermission,
+	migrateSubredditToNxg,
+	noWikiPermissionReason,
+	noWikiWritePermissionReason,
+} from './wikiMigration'
 
 const log = createLogger('TBWikiPaths',)
 
@@ -249,6 +255,27 @@ async function doResolveWikiLayout (
 		return layout
 	}
 
+	// Listed as a moderator is not the same as allowed to write: alumni and
+	// no-permission mods appear in the moderated-subs listing too. Without wiki
+	// permission the bootstrap can only fail, so skip it quietly instead of
+	// attempting a write that 403s and toasts every session.
+	let canWrite: boolean
+	try {
+		canWrite = await hasWikiWritePermission(subreddit,)
+	} catch (error) {
+		// Can't tell: skip the bootstrap this session (no write, no toast) and
+		// retry on the next one, mirroring the fail-closed mod-status handling.
+		log.warn(`Could not determine wiki permission for /r/${subreddit}; skipping NXG setup:`, error,)
+		const layout: WikiLayout = hasLegacyData
+			? {subreddit, state: 'legacyFallback', compatibilityWrites: false, fallbackReason: 'resolveError',}
+			: {subreddit, state: 'nxg', compatibilityWrites: false,}
+		await setCachedWikiLayout(layout, false,)
+		return layout
+	}
+	if (!canWrite) {
+		return recordNoWikiPermission(subreddit, hasLegacyData,)
+	}
+
 	// Both bootstrap helpers record the layout cache themselves on success.
 	// They never resolve layouts internally (see their recursion invariant),
 	// so calling them while this sub's in-flight promise is held cannot
@@ -264,6 +291,12 @@ async function doResolveWikiLayout (
 	}
 
 	const failure = result.failed[0]!
+	if (failure.reason === noWikiWritePermissionReason || failure.reason === noWikiPermissionReason) {
+		// Reddit refused the write even though the listing said we could: the
+		// permission data was stale. Not an error the user can act on - no toast.
+		log.warn(`No wiki write permission for /r/${subreddit}; skipping NXG setup`,)
+		return recordNoWikiPermission(subreddit, hasLegacyData,)
+	}
 	log.error(`Could not bootstrap /r/${subreddit} onto the NXG layout: ${failure.page}: ${failure.reason}`,)
 	if (!silent) {
 		negativeTextFeedback(
@@ -280,6 +313,22 @@ async function doResolveWikiLayout (
 		? {subreddit, state: 'legacyFallback', compatibilityWrites: false, fallbackReason: 'bootstrapFailed',}
 		: {subreddit, state: 'nxg', compatibilityWrites: false,}
 	await setCachedWikiLayout(layout, false,)
+	return layout
+}
+
+/**
+ * Records the layout of a sub the viewer moderates without wiki permission:
+ * legacy data stays readable on the legacy paths (persisted, so the TTL
+ * re-checks later like `notMod`); a data-less sub stays session-only so being
+ * granted the permission bootstraps it next session.
+ * @param subreddit The subreddit being resolved.
+ * @param hasLegacyData Whether the sub has any legacy toolbox pages.
+ */
+async function recordNoWikiPermission (subreddit: string, hasLegacyData: boolean,): Promise<WikiLayout> {
+	const layout: WikiLayout = hasLegacyData
+		? {subreddit, state: 'legacyFallback', compatibilityWrites: false, fallbackReason: 'noWikiPerms',}
+		: {subreddit, state: 'nxg', compatibilityWrites: false,}
+	await setCachedWikiLayout(layout, hasLegacyData,)
 	return layout
 }
 

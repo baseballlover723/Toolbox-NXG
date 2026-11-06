@@ -195,6 +195,31 @@ export const getModeratorListResult = async (
 }
 
 /**
+ * Fetches a user's moderator permissions on a subreddit.
+ * Alumni and no-permission moderators can still appear in the user's moderated-subs
+ * listing, so callers that need to write (e.g. wiki edits) check this instead.
+ * @param subreddit Subreddit to check.
+ * @param user User whose permissions to fetch.
+ * @returns The user's `mod_permissions`, or `[]` when they are not in the moderator listing.
+ */
+export const getModPermissions = async (subreddit: string, user: string,): Promise<string[]> => {
+	const entry = await findUserInSubredditListing<{name: string; mod_permissions?: string[]}>(
+		subreddit,
+		'moderators',
+		user,
+	)
+	return entry?.mod_permissions ?? []
+}
+
+/**
+ * Returns `true` when a moderator permission set allows editing the subreddit wiki.
+ * @param permissions The moderator's `mod_permissions`.
+ */
+export function canEditWiki (permissions: readonly string[],): boolean {
+	return permissions.includes('all',) || permissions.includes('wiki',)
+}
+
+/**
  * Gets the mute state of a user in a subreddit's modmail.
  * @returns The mute entry if the user is muted, or `undefined` if not
  */
