@@ -16,11 +16,13 @@ export interface NativeRemovalReason {
 
 /**
  * Response shape of `GET /api/v1/{subreddit}/removal_reasons`: reasons keyed by id
- * plus an `order` array giving the moderator-configured display order.
+ * plus an `order` array giving the moderator-configured display order. Both fields
+ * are optional because the shape is not guaranteed and a missing field must degrade
+ * to "no reasons" rather than throw.
  */
 interface NativeRemovalReasonsResponse {
-	data: Record<string, NativeRemovalReason>
-	order: string[]
+	data?: Record<string, NativeRemovalReason>
+	order?: string[]
 }
 
 const log = createLogger('TBNativeReasons',)
@@ -59,14 +61,16 @@ export function clearNativeReasonsCache (subreddit?: string,): void {
 
 /** Reads and orders a subreddit's native removal reasons straight from the API. */
 async function fetchNativeRemovalReasons (subreddit: string,): Promise<NativeRemovalReason[]> {
-	const response = await apiOauthGetJSON<NativeRemovalReasonsResponse>(
+	const response = await apiOauthGetJSON<NativeRemovalReasonsResponse | null>(
 		`/api/v1/${subreddit}/removal_reasons`,
 	)
-	const byId = response.data ?? {}
+	// Normalize once so a null body degrades the same way as a body missing its fields.
+	const body: NativeRemovalReasonsResponse = response ?? {}
+	const byId = body.data ?? {}
 	// `order` is the source of truth for display order; fall back to insertion order if it is
 	// absent or stale. `noUncheckedIndexedAccess` widens the lookup to `| undefined`, so drop
 	// any id in `order` that no longer has a matching entry.
-	const ids = response.order?.length ? response.order : Object.keys(byId,)
+	const ids = body.order?.length ? body.order : Object.keys(byId,)
 	const reasons = ids.map((id,) => byId[id]).filter((reason,): reason is NativeRemovalReason => Boolean(reason,))
 	// An unexpected response shape yields an empty list rather than an error, which is
 	// indistinguishable from "this subreddit has none configured" everywhere downstream.
@@ -74,9 +78,9 @@ async function fetchNativeRemovalReasons (subreddit: string,): Promise<NativeRem
 	log.debug(
 		`native removal reasons for /r/${subreddit}: ${reasons.length} usable`,
 		{
-			topLevelKeys: Object.keys(response ?? {},),
+			topLevelKeys: Object.keys(body,),
 			dataEntries: Object.keys(byId,).length,
-			orderEntries: response?.order?.length ?? 0,
+			orderEntries: body.order?.length ?? 0,
 			response,
 		},
 	)

@@ -69,12 +69,12 @@ function thingInfo (subreddit: string,): ThingInfo {
 }
 
 /** Drives editMacro and returns the onPost the popup was opened with. */
-async function openMacro (macro: Partial<MacroConfig>, subreddit = 'sandboxed',) {
+function openMacro (macro: Partial<MacroConfig>, subreddit = 'sandboxed',) {
 	capturedOnPost = undefined
 	showMacroEditPopup.mockImplementation((args: {onPost: (c: string,) => Promise<boolean>},) => {
 		capturedOnPost = args.onPost
 	},)
-	await editMacro(
+	editMacro(
 		document.createElement('div',),
 		thingInfo(subreddit,),
 		{text: 'hi', ...macro,} as MacroConfig,
@@ -93,7 +93,7 @@ beforeEach(() => {
 describe('macro training-mode refusal', () => {
 	it('refuses a mod-action macro for a trainee and performs no actions', async () => {
 		isTrainingCaptureActive.mockResolvedValue(true,)
-		const onPost = await openMacro({remove: true, distinguish: false,},)
+		const onPost = openMacro({remove: true, distinguish: false,},)
 
 		const shouldClose = await onPost('reply text',)
 
@@ -107,7 +107,7 @@ describe('macro training-mode refusal', () => {
 
 	it('refuses a ban macro for a trainee instead of silently swallowing the ban', async () => {
 		isTrainingCaptureActive.mockResolvedValue(true,)
-		const onPost = await openMacro({ban: true, distinguish: false,},)
+		const onPost = openMacro({ban: true, distinguish: false,},)
 
 		await onPost('reply text',)
 
@@ -117,7 +117,7 @@ describe('macro training-mode refusal', () => {
 
 	it('allows a reply-only macro in training mode (the trainee\'s own voice)', async () => {
 		isTrainingCaptureActive.mockResolvedValue(true,)
-		const onPost = await openMacro({distinguish: false,},)
+		const onPost = openMacro({distinguish: false,},)
 
 		const shouldClose = await onPost('reply text',)
 
@@ -131,7 +131,7 @@ describe('macro training-mode refusal', () => {
 		// distinguish/lockreply only style/close the trainee's own just-posted reply, so they
 		// stay allowed in training mode (run through the guard's authorized window) rather than
 		// being refused like mod actions against the target.
-		const onPost = await openMacro({distinguish: true, lockreply: true,},)
+		const onPost = openMacro({distinguish: true, lockreply: true,},)
 
 		const shouldClose = await onPost('reply text',)
 
@@ -145,7 +145,7 @@ describe('macro training-mode refusal', () => {
 	})
 
 	it('performs the mod action normally when capture is not active', async () => {
-		const onPost = await openMacro({remove: true, distinguish: false,},)
+		const onPost = openMacro({remove: true, distinguish: false,},)
 
 		await onPost('reply text',)
 
