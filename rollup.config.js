@@ -193,6 +193,12 @@ function contentScriptConfig (platformConfig,) {
 			buildDefines(),
 			postcss({
 				extract: path.resolve(`${platformConfig.outputDir}/data/bundled.css`,),
+				// postcss-modules joins its loader root (default "/") onto the already-absolute path of
+				// the importing file when resolving `composes: x from "..."`. Harmless on Linux, but on
+				// Windows it yields `C:\C:\...`, the read fails silently, and every composed class is
+				// dropped from bundled.css. An empty root leaves the importer path as-is on both.
+				// Only *.module.css files are treated as modules either way (autoModules).
+				modules: {root: '',},
 			},),
 			...sharedScriptPlugins(`${platformConfig.outputDir}/data`,),
 			...(!isDevBuild ? [terser({format: {ascii_only: true,},},),] : []),
