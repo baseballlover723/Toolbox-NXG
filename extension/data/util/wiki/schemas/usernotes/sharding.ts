@@ -3,8 +3,8 @@
  * at 512KB (only the literal legacy path `usernotes` gets 1MB), so the NXG
  * layout splits usernotes across multiple pages: a small JSON manifest at
  * `toolbox-nxg/usernotes` maps username-hash ranges to shard pages under
- * `toolbox-nxg/usernotes/<suffix>`, each holding a complete v6 envelope for
- * its range. A shard that outgrows the soft limit splits at the median user
+ * `toolbox-nxg/usernotes/<suffix>`, each holding an `nxg-usernotes` envelope
+ * (see `codec.ts`) for its range. A shard that outgrows the soft limit splits at the median user
  * hash, so capacity grows without bound while ordinary saves rewrite only the
  * shards whose users actually changed.
  *

@@ -1,8 +1,5 @@
 /** Domain types and constants for the Subreddit Notes module. */
 
-/** Wiki page name for the note index. */
-export const subredditNotesIndexPage = 'notes/index'
-
 /** Current schema version written to every NXG index save. */
 export const subredditNotesIndexVersion = 2
 

@@ -71,8 +71,11 @@ export interface ResolveWikiLayoutOptions {
  * Resolves the current wiki layout for a subreddit. Checks the local cache
  * first (performance hint), then falls back to reading the wiki: the
  * `toolbox-nxg` page first, then `toolbox`, then a legacy `usernotes` probe.
- * Read-only - migration to the NXG layout is opt-in via the Wiki Layout
- * settings section ({@link util/wiki/wikiMigration!migrateSubredditToNxg}).
+ * A sub with no `toolbox-nxg` page is set up here on first touch when the
+ * viewer moderates it with wiki permission: legacy data is migrated
+ * ({@link util/wiki/wikiMigration!migrateSubredditToNxg}) and a data-less sub
+ * gets a default config page ({@link util/wiki/wikiMigration!bootstrapFreshSub});
+ * other viewers get a read-only legacy or empty layout.
  * Never silently downgrades a migrated subreddit to legacy reads.
  *
  * For subs the viewer does not moderate, resolution short-circuits to a
