@@ -6,6 +6,7 @@ import {link,} from '../../util/reddit/pageContext'
 import {mountReactInLightBody,} from '../../util/ui/reactMount'
 import {type CounterState, getCounterState,} from '../notifier/store'
 import {ModBar,} from './components/ModBar'
+import {createApiBudgetHandlers,} from './features/apiBudget'
 import type {ModbarSettings,} from './settings'
 
 /**
@@ -64,6 +65,9 @@ export async function createModbarHandlers (
 		modmailCount,
 	}
 
+	// The API budget readout is a debug aid; only poll for it when debug mode is on.
+	const apiBudget = debugMode ? createApiBudgetHandlers() : null
+
 	const {unmount,} = mountReactInLightBody(
 		<ModBar
 			shortcuts={shortcuts}
@@ -79,6 +83,7 @@ export async function createModbarHandlers (
 			unModQueueUrl={unModQueueUrl}
 			notifierEnabled={notifierEnabled}
 			debugMode={debugMode}
+			{...(apiBudget ? {apiBudget: apiBudget.store,} : {})}
 			initialCounters={initialCounters}
 			setSetting={setSetting}
 			onMount={onModbarMount}
@@ -86,5 +91,10 @@ export async function createModbarHandlers (
 		'ModBar',
 	)
 
-	return {dispose: unmount,}
+	return {
+		dispose: () => {
+			unmount()
+			void apiBudget?.cleanup()
+		},
+	}
 }

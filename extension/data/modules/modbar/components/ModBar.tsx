@@ -19,6 +19,8 @@ import {getModuleSettingAsync,} from '../../../util/persistence/settings'
 import {useMountEffect,} from '../../../util/ui/hooks'
 import {reloadPage,} from '../../../util/ui/navigation'
 import {type CounterState, subscribeCounters,} from '../../notifier/store'
+import type {ApiBudgetStore,} from '../schema'
+import {ApiBudgetIndicator,} from './ApiBudgetIndicator'
 import {MySubredditsPopup,} from './MySubredditsPopup'
 import {RecentActionsPopup,} from './RecentActionsPopup'
 
@@ -70,6 +72,8 @@ interface ModBarProps {
 	notifierEnabled: boolean
 	/** Whether debug mode is on (shows the reload-toolbox button). */
 	debugMode: boolean
+	/** Live API budget for the debug readout; present only when debug mode is on. */
+	apiBudget?: ApiBudgetStore
 	initialCounters: CounterState
 	/** Callback to persist a modbar setting change. */
 	setSetting: (key: 'modbarHidden', value: boolean,) => void
@@ -98,6 +102,7 @@ export function ModBar ({
 	unModQueueUrl,
 	notifierEnabled,
 	debugMode,
+	apiBudget,
 	initialCounters,
 	setSetting,
 	onMount,
@@ -344,6 +349,7 @@ export function ModBar ({
 						<span>{toolboxVersion}</span>
 					</button>
 				)}
+				{apiBudget && <ApiBudgetIndicator store={apiBudget} />}
 				{debugMode && (
 					<a
 						className="toolbox-icons toolbox-reload-link"

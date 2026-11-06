@@ -14,6 +14,7 @@ import {initProposalsRuntime,} from './modules/shared/proposals/setup'
 
 import {checkLoadConditions,} from './framework/loadConditions'
 import TBModule from './framework/moduleRegistry'
+import {createRateLimitNotice,} from './framework/rateLimitNotice'
 import createLogger from './util/infra/logging'
 import {isOldReddit,} from './util/infra/platform'
 import {clearCache,} from './util/persistence/cache'
@@ -70,7 +71,8 @@ if (isOldReddit) {
 	)
 }
 
-void (async () => {
+/** Runs the full startup sequence: load checks, settings migrations, module registration and init. */
+async function startToolbox () {
 	// Ensure that other conditions are met, and return early if not
 	try {
 		await checkLoadConditions()
@@ -181,4 +183,16 @@ void (async () => {
 	// shreddit module that every module is registered and it may run its initial scan.
 	document.dispatchEvent(new CustomEvent('TBListenerLoaded',),)
 	watchForURLChanges()
+}
+
+void (async () => {
+	// Startup waits on the shared API budget (the user-details fetch, settings
+	// migrations, module init). If that budget is spent, explain the wait instead of
+	// leaving the page silently without Toolbox; removed once startup settles.
+	const stopRateLimitNotice = createRateLimitNotice()
+	try {
+		await startToolbox()
+	} finally {
+		await stopRateLimitNotice()
+	}
 })()

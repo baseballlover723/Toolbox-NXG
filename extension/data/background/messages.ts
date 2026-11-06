@@ -31,6 +31,23 @@ export type TbRequestResponse =
 	| {error?: never; response: SerializedResponse}
 	| {error: true; message?: string; response?: SerializedResponse}
 
+/** Asks the background for its current view of the shared Reddit API rate-limit budget. */
+export interface TbRatelimitStatusMessage {
+	action: 'toolbox-ratelimit-status'
+}
+
+/**
+ * Reply shape for a `toolbox-ratelimit-status` message. The budget lives in the
+ * background and is shared by every tab, so this is the state that actually gates
+ * outgoing requests.
+ */
+export interface TbRatelimitStatusResponse {
+	/** Calls left in the current window, or `null` when no limit has been observed yet. */
+	remaining: number | null
+	/** Absolute ms timestamp at which the current window resets; `0` when unknown. */
+	resetAt: number
+}
+
 // --- Cache -----------------------------------------------------------------
 
 /** Retrieves a cached value for `storageKey`; `inputValue` is the uncached fallback to store on a miss. */
@@ -178,6 +195,7 @@ export type TbUsernoteDecompressResponse =
 /** Union of all messages handled by the background service worker. */
 export type ToolboxMessage =
 	| TbRequestMessage
+	| TbRatelimitStatusMessage
 	| TbCacheMessage
 	| TbCacheForceTimeoutMessage
 	| TbUpdateSettingsMessage

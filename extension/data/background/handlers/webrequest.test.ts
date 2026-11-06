@@ -16,7 +16,7 @@ vi.mock('webextension-polyfill', () => ({
 }),)
 vi.mock('../messageHandling', () => ({registerMessageHandler,}),)
 
-import {makeRequest, registerWebrequestHandlers, resetRateLimitState,} from './webrequest'
+import {getRateLimitStatus, makeRequest, registerWebrequestHandlers, resetRateLimitState,} from './webrequest'
 import type {MakeRequestOptions,} from './webrequest'
 
 beforeEach(() => {
@@ -312,6 +312,31 @@ describe('makeRequest', () => {
 })
 
 describe('rate limiting', () => {
+	it('reports an unobserved limit as null remaining', () => {
+		expect(getRateLimitStatus(),).toEqual({remaining: null, resetAt: 0,},)
+	})
+
+	it('reports the budget recorded from response headers', async () => {
+		vi.useFakeTimers({now: 1_000_000,},)
+		vi.mocked(fetch,).mockResolvedValueOnce(
+			new Response('', {
+				status: 200,
+				headers: {'x-ratelimit-remaining': '7', 'x-ratelimit-reset': '30',},
+			},),
+		)
+		await makeRequest({endpoint: '/api/first',},)
+		// One slot was consumed before the response replaced the state with the header values.
+		expect(getRateLimitStatus(),).toEqual({remaining: 7, resetAt: 1_030_000,},)
+		vi.useRealTimers()
+	})
+
+	it('registers a toolbox-ratelimit-status handler', () => {
+		registerWebrequestHandlers()
+		const call = registerMessageHandler.mock.calls.find((c,) => c[0] === 'toolbox-ratelimit-status')
+		expect(call,).toBeDefined()
+		expect((call![1] as () => unknown)(),).toEqual({remaining: null, resetAt: 0,},)
+	})
+
 	it('updates rate-limit state from response headers', async () => {
 		vi.mocked(fetch,).mockResolvedValueOnce(
 			new Response('', {

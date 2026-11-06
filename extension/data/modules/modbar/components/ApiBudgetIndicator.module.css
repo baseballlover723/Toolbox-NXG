@@ -1,0 +1,27 @@
+/* Debug-mode API budget readout in the modbar, next to the version badge. */
+
+.indicator {
+	display: flex;
+	align-items: center;
+	gap: var(--toolbox-sp-3);
+	margin: 0 var(--toolbox-sp-5) 0 0;
+	padding: 0 var(--toolbox-sp-3);
+	color: var(--toolbox-text-body);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.reset {
+	color: var(--toolbox-text-secondary);
+}
+
+.low {
+	color: var(--toolbox-caution-accent);
+}
+
+.exhausted,
+.exhausted .reset {
+	color: var(--toolbox-error-color);
+	font-weight: bold;
+}

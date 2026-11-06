@@ -239,6 +239,25 @@ body.toolbox[toolbox-warning]::before {
 	font-size: 14px;
 }
 
+/* Startup notice shown while Toolbox waits out a spent Reddit API rate limit
+   (framework/rateLimitNotice.ts). Plain DOM injected before the React root exists,
+   so it is global CSS rather than a module. */
+.toolbox-ratelimit-notice {
+	position: fixed;
+	right: 40px;
+	bottom: 50px;
+	z-index: var(--toolbox-z-toast);
+	max-width: 360px;
+	padding: var(--toolbox-sp-3) var(--toolbox-sp-5);
+	border: 1px solid var(--toolbox-caution-border);
+	border-left: 4px solid var(--toolbox-caution-accent);
+	background-color: var(--toolbox-caution-bg);
+	color: var(--toolbox-caution-text);
+	font-family: var(--toolbox-font-family);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
 /* Base styles for React-component inputs/textareas/selects - zero specificity so module CSS always wins.
    Duplicated with :host so the rules also apply inside shadow roots (where .toolbox-scope is in the
    light DOM and not visible to shadow-scoped CSS). */

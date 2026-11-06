@@ -109,6 +109,8 @@ const messageValidators: Record<ToolboxMessageAction, MessageValidator> = {
 		&& optionalBoolean(request.okOnly,)
 		&& optionalBoolean(request.absolute,),
 
+	'toolbox-ratelimit-status': () => true,
+
 	'toolbox-cache': (request,) => {
 		if (request.method === 'clear') {
 			return true

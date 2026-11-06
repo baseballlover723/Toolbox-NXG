@@ -8,6 +8,7 @@ import browser from 'webextension-polyfill'
 
 import createLogger from '../../util/infra/logging'
 import {registerMessageHandler,} from '../messageHandling'
+import type {TbRatelimitStatusResponse,} from '../messages'
 import {tmpStoreHeaders,} from './cookieStore'
 import {getCookieWithFPIFallback, getRedditSessionJTI, isAllowedRedditHost,} from './tabUtils'
 
@@ -34,6 +35,17 @@ let budgetWaitPromise: Promise<void> | null = null
 export function resetRateLimitState (): void {
 	rateLimitState = {remaining: Infinity, resetAt: 0,}
 	budgetWaitPromise = null
+}
+
+/**
+ * Returns a serializable snapshot of the shared rate-limit budget. `Infinity`
+ * (no limit observed) does not survive the message channel, so it maps to `null`.
+ */
+export function getRateLimitStatus (): TbRatelimitStatusResponse {
+	return {
+		remaining: Number.isFinite(rateLimitState.remaining,) ? rateLimitState.remaining : null,
+		resetAt: rateLimitState.resetAt,
+	}
 }
 
 /** Updates the in-memory rate-limit state from Reddit's `x-ratelimit-*` response headers. */
@@ -462,7 +474,10 @@ export async function makeRequest ({
 	return finish(response, okOnly,)
 }
 
-/** Registers the `toolbox-request` message handler that proxies fetch calls. */
+/**
+ * Registers the `toolbox-request` message handler that proxies fetch calls, and the
+ * `toolbox-ratelimit-status` handler that reports the shared budget.
+ */
 export function registerWebrequestHandlers () {
 	registerMessageHandler('toolbox-request', (request, sender,) =>
 		// cookieStoreId comes only from the trusted sender and is assigned after the
@@ -475,4 +490,5 @@ export function registerWebrequestHandlers () {
 				response: error.response ? await serializeResponse(error.response,) : undefined,
 			}),
 		),)
+	registerMessageHandler('toolbox-ratelimit-status', () => getRateLimitStatus(),)
 }
