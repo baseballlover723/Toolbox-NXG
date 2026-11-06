@@ -9,7 +9,7 @@ The toolbox development team highly values privacy, these are the measures we ha
 
 ---
 
-_[1]_ toolbox is open-source, you can check the code and used webextension permissions on the repository here. No code is modified before the extension is released to the chrome store or mozilla AMO. Here is how you access the code of the installed version to verify this claim:
+_[1]_ toolbox is open-source, you can check the code and used webextension permissions on the repository here. The releases on the chrome store and mozilla AMO are built from this public source code by the published build process: the code is bundled and minified, but nothing is added or removed. Here is how you access the code of the installed version to verify this claim:
 
 - Edge: Open `edge://version/` and look for `Profile path` which is the directory containing extensions.
 - Chrome: Open `chrome://version/` and look for `Profile Path` which is the directory containing extensions.

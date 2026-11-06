@@ -9,7 +9,7 @@ The toolbox development team highly values privacy. These are the measures we ha
 - If accessed data needs to be stored it is either stored on reddit (usernotes, toolbox subreddit configuration, settings export) or in the local browser extension settings (personal settings, cache). No data is stored outside of reddit or out of reach of the person using toolbox.
 - Data stored on reddit is stored through wiki pages. It is only stored in wiki pages of subreddits where the account using toolbox has access as moderator with the permissions to edit those pages. Any write action on a wiki page is accompanied with a settings change on the wiki page that makes sure only moderators have access to the written data.
 
-[^1]: Toolbox is open-source — you can check the code and the declared webextension permissions in the repository. No code is modified before the extension is released to the Chrome Web Store or Mozilla AMO. Here is how to access the code of the installed version to verify this:
+[^1]: Toolbox is open-source — you can check the code and the declared webextension permissions in the repository. The releases on the Chrome Web Store and Mozilla AMO are built from this public source code by the published build process: the code is bundled and minified, but nothing is added or removed. Here is how to access the code of the installed version to verify this:
 
     - **Edge**: Open `edge://version/` and look for `Profile path` — that directory contains extensions.
     - **Chrome**: Open `chrome://version/` and look for `Profile Path` — that directory contains extensions.
