@@ -1,5 +1,4 @@
-/** Background-page helpers for Reddit host validation, JWT payload decoding, and
- * messaging tabs. */
+/** Background-page helpers for JWT payload decoding, session cookies, and messaging tabs. */
 
 import browser from 'webextension-polyfill'
 
@@ -8,14 +7,6 @@ import createLogger from '../../util/infra/logging'
 const log = createLogger('TBTabUtils',)
 
 const noReceiver = 'Could not establish connection. Receiving end does not exist.'
-
-/** Returns `true` if `hostname` is `reddit.com`, `redd.it`, or any subdomain thereof. */
-export function isAllowedRedditHost (hostname: string,): boolean {
-	return hostname === 'reddit.com'
-		|| hostname.endsWith('.reddit.com',)
-		|| hostname === 'redd.it'
-		|| hostname.endsWith('.redd.it',)
-}
 
 /**
  * Decodes the payload of a JWT token without verifying the signature.

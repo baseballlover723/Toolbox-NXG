@@ -250,6 +250,41 @@ const config = {
 } satisfies BuildConfig
 ```
 
+### Platform-exclusive code
+
+Guard code that only one browser needs on `isFirefoxBuild` from
+`util/infra/buildenv`. It is fixed at build time from `BUILD_TARGET`, so Rollup
+removes the guarded code from the other browser's bundle instead of shipping it
+unused.
+
+The guard must be an `if` statement outside any `try` block. Rollup keeps
+everything referenced inside a `try`, and does not always drop a ternary's dead
+branch; either way the code silently stays in the Chrome bundle.
+
+```ts
+// correct — the container path is dropped from the Chrome bundle
+function send (options: ForwardedRequestInit,): Promise<Response> {
+	if (isFirefoxBuild && container) {
+		return fetchInContainer(container, url, options,)
+	}
+	return fetch(url, toRequestInit(options,),)
+}
+
+// avoid — inside a try, so fetchInContainer ships in Chrome anyway
+try {
+	return isFirefoxBuild && container
+		? await fetchInContainer(container, url, options,)
+		: await fetch(url, toRequestInit(options,),)
+} catch (error) {
+	log.error('Fetch request failed:', error,)
+	throw error
+}
+```
+
+Tests run as the Firefox build; to exercise the Chrome path, mock
+`util/infra/buildenv`. To confirm the guard works, build and grep `build/chrome`
+for the guarded code.
+
 ---
 
 ## 4. Functions and Arrow Functions

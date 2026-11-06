@@ -47,10 +47,12 @@ const sourceExtensionByOutputExtension = new Map([
 
 const platforms = {
 	chrome: {
+		platform: 'chrome',
 		manifest: 'extension/chrome_manifest.json',
 		outputDir: 'build/chrome',
 	},
 	firefox: {
+		platform: 'firefox',
 		manifest: 'extension/firefox_manifest.json',
 		outputDir: 'build/firefox',
 	},
@@ -125,7 +127,7 @@ function getStaticAssetPaths (manifest,) {
 		.sort()
 }
 
-function buildDefines () {
+function buildDefines (platform,) {
 	return replace({
 		preventAssignment: true,
 		values: {
@@ -135,6 +137,8 @@ function buildDefines () {
 			'BUILD_TYPE': JSON.stringify(buildType,),
 			'BUILD_SHA': JSON.stringify(buildSha ?? null,),
 			'BUILD_COUNT': JSON.stringify(devBuildCount,),
+			// Target browser; platform-exclusive code is guarded on it so the other bundle drops it.
+			'BUILD_PLATFORM': JSON.stringify(platform,),
 		},
 	},)
 }
@@ -190,7 +194,7 @@ function contentScriptConfig (platformConfig,) {
 			sourcemap: isDevBuild,
 		},
 		plugins: [
-			buildDefines(),
+			buildDefines(platformConfig.platform,),
 			postcss({
 				extract: path.resolve(`${platformConfig.outputDir}/data/bundled.css`,),
 				// postcss-modules joins its loader root (default "/") onto the already-absolute path of
@@ -290,6 +294,7 @@ function backgroundConfig (platformConfig,) {
 			sourcemap: isDevBuild ? 'inline' : false,
 		},
 		plugins: [
+			buildDefines(platformConfig.platform,),
 			...sharedScriptPlugins(`${platformConfig.outputDir}/data/background`,),
 			zipBuildOutputPlugin(platformConfig, manifest.version,),
 		],

@@ -7,6 +7,7 @@
 
 import browser from 'webextension-polyfill'
 
+import {isFirefoxBuild,} from '../../util/infra/buildenv'
 import createLogger from '../../util/infra/logging'
 import {registerMessageHandler,} from '../messageHandling'
 import type {TbNotificationDetails,} from '../messages'
@@ -41,7 +42,7 @@ const DEFAULT_STORE_ID = 'firefox-default'
  * from different containers apart.
  */
 async function containerLabel (cookieStoreId: string | undefined,): Promise<string | undefined> {
-	if (!cookieStoreId || cookieStoreId === DEFAULT_STORE_ID || !browser.contextualIdentities) {
+	if (!isFirefoxBuild || !cookieStoreId || cookieStoreId === DEFAULT_STORE_ID || !browser.contextualIdentities) {
 		return undefined
 	}
 	try {

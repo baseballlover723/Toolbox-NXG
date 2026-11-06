@@ -1,6 +1,15 @@
 import {defineConfig,} from 'vitest/config'
 
 export default defineConfig({
+	// Build-time globals that rollup's replace plugin injects (see buildDefines in rollup.config.js).
+	// Tests run the Firefox flavor so platform-guarded code is exercised; a test that needs the
+	// Chrome flavor mocks util/infra/buildenv.
+	define: {
+		BUILD_TYPE: JSON.stringify('dev',),
+		BUILD_SHA: 'null',
+		BUILD_COUNT: '0',
+		BUILD_PLATFORM: JSON.stringify('firefox',),
+	},
 	test: {
 		// The only DOM environment: every test runs here, so there is one set of DOM
 		// quirks to reason about rather than two. jsdom was previously pinned per-file

@@ -28,8 +28,6 @@
         "notifications",
         "webNavigation",
         "alarms",
-        "webRequest",
-        "webRequestBlocking",
         "contextualIdentities"
     ],
     "icons": {

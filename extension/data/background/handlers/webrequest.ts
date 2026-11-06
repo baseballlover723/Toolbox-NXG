@@ -6,11 +6,19 @@
 
 import browser from 'webextension-polyfill'
 
+import {
+	type ForwardedBody,
+	type ForwardedRequestInit,
+	serializeResponse,
+	toRequestInit,
+} from '../../api/transport/forwardedRequest'
+import {isFirefoxBuild,} from '../../util/infra/buildenv'
 import createLogger from '../../util/infra/logging'
+import {isAllowedRedditHost,} from '../../util/reddit/redditHost'
 import {registerMessageHandler,} from '../messageHandling'
 import type {TbRatelimitStatusResponse,} from '../messages'
-import {tmpStoreHeaders,} from './cookieStore'
-import {getCookieWithFPIFallback, getRedditSessionJTI, isAllowedRedditHost,} from './tabUtils'
+import {type ContainerTarget, containerTargetFor, fetchInContainer, requestTokenInContainer,} from './containerRequest'
+import {getCookieWithFPIFallback, getRedditSessionJTI,} from './tabUtils'
 
 const log = createLogger('TBWebrequest',)
 
@@ -111,18 +119,34 @@ interface TokenData {
 }
 
 /**
+ * Sends the CSRF-for-OAuth token exchange. Container requests go through the originating tab,
+ * which must send it as the page: reddit refuses this endpoint from a content script's `fetch`.
+ */
+function sendTokenRequest (csrfToken: string, container: ContainerTarget | undefined,): Promise<Response> {
+	// isFirefoxBuild lets Rollup drop the container path from the Chrome bundle.
+	if (isFirefoxBuild && container) {
+		return requestTokenInContainer(container, csrfToken,)
+	}
+	return fetch('https://www.reddit.com/svc/shreddit/token', {
+		headers: {'Content-Type': 'application/json',},
+		method: 'POST',
+		body: JSON.stringify({csrf_token: csrfToken,},),
+	},)
+}
+
+/**
  * Fetches an OAuth token from the /svc/shreddit/token endpoint.
- * @param cookieStoreId Cookie store of the originating tab, so the token is minted
- * from and cached against the correct Firefox container's session.
+ * @param container Firefox container tab the request came from, so the token is minted
+ * from and cached against that container's session; `undefined` for the default session.
  * @param tries Number of tries to get the token (recursive)
  */
-async function getOAuthTokens (cookieStoreId?: string, tries = 1,): Promise<TokenData> {
+async function getOAuthTokens (container?: ContainerTarget, tries = 1,): Promise<TokenData> {
 	// Attempt to use cached token if it hasn't expired
 
 	// make currently-logged-in user part of the storage key so we don't
 	// accidentally use the wrong access token after switching accounts (or
 	// containers)
-	const currentUserID = await getRedditSessionJTI(cookieStoreId,)
+	const currentUserID = await getRedditSessionJTI(container?.cookieStoreId,)
 	const storageKey = `toolbox-accessToken-${currentUserID}`
 	// browser.storage.local.get returns { [key]: value } rather than the value directly
 	const cachedToken = (await browser.storage.local.get(storageKey,))[storageKey] as TokenData | undefined
@@ -136,16 +160,12 @@ async function getOAuthTokens (cookieStoreId?: string, tries = 1,): Promise<Toke
 	const csrfToken = await getCookieWithFPIFallback({
 		url: 'https://sh.reddit.com',
 		name: 'csrf_token',
-		...(cookieStoreId ? {storeId: cookieStoreId,} : {}),
+		...(container ? {storeId: container.cookieStoreId,} : {}),
 	},)
 
 	// If we have a valid cookie, exchange CSRF token for OAuth token and return
 	if (csrfToken) {
-		const response = await fetch('https://www.reddit.com/svc/shreddit/token', {
-			headers: {'Content-Type': 'application/json', ...tmpStoreHeaders(cookieStoreId,),},
-			method: 'POST',
-			body: JSON.stringify({csrf_token: csrfToken.value,},),
-		},)
+		const response = await sendTokenRequest(csrfToken.value, container,)
 		const contentType = response.headers.get('content-type',)
 		if (response.ok && contentType?.startsWith('application/json',)) {
 			const tokenData = await response.json() as {token: string; expires: number}
@@ -168,43 +188,26 @@ async function getOAuthTokens (cookieStoreId?: string, tries = 1,): Promise<Toke
 		await makeRequest({
 			endpoint: 'https://sh.reddit.com/not_found',
 			absolute: true,
-			cookieStoreId,
+			container,
 		},)
-		return getOAuthTokens(cookieStoreId, tries + 1,)
+		return getOAuthTokens(container, tries + 1,)
 	} else {
 		throw new Error('error getting CSRF token',)
 	}
 }
 
-/**
- * Flattens a fetch `Response` into a plain JSON value from which an equivalent
- * `Response` can later be rebuilt.
- * @returns An array of arguments to the `Response` constructor, serializable
- * to plain JSON, which can be used to replicate the given response.
- */
-async function serializeResponse (response: Response,): Promise<[string, ResponseInit,]> {
-	const headers: Record<string, string> = {}
-	for (const [header, value,] of response.headers) {
-		headers[header] = value
+/** Converts a request body to plain data; form fields with no value are dropped. */
+function toForwardedBody (body: RequestBodyObject | string,): ForwardedBody {
+	if (typeof body === 'string') {
+		return {kind: 'text', text: body,}
 	}
-	return [await response.text(), {
-		status: response.status,
-		statusText: response.statusText,
-		headers,
-	},]
-}
-
-/**
- * Builds a `FormData` instance from a set of key-value pairs.
- */
-function makeFormData (body: RequestBodyObject,): FormData {
-	const formData = new FormData()
+	const fields: Record<string, string> = {}
 	for (const [key, value,] of Object.entries(body,)) {
 		if (value != null) {
-			formData.append(key, value,)
+			fields[key] = value
 		}
 	}
-	return formData
+	return {kind: 'form', fields,}
 }
 
 /** Uppercases `method` and validates it against the allowed set; returns `undefined` when `method` is `undefined`. */
@@ -320,11 +323,11 @@ export interface MakeRequestOptions {
 	/** If `true`, treats `endpoint` as a fully-qualified URL. Must target a reddit.com origin. */
 	absolute?: boolean | undefined
 	/**
-	 * Cookie store of the tab that originated the request, used to send the right
-	 * Firefox container's cookies. Derived from the trusted message `sender`, never
-	 * from content-script-supplied payload data.
+	 * Firefox container tab that originated the request; its frame performs the network
+	 * call so the container's cookies are sent. Derived from the trusted message `sender`,
+	 * never from content-script-supplied payload data.
 	 */
-	cookieStoreId?: string | undefined
+	container?: ContainerTarget | undefined
 }
 
 /** An `Error` that may carry the failed `Response` for `okOnly` errors. */
@@ -353,7 +356,7 @@ export async function makeRequest ({
 	oauth,
 	okOnly,
 	absolute,
-	cookieStoreId,
+	container,
 }: MakeRequestOptions,): Promise<Response> {
 	// Construct the request URL
 	const normalizedMethod = normalizeMethod(method,)
@@ -378,8 +381,8 @@ export async function makeRequest ({
 		throw new Error('toolbox-request: request bodies are only allowed with POST requests',)
 	}
 
-	// Construct the options object passed to fetch()
-	const fetchOptions: RequestInit = {
+	// Construct the fetch options as plain data, so a container request can be forwarded as-is
+	const fetchOptions: ForwardedRequestInit = {
 		credentials: credentialsForUrl(url,), // required for reddit.com cookies, omitted for redd.it media hosts
 		redirect: 'error', // prevents strange reddit API shenanigans
 		...(normalizedMethod !== undefined ? {method: normalizedMethod,} : {}),
@@ -387,28 +390,20 @@ export async function makeRequest ({
 	}
 	if (body) {
 		if (typeof body === 'object' && 'type' in body && body.type === 'json') {
-			fetchOptions.body = JSON.stringify(body.data,)
+			fetchOptions.body = {kind: 'text', text: JSON.stringify(body.data,),}
 			fetchOptions.headers = {...fetchOptions.headers, 'Content-Type': 'application/json',}
-		} else if (typeof body === 'object') {
-			fetchOptions.body = makeFormData(body as RequestBodyObject,)
 		} else {
-			fetchOptions.body = body
+			fetchOptions.body = toForwardedBody(body as RequestBodyObject | string,)
 		}
-	}
-	// Tag the request so the Firefox cookie-rewrite listener swaps in the
-	// originating container's cookies. No-op off Firefox or for the default store.
-	const storeHeaders = tmpStoreHeaders(cookieStoreId,)
-	if (storeHeaders) {
-		fetchOptions.headers = {...fetchOptions.headers, ...storeHeaders,}
 	}
 
 	/** Returns the fetch options for `mode`; cookie mode relies on `credentials: 'include'` alone. */
-	async function optionsForMode (mode: OAuthMode,): Promise<RequestInit> {
+	async function optionsForMode (mode: OAuthMode,): Promise<ForwardedRequestInit> {
 		if (mode === 'cookie') {
 			return fetchOptions
 		}
 		try {
-			const tokens = await getOAuthTokens(cookieStoreId,)
+			const tokens = await getOAuthTokens(container,)
 			return {
 				...fetchOptions,
 				headers: {...fetchOptions.headers, Authorization: `Bearer ${tokens.accessToken}`,},
@@ -419,9 +414,22 @@ export async function makeRequest ({
 		}
 	}
 
-	async function performFetch (options: RequestInit, failureMessage: string,): Promise<Response> {
+	/**
+	 * Sends the request: from the originating container tab if there is one, else from here.
+	 * Kept out of `performFetch`'s `try` block: Rollup keeps everything referenced inside a `try`,
+	 * so the branch must live here for the Chrome bundle to drop the container path.
+	 */
+	function send (options: ForwardedRequestInit,): Promise<Response> {
+		if (isFirefoxBuild && container) {
+			return fetchInContainer(container, url, options,)
+		}
+		return fetch(url, toRequestInit(options,),)
+	}
+
+	/** Sends the request, logging and rethrowing network failures. */
+	async function performFetch (options: ForwardedRequestInit, failureMessage: string,): Promise<Response> {
 		try {
-			return await fetch(url, options,)
+			return await send(options,)
 		} catch (error) {
 			log.error(failureMessage, error,)
 			throw error
@@ -429,7 +437,7 @@ export async function makeRequest ({
 	}
 
 	/** Sends the request, waiting first if the rate-limit budget is exhausted and retrying once on 429. */
-	async function sendWithBudget (options: RequestInit,): Promise<Response> {
+	async function sendWithBudget (options: ForwardedRequestInit,): Promise<Response> {
 		await waitForBudget()
 		let result = await performFetch(options, 'Fetch request failed:',)
 		updateRateLimitState(result,)
@@ -460,7 +468,7 @@ export async function makeRequest ({
 	// are never retried, to avoid performing an action twice.
 	if (response.status === 403 && isReadMethod(normalizedMethod,)) {
 		const fallbackMode: OAuthMode = mode === 'cookie' ? 'bearer' : 'cookie'
-		let fallbackOptions: RequestInit | undefined
+		let fallbackOptions: ForwardedRequestInit | undefined
 		try {
 			fallbackOptions = await optionsForMode(fallbackMode,)
 		} catch {
@@ -480,9 +488,9 @@ export async function makeRequest ({
  */
 export function registerWebrequestHandlers () {
 	registerMessageHandler('toolbox-request', (request, sender,) =>
-		// cookieStoreId comes only from the trusted sender and is assigned after the
+		// container comes only from the trusted sender and is assigned after the
 		// request fields so a spoofed payload value cannot override it.
-		makeRequest({...request, cookieStoreId: sender.tab?.cookieStoreId,},).then(
+		makeRequest({...request, container: containerTargetFor(sender,),},).then(
 			async (response,) => ({response: await serializeResponse(response,),}),
 			async (error: RequestError,) => ({
 				error: true as const,

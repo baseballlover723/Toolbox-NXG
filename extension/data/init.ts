@@ -13,6 +13,7 @@ import AppRoot from './shared/app/AppRoot'
 
 import {initProposalsRuntime,} from './modules/shared/proposals/setup'
 
+import {registerContainerRequestExecutor,} from './api/transport/containerExecutor'
 import {checkLoadConditions,} from './framework/loadConditions'
 import TBModule from './framework/moduleRegistry'
 import {createRateLimitNotice,} from './framework/rateLimitNotice'
@@ -74,6 +75,11 @@ if (isOldReddit) {
 
 /** Runs the full startup sequence: load checks, settings migrations, module registration and init. */
 async function startToolbox () {
+	// Firefox Multi-Account Containers: answer background-forwarded requests from this frame so
+	// they carry this tab's container cookies. Must precede every request, including the user
+	// details fetch in checkLoadConditions. No-op outside the Firefox bundle.
+	registerContainerRequestExecutor()
+
 	// Ensure that other conditions are met, and return early if not
 	try {
 		await checkLoadConditions()

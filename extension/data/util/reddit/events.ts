@@ -2,6 +2,7 @@
 
 import browser from 'webextension-polyfill'
 
+import {isFirefoxBuild,} from '../infra/buildenv'
 import createLogger from '../infra/logging'
 
 const log = createLogger('TBPageContext',)
@@ -21,6 +22,9 @@ export function sendEvent (tbuEvent: string, detail?: unknown,) {
  */
 let bridgeActive = false
 
+/** Background message actions handled by a dedicated listener and never bridged to the window. */
+const privateActions = new Set<string>(isFirefoxBuild ? ['toolbox-container-fetch', 'toolbox-container-token',] : [],)
+
 export function setupMessageBridge () {
 	if (bridgeActive) {
 		return
@@ -36,6 +40,11 @@ export function setupMessageBridge () {
 			return undefined
 		}
 		const {action, payload,} = message as {action: string; payload?: unknown}
+		// Container request messages are answered by api/transport/containerExecutor and must not
+		// surface as window events, which page scripts can observe.
+		if (privateActions.has(action,)) {
+			return undefined
+		}
 		window.dispatchEvent(new CustomEvent(action, {detail: payload,},),)
 		return undefined
 	},)

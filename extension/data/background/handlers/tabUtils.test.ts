@@ -18,7 +18,6 @@ import {
 	getCookieWithFPIFallback,
 	getRedditSessionJTI,
 	getRedditSessionUserID,
-	isAllowedRedditHost,
 	sendTabMessageSilently,
 } from './tabUtils'
 
@@ -29,15 +28,6 @@ beforeEach(() => {
 },)
 
 describe('tabUtils', () => {
-	it('allows reddit.com and redd.it hosts only', () => {
-		expect(isAllowedRedditHost('reddit.com',),).toBe(true,)
-		expect(isAllowedRedditHost('old.reddit.com',),).toBe(true,)
-		expect(isAllowedRedditHost('redd.it',),).toBe(true,)
-		expect(isAllowedRedditHost('v.redd.it',),).toBe(true,)
-		expect(isAllowedRedditHost('notreddit.com',),).toBe(false,)
-		expect(isAllowedRedditHost('evilredd.it',),).toBe(false,)
-	})
-
 	it('decodes JWT payloads', () => {
 		expect(decodeJWTPayload(mockJwtCookie({sub: 't2_user',},).value,),).toEqual({sub: 't2_user',},)
 	})

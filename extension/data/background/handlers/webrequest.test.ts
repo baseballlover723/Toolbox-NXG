@@ -7,12 +7,11 @@ import {mockJwtCookie,} from './test-helpers'
 const registerMessageHandler = vi.hoisted(() => vi.fn())
 const cookies = vi.hoisted(() => ({get: vi.fn(),}))
 const storageLocal = vi.hoisted(() => ({get: vi.fn(), set: vi.fn(),}))
-// Presence of webRequest.onBeforeSendHeaders makes the Firefox cookie-rewrite path
-// active, so requests with a non-default cookieStoreId get tagged with the temp header.
-const webRequest = vi.hoisted(() => ({onBeforeSendHeaders: {addListener: vi.fn(),},}))
+// Container requests are forwarded to the originating tab with tabs.sendMessage.
+const tabs = vi.hoisted(() => ({sendMessage: vi.fn(),}))
 
 vi.mock('webextension-polyfill', () => ({
-	default: {cookies, storage: {local: storageLocal,}, webRequest,},
+	default: {cookies, storage: {local: storageLocal,}, tabs,},
 }),)
 vi.mock('../messageHandling', () => ({registerMessageHandler,}),)
 
@@ -24,6 +23,9 @@ beforeEach(() => {
 	cookies.get.mockReset().mockResolvedValue(null,)
 	storageLocal.get.mockReset().mockResolvedValue({},)
 	storageLocal.set.mockReset().mockResolvedValue(undefined,)
+	tabs.sendMessage.mockReset().mockResolvedValue({
+		response: [JSON.stringify({fromTab: true,},), {status: 200, headers: {'content-type': 'application/json',},},],
+	},)
 	resetRateLimitState()
 	vi.stubGlobal(
 		'fetch',
@@ -496,30 +498,127 @@ describe('webrequest message handler', () => {
 		},)
 	})
 
-	it('tags the request with the sender tab cookie store', async () => {
+	it('sends default-container requests from the background', async () => {
 		registerWebrequestHandlers()
 		const handler = registerMessageHandler.mock.calls[0]![1]
 
-		await handler({endpoint: '/api/test',}, {tab: {cookieStoreId: 'firefox-container-1',},},)
+		await handler({endpoint: '/api/test',}, {tab: {id: 3, cookieStoreId: 'firefox-default',}, frameId: 0,},)
 
-		expect(fetch,).toHaveBeenCalledWith(
-			'https://old.reddit.com/api/test',
-			expect.objectContaining({
-				headers: expect.objectContaining({'x-toolbox-tmp-cookiestore': 'firefox-container-1',},),
-			},),
-		)
+		expect(fetch,).toHaveBeenCalledOnce()
+		expect(tabs.sendMessage,).not.toHaveBeenCalled()
 	})
 
-	it('ignores a spoofed cookieStoreId in the message payload', async () => {
+	it('forwards container requests to the sending frame instead of fetching', async () => {
+		registerWebrequestHandlers()
+		const handler = registerMessageHandler.mock.calls[0]![1]
+
+		const result = await handler(
+			{method: 'POST', endpoint: '/api/test', body: {foo: 'bar', skip: undefined,},},
+			{tab: {id: 3, cookieStoreId: 'firefox-container-1',}, frameId: 7,},
+		)
+
+		expect(fetch,).not.toHaveBeenCalled()
+		expect(tabs.sendMessage,).toHaveBeenCalledWith(3, {
+			action: 'toolbox-container-fetch',
+			url: 'https://old.reddit.com/api/test',
+			init: {
+				credentials: 'include',
+				redirect: 'error',
+				method: 'POST',
+				cache: 'no-store',
+				body: {kind: 'form', fields: {foo: 'bar',},},
+			},
+		}, {frameId: 7,},)
+		expect(result,).toEqual({
+			response: [JSON.stringify({fromTab: true,},), expect.objectContaining({status: 200,},),],
+		},)
+	})
+
+	it('mints container OAuth tokens through the sending frame with that container\'s CSRF cookie', async () => {
+		cookies.get
+			.mockResolvedValueOnce(mockJwtCookie({jti: 'container-session',},),)
+			.mockResolvedValueOnce({value: 'container-csrf',},)
+		tabs.sendMessage
+			.mockResolvedValueOnce({
+				response: [JSON.stringify({token: 'container-token', expires: Date.now() + 1000,},), {
+					status: 200,
+					headers: {'content-type': 'application/json',},
+				},],
+			},)
 		registerWebrequestHandlers()
 		const handler = registerMessageHandler.mock.calls[0]![1]
 
 		await handler(
-			{endpoint: '/api/test', cookieStoreId: 'evil-store',},
-			{tab: {cookieStoreId: 'firefox-container-1',},},
+			{method: 'POST', endpoint: '/api/test', oauth: true,},
+			{tab: {id: 3, cookieStoreId: 'firefox-container-1',}, frameId: 0,},
 		)
 
-		const headers = vi.mocked(fetch,).mock.calls[0]![1].headers
-		expect(headers['x-toolbox-tmp-cookiestore'],).toBe('firefox-container-1',)
+		expect(cookies.get,).toHaveBeenCalledWith(expect.objectContaining({
+			name: 'csrf_token',
+			storeId: 'firefox-container-1',
+		},),)
+		expect(tabs.sendMessage,).toHaveBeenNthCalledWith(1, 3, {
+			action: 'toolbox-container-token',
+			csrfToken: 'container-csrf',
+		}, {frameId: 0,},)
+		expect(tabs.sendMessage,).toHaveBeenNthCalledWith(
+			2,
+			3,
+			expect.objectContaining({
+				action: 'toolbox-container-fetch',
+				url: 'https://oauth.reddit.com/api/test',
+				init: expect.objectContaining({headers: {Authorization: 'Bearer container-token',},},),
+			},),
+			{frameId: 0,},
+		)
+		expect(storageLocal.set,).toHaveBeenCalledWith({
+			'toolbox-accessToken-container-session': expect.objectContaining({accessToken: 'container-token',},),
+		},)
+		expect(fetch,).not.toHaveBeenCalled()
+	})
+
+	it('reports a container request the tab could not perform as an error', async () => {
+		tabs.sendMessage.mockResolvedValueOnce({error: 'NetworkError',},)
+		registerWebrequestHandlers()
+		const handler = registerMessageHandler.mock.calls[0]![1]
+
+		const result = await handler(
+			{endpoint: '/api/test',},
+			{tab: {id: 3, cookieStoreId: 'firefox-container-1',}, frameId: 0,},
+		)
+
+		expect(result,).toEqual(expect.objectContaining({
+			error: true,
+			message: 'Container request failed: NetworkError',
+		},),)
+	})
+
+	it('reports a missing reply from the tab as an error', async () => {
+		tabs.sendMessage.mockResolvedValueOnce(undefined,)
+		registerWebrequestHandlers()
+		const handler = registerMessageHandler.mock.calls[0]![1]
+
+		const result = await handler(
+			{endpoint: '/api/test',},
+			{tab: {id: 3, cookieStoreId: 'firefox-container-1',}, frameId: 0,},
+		)
+
+		expect(result,).toEqual(expect.objectContaining({
+			error: true,
+			message: 'Container request: no valid reply from the originating tab',
+		},),)
+	})
+
+	it('ignores a spoofed container in the message payload', async () => {
+		registerWebrequestHandlers()
+		const handler = registerMessageHandler.mock.calls[0]![1]
+
+		await handler(
+			{endpoint: '/api/test', container: {tabId: 99, frameId: 0, cookieStoreId: 'evil-store',},},
+			{tab: {id: 3, cookieStoreId: 'firefox-default',}, frameId: 0,},
+		)
+
+		expect(tabs.sendMessage,).not.toHaveBeenCalled()
+		expect(fetch,).toHaveBeenCalledOnce()
 	})
 })

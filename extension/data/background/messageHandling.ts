@@ -7,7 +7,7 @@
 import browser from 'webextension-polyfill'
 
 import createLogger from '../util/infra/logging'
-import {isAllowedRedditHost,} from './handlers/tabUtils'
+import {isAllowedRedditHost,} from '../util/reddit/redditHost'
 import type {ToolboxMessage, ToolboxMessageAction,} from './messages'
 
 const log = createLogger('TBMessageHandling',)

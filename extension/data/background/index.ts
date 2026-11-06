@@ -1,7 +1,6 @@
 /** Entry point for the Toolbox background service worker: registers all message handlers and event listeners. */
 
 import {registerCacheHandlers,} from './handlers/cache'
-import {registerCookieStoreHandlers,} from './handlers/cookieStore'
 import {registerGlobalMessageHandlers,} from './handlers/globalmessage'
 import {registerModqueueHandlers,} from './handlers/modqueue'
 import {registerNotificationHandlers,} from './handlers/notifications'
@@ -13,7 +12,6 @@ import {registerWebrequestHandlers,} from './handlers/webrequest'
 
 // These registration functions attach browser listeners and are intended to run exactly once per service-worker instance.
 registerCacheHandlers()
-registerCookieStoreHandlers()
 registerGlobalMessageHandlers()
 registerModqueueHandlers()
 registerNotificationHandlers()

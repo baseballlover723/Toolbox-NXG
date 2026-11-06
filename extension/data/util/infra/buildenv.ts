@@ -17,3 +17,12 @@ export const buildSha = BUILD_SHA as string | null
  */
 // @ts-expect-error BUILD_COUNT defined by @rollup/plugin-replace
 export const buildCount = BUILD_COUNT as number
+
+/**
+ * `true` in the Firefox bundle. Guard Firefox-exclusive code (containers, `content.fetch`)
+ * on this so Rollup drops it from the Chrome bundle entirely instead of shipping it dormant.
+ * For that to work the guard must be an `if` outside any `try` block: Rollup keeps everything
+ * referenced inside a `try`.
+ */
+// @ts-expect-error BUILD_PLATFORM defined by @rollup/plugin-replace
+export const isFirefoxBuild: boolean = BUILD_PLATFORM === 'firefox'
