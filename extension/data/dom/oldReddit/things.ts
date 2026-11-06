@@ -134,6 +134,18 @@ export function getThingFlatListButtons (thing: Element,): Element | null {
 	return thing.querySelector('.flat-list',)
 }
 
+/**
+ * Returns the `<li>` holding the "context" link in a flat-list button row, or `null`.
+ * Prefers reddit's native `data-event-action="context"` anchor; falls back to an anchor whose text is
+ * exactly "context" so the replacement link inserted by mass moderation is also found.
+ */
+export function getThingContextLinkItem (flatList: Element,): HTMLLIElement | null {
+	const native = flatList.querySelector('a[data-event-action="context"]',)
+	const anchor = native
+		?? Array.from(flatList.querySelectorAll('a',),).find((a,) => a.textContent?.trim() === 'context')
+	return anchor?.closest('li',) ?? null
+}
+
 /** Returns the `a.title` link anchor within a thing, or `null`. */
 export function getThingTitleAnchor (thing: Element,): HTMLAnchorElement | null {
 	return thing.querySelector<HTMLAnchorElement>('a.title',)

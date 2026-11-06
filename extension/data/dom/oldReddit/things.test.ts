@@ -16,6 +16,7 @@ import {
 	getThingBigModButtons,
 	getThingByFullname,
 	getThingBylinkAnchor,
+	getThingContextLinkItem,
 	getThingDomain,
 	getThingDomainEl,
 	getThingFlatListButtons,
@@ -342,6 +343,29 @@ describe('getThingFlatListButtons', () => {
 	it('returns .flat-list within a thing', () => {
 		document.body.innerHTML = `<div class="thing"><ul class="flat-list"></ul></div>`
 		expect(getThingFlatListButtons(document.querySelector('.thing',)!,),).not.toBeNull()
+	})
+})
+
+describe('getThingContextLinkItem', () => {
+	it('returns the li holding the native context link', () => {
+		document.body.innerHTML = `<ul class="flat-list">
+			<li class="first"><a class="bylink" data-event-action="permalink">permalink</a></li>
+			<li id="ctx"><a class="bylink" data-event-action="context">context</a></li>
+		</ul>`
+		expect(getThingContextLinkItem(document.querySelector('.flat-list',)!,)?.id,).toBe('ctx',)
+	})
+
+	it('falls back to an anchor whose text is "context"', () => {
+		document.body.innerHTML = `<ul class="flat-list">
+			<li id="ctx" class="toolbox-replacement"><a class="context">context</a></li>
+			<li><a>context-popup</a></li>
+		</ul>`
+		expect(getThingContextLinkItem(document.querySelector('.flat-list',)!,)?.id,).toBe('ctx',)
+	})
+
+	it('returns null when there is no context link', () => {
+		document.body.innerHTML = `<ul class="flat-list"><li><a>permalink</a></li></ul>`
+		expect(getThingContextLinkItem(document.querySelector('.flat-list',)!,),).toBeNull()
 	})
 })
 

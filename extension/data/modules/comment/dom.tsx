@@ -185,8 +185,9 @@ export function openCommentContextPopup (commentID: string, permalink: string, e
 /**
  * Creates handlers for context-popup button injection on comment action rows.
  *
- * Old Reddit: registers a `thingFlatListActions` renderer, limited to mod/user/permalink pages.
- * The slot is provided per-comment by `oldreddit/dom.ts`; no `TBNewThings` wiring is needed.
+ * Old Reddit: registers a `thingContextLinkActions` renderer, limited to mod/user/permalink pages.
+ * The slot is provided per-comment by `oldreddit/dom.ts` directly after the native "context" link,
+ * so the button sits immediately to its right; no `TBNewThings` wiring is needed.
  *
  * Shreddit: registers a `thingActions` renderer limited to user-profile pages, plus a
  * `thingFlatListActions` renderer limited to the mod queue. Both are surfaces where comments appear
@@ -200,10 +201,10 @@ export function createContextPopupHandlers () {
 	log.debug('openContextInPopup enabled.',)
 
 	if (isOldReddit) {
-		// Old Reddit: render into the flat-list button row provided by oldreddit/dom.ts.
+		// Old Reddit: render into the slot oldreddit/dom.ts places right after the native "context" link.
 		// The page-type guard here mirrors the old per-element check: only mod queue,
 		// user pages, and single-comment permalink pages have the native "context" link.
-		const cleanup = renderAtLocation('thingFlatListActions', {id: 'comment.contextPopup',}, ({context,},) => {
+		const cleanup = renderAtLocation('thingContextLinkActions', {id: 'comment.contextPopup',}, ({context,},) => {
 			if (!(isModpage || isUserPage || isSubCommentsPage)) { return null }
 			if (context.kind !== 'comment') { return null }
 			const {thingId, postId, subreddit,} = context

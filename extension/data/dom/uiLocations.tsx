@@ -31,6 +31,8 @@ export type UILocation =
 	 * comment's `shreddit-comment-action-row` (see `modules/shreddit/dom.ts`).
 	 */
 	| 'thingFlatListActions'
+	/** Old Reddit only: an `<li>` inserted immediately after a comment's native "context" link in the flat-list row. */
+	| 'thingContextLinkActions'
 	/** Comment tagline status indicator area (author/score/time row). */
 	| 'thingTaglineStatus'
 	/** Old Reddit only: the action-link `<li>` immediately after a top-level comment's distinguish toggle. */

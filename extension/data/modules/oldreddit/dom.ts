@@ -12,6 +12,7 @@ import {
 	ensureThingAuthorContainer,
 	ensureThingSlot,
 	getThingBylinkAnchor,
+	getThingContextLinkItem,
 	getThingDomainEl,
 	getThingFlatListButtons,
 	getThingParentLinkThing,
@@ -175,6 +176,21 @@ export function createOldRedditHandlers (_s: OldRedditSettings,): OldRedditHandl
 						flatList.appendChild(slot,)
 					}
 					provideLocation('thingFlatListActions', slot, thingContext, {shadow: false, hostTag: 'span',},)
+				}
+
+				// A separate slot pinned directly after the native "context" link, so context-related
+				// controls sit beside it rather than among the generic flat-list actions.
+				if (isComment && flatList && !flatList.querySelector('.toolbox-context-link-slot',)) {
+					const contextLi = getThingContextLinkItem(flatList,)
+					if (contextLi) {
+						const slot = document.createElement('li',)
+						slot.className = 'toolbox-context-link-slot'
+						contextLi.after(slot,)
+						provideLocation('thingContextLinkActions', slot, thingContext, {
+							shadow: false,
+							hostTag: 'span',
+						},)
+					}
 				}
 
 				if (isComment) {
