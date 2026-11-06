@@ -1,7 +1,10 @@
 /** Wiki and API operations for the Removal Reasons module. */
 
 import {getNativeRemovalReasons, type NativeRemovalReason,} from '../../api/resources/removalReasons'
+import {removalReasons,} from '../../framework/moduleIds'
+import {getCache, setCache,} from '../../util/persistence/cache'
 import type {ToolboxConfig,} from '../../util/wiki/schemas/config/schema'
+import {recoverSplitChoiceTexts,} from '../../util/wiki/wikiMigration'
 import {type ConfigSaveResult, getConfig, saveToolboxConfig,} from '../config/moduleapi'
 import type {RemovalReasonsConfig,} from './schema'
 
@@ -60,4 +63,44 @@ export function saveRemovalConfig (
 	// write has landed - the sync toggle, whose sync re-reads the config it just changed -
 	// has no other way to sequence itself. Fire-and-forget callers can still ignore it.
 	return saveToolboxConfig(subreddit, config, reason,)
+}
+
+/**
+ * Cache key holding the subreddits this moderator has already been checked for
+ * split choice fields (see {@link findSplitChoiceRepairs}). Never expires: the
+ * check reads up to a page of wiki history, and once a subreddit has been
+ * repaired or dismissed there is nothing new for it to find.
+ */
+const choiceRepairCheckedKey = 'choiceRepairChecked'
+
+/**
+ * Finds removal reasons whose mid-sentence choice field an earlier build split
+ * onto lines of its own, and the restored text for each. Skipped (returning an
+ * empty map) for a subreddit already checked via {@link markChoiceRepairChecked}.
+ * @param subreddit The bare subreddit name.
+ * @param texts The current reason texts, by index.
+ * @returns Restored text keyed by reason index; empty when there is nothing to repair.
+ * @throws On a transient wiki read failure (the subreddit is left unchecked).
+ */
+export async function findSplitChoiceRepairs (
+	subreddit: string,
+	texts: readonly string[],
+): Promise<Map<number, string>> {
+	const checked = await getCache<string[]>(removalReasons, choiceRepairCheckedKey, [],)
+	if (checked.includes(subreddit,)) { return new Map() }
+	const repairs = await recoverSplitChoiceTexts(subreddit, texts,)
+	if (repairs.size === 0) { await markChoiceRepairChecked(subreddit,) }
+	return repairs
+}
+
+/**
+ * Records that a subreddit needs no further split-choice check, after its
+ * repair was applied or dismissed (or nothing was found).
+ * @param subreddit The bare subreddit name.
+ */
+export async function markChoiceRepairChecked (subreddit: string,): Promise<void> {
+	const checked = await getCache<string[]>(removalReasons, choiceRepairCheckedKey, [],)
+	if (!checked.includes(subreddit,)) {
+		await setCache(removalReasons, choiceRepairCheckedKey, [...checked, subreddit,],)
+	}
 }

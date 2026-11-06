@@ -27,6 +27,7 @@ import {
 import type {LegacyDomainTag, LegacyUsernoteColor, ToolboxConfig,} from './schemas/config/schema'
 import {decodeDomainTagsPage,} from './schemas/domaintags/codec'
 import type {DomainTag,} from './schemas/domaintags/schema'
+import {hasChoiceBlock, splitInlineChoices,} from './schemas/shared/tokens'
 import {
 	buildIndexFromWikiPages,
 	encodeLegacyIndex,
@@ -332,6 +333,53 @@ export async function recoverLegacyDomainTags (subreddit: string,): Promise<Lega
 		return found.length > 0
 	},)
 	return found
+}
+
+/**
+ * Finds removal reason text that an earlier build split apart, and the text it
+ * should have become.
+ *
+ * Builds before the inline `{choice: ...}` form turned every legacy `<select>`
+ * into a `{choice}` block on lines of its own, even one written mid-sentence or
+ * as a link's text, and saved that to the NXG page. The 6.x-compat mirror was
+ * rewritten from it, so only the legacy page's revision history still holds the
+ * original. A reason is restored only when its current text is exactly what the
+ * old conversion produced from a historical reason, so a reason a moderator has
+ * edited since, or wrote as a block on purpose, is never touched.
+ * @param subreddit The subreddit whose legacy config history to scan.
+ * @param texts The current NXG reason texts, by index.
+ * @returns Restored text keyed by the index of each reason to repair (empty
+ *   when nothing matches).
+ * @throws On a transient read failure.
+ */
+export async function recoverSplitChoiceTexts (
+	subreddit: string,
+	texts: readonly string[],
+): Promise<Map<number, string>> {
+	const repairs = new Map<number, string>()
+	const pending = new Set(texts.flatMap((text, index,) => hasChoiceBlock(text,) ? [index,] : []),)
+	if (pending.size === 0) { return repairs }
+	await scanLegacyConfigRevisions(subreddit, (raw,) => {
+		try {
+			normalizeConfig(raw,)
+		} catch {
+			return false
+		}
+		// Each historical reason with an inline choice, keyed by how the old build stored it.
+		const restored = new Map<string, string>()
+		for (const reason of (raw as ToolboxConfig).removalReasons.reasons) {
+			const split = splitInlineChoices(reason.text,)
+			if (split !== reason.text) { restored.set(split, reason.text,) }
+		}
+		for (const index of pending) {
+			const original = restored.get(texts[index]!,)
+			if (original === undefined) { continue }
+			repairs.set(index, original,)
+			pending.delete(index,)
+		}
+		return pending.size === 0
+	},)
+	return repairs
 }
 
 /**

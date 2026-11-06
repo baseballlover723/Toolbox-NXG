@@ -11,6 +11,13 @@ const reloadConfigFromWiki = vi.hoisted(() => vi.fn())
 const syncNativeReasons = vi.hoisted(() => vi.fn())
 const getLastNativeSyncCheck = vi.hoisted(() => vi.fn())
 const getLastNativeSyncFailure = vi.hoisted(() => vi.fn())
+const findSplitChoiceRepairs = vi.hoisted(() => vi.fn())
+const markChoiceRepairChecked = vi.hoisted(() => vi.fn())
+
+vi.mock('../moduleapi', () => ({
+	findSplitChoiceRepairs,
+	markChoiceRepairChecked,
+}),)
 
 vi.mock('webextension-polyfill', () => ({
 	default: {runtime: {getURL: (path: string,) => `chrome-extension://fake/${path}`,},},
@@ -122,6 +129,8 @@ beforeEach(() => {
 	syncNativeReasons.mockResolvedValue({status: 'disabled',},)
 	getLastNativeSyncCheck.mockResolvedValue(undefined,)
 	getLastNativeSyncFailure.mockResolvedValue(undefined,)
+	findSplitChoiceRepairs.mockResolvedValue(new Map(),)
+	markChoiceRepairChecked.mockResolvedValue(undefined,)
 	// Not implemented in the test environment; each test that deletes sets its own answer.
 	confirmMock = vi.fn(() => true)
 	globalThis.confirm = confirmMock
@@ -395,6 +404,59 @@ describe('RemovalReasonList message preview toggle', () => {
 
 		expect(container.textContent,).toContain('Nothing to preview yet.',)
 		expect(container.querySelector('.toolbox-radio-group',),).toBeNull()
+	})
+})
+
+describe('restoring choice fields split by an earlier version', () => {
+	const split = 'This is a\n\n{choice}\n- repost\n- spam\n\npost.'
+	const restored = 'This is a {choice: repost | spam} post.'
+	const reasons = [
+		{id: 'r1', title: 'Repost', text: split, removePosts: true,},
+		{id: 'r2', title: 'Other', text: 'Untouched', removePosts: true,},
+	]
+
+	/** Renders the list with one repair pending for the first reason, and lets the scan settle. */
+	async function renderWithRepair () {
+		findSplitChoiceRepairs.mockResolvedValue(new Map([[0, restored,],],),)
+		renderList(makeState(reasons,),)
+		await act(async () => {},)
+	}
+
+	it('scans the current reason texts and lists the reasons it can restore', async () => {
+		await renderWithRepair()
+
+		expect(findSplitChoiceRepairs,).toHaveBeenCalledWith('testsub', [split, 'Untouched',],)
+		expect(container.textContent,).toContain('moved the pick-one field',)
+		expect([...container.querySelectorAll('li',),].map((li,) => li.textContent),).toEqual(['Repost',],)
+	})
+
+	it('shows nothing when there is nothing to restore', async () => {
+		renderList(makeState(reasons,),)
+		await act(async () => {},)
+
+		expect(container.textContent,).not.toContain('moved the pick-one field',)
+	})
+
+	it('restores only the affected reason, saves once, and stops asking', async () => {
+		await renderWithRepair()
+
+		await act(async () => getButton('Restore and save',).click())
+
+		expect(onSave,).toHaveBeenCalledTimes(1,)
+		const saved = onSave.mock.calls[0]![0].removalReasons.reasons
+		expect(saved.map((r: RemovalReason,) => r.text),).toEqual([restored, 'Untouched',],)
+		expect(markChoiceRepairChecked,).toHaveBeenCalledWith('testsub',)
+		expect(container.textContent,).not.toContain('moved the pick-one field',)
+	})
+
+	it('leaves everything as is when dismissed, and stops asking', async () => {
+		await renderWithRepair()
+
+		await act(async () => getButton('Leave as is',).click())
+
+		expect(onSave,).not.toHaveBeenCalled()
+		expect(markChoiceRepairChecked,).toHaveBeenCalledWith('testsub',)
+		expect(container.textContent,).not.toContain('moved the pick-one field',)
 	})
 })
 

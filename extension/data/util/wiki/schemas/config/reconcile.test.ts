@@ -289,6 +289,37 @@ describe('reconcileConfigFromLegacy', () => {
 		expect(result.config,).toBe(nxg,)
 	})
 
+	it('treats an NXG inline {choice: ...} and the equivalent mirror inline <select> as equal', async () => {
+		const nxg = makeConfig({
+			removalReasons: {
+				reasons: [{
+					id: 'reason01',
+					title: 'Repost',
+					text: 'This is a [{choice#kind: repost | spam}](https://example.com) post.',
+				},],
+			},
+		},)
+		readFromWiki.mockResolvedValue({
+			ok: true,
+			data: {
+				ver: 1,
+				removalReasons: {
+					reasons: [{
+						title: 'Repost',
+						text: escape(
+							'This is a [<select id="kind"><option>repost</option><option>spam</option></select>](https://example.com) post.',
+						),
+					},],
+				},
+			},
+		},)
+
+		const result = await reconcileConfigFromLegacy('sub', nxg,)
+
+		expect(result.changed,).toBe(false,)
+		expect(result.config,).toBe(nxg,)
+	})
+
 	it('adopts a 6.x edit to a choice option', async () => {
 		const nxg = makeConfig({
 			removalReasons: {

@@ -100,14 +100,7 @@ Domain tags and usernote type colors were previously stored here as `domainTags:
 {
     "id": "abc12345",
     "title": "Rule 1: No spam",
-    "text": "Your post has been removed for {select:rule}.\n\nPlease review our rules.",
-    "selects": [
-        {
-            "name": "rule",
-            "prompt": "Which rule was broken?",
-            "options": ["Rule 1: No spam", "Rule 2: Be civil"]
-        }
-    ],
+    "text": "Your post has been removed. Which rule was broken?\n\n{choice#rule}\n- Rule 1: No spam\n- Rule 2: Be civil\n\nPlease review our rules.",
     "removePosts": true,
     "flairText": "Removed",
     "flairCSS": "",
@@ -115,31 +108,34 @@ Domain tags and usernote type colors were previously stored here as `domainTags:
 }
 ```
 
-| Field               | Required | Type                 | Description                                                                                                                                                                                                                  |
-| ------------------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                | no       | string               | Stable 8-character base-36 identifier; assigned by NXG, absent in v1 mirrors                                                                                                                                                 |
-| `title`             | yes      | string               | Display title shown in the removal overlay                                                                                                                                                                                   |
-| `text`              | yes      | string               | Markdown body of the removal message; may contain substitution and interactive tokens (v2)                                                                                                                                   |
-| `selects`           | no       | `SelectDefinition[]` | Named pick-one choice definitions referenced from `text` as `{select:name}`; omitted when none                                                                                                                               |
-| `removePosts`       | no       | boolean              | When `false`, this reason is hidden for posts; defaults to `true` when absent                                                                                                                                                |
-| `removeComments`    | no       | boolean              | `true` always shows for comments; absent defers to per-mod setting; `false` always hides                                                                                                                                     |
-| `flairText`         | yes      | string               | Post flair text to apply after removal; empty string for none                                                                                                                                                                |
-| `flairCSS`          | yes      | string               | Post flair CSS class to apply; empty string for none                                                                                                                                                                         |
-| `flairTemplateID`   | yes      | string               | Post flair template ID to apply; empty string for none                                                                                                                                                                       |
-| `editable`          | no       | boolean              | When true, the moderator may edit this reason's text before sending                                                                                                                                                          |
-| `default_note`      | no       | string               | Default usernote text pre-filled when this reason is selected                                                                                                                                                                |
-| `default_note_type` | no       | string               | Key of the usernote type (`UserNoteColor.key`) to pre-select when leaving a note                                                                                                                                             |
-| `nativeReasonId`    | no       | string               | NXG-only. Reddit's id for the native removal reason this reason mirrors; registers the reason in Reddit's mod log on removal, and links the reason for syncing. Reasons carrying it are excluded from the v1 mirror entirely |
+| Field               | Required | Type    | Description                                                                                                                                                                                                                  |
+| ------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | no       | string  | Stable 8-character base-36 identifier; assigned by NXG, absent in v1 mirrors                                                                                                                                                 |
+| `title`             | yes      | string  | Display title shown in the removal overlay                                                                                                                                                                                   |
+| `text`              | yes      | string  | Markdown body of the removal message; may contain substitution and interactive tokens (v2)                                                                                                                                   |
+| `removePosts`       | no       | boolean | When `false`, this reason is hidden for posts; defaults to `true` when absent                                                                                                                                                |
+| `removeComments`    | no       | boolean | `true` always shows for comments; absent defers to per-mod setting; `false` always hides                                                                                                                                     |
+| `flairText`         | yes      | string  | Post flair text to apply after removal; empty string for none                                                                                                                                                                |
+| `flairCSS`          | yes      | string  | Post flair CSS class to apply; empty string for none                                                                                                                                                                         |
+| `flairTemplateID`   | yes      | string  | Post flair template ID to apply; empty string for none                                                                                                                                                                       |
+| `editable`          | no       | boolean | When true, the moderator may edit this reason's text before sending                                                                                                                                                          |
+| `default_note`      | no       | string  | Default usernote text pre-filled when this reason is selected                                                                                                                                                                |
+| `default_note_type` | no       | string  | Key of the usernote type (`UserNoteColor.key`) to pre-select when leaving a note                                                                                                                                             |
+| `nativeReasonId`    | no       | string  | NXG-only. Reddit's id for the native removal reason this reason mirrors; registers the reason in Reddit's mod log on removal, and links the reason for syncing. Reasons carrying it are excluded from the v1 mirror entirely |
 
-### `SelectDefinition`
+### Interactive tokens in reason text
 
-Stored in `RemovalReason.selects`; referenced from reason text as `{select:name}`.
+v2 reason text embeds fill-in fields as brace tokens (v1 used limited HTML; see [Schema Changes](../migration/schema-changes.md#brace-tokens) for the full syntax and conversion rules):
 
-| Field     | Required | Type       | Description                                                                                |
-| --------- | -------- | ---------- | ------------------------------------------------------------------------------------------ |
-| `name`    | yes      | string     | Slug-safe name (`[\w-]+`), unique within the reason; used as the `{select:name}` reference |
-| `prompt`  | no       | string     | Optional label shown above the choices; omitted (never `""`) when empty                    |
-| `options` | yes      | `string[]` | Choice texts; each is both the visible label and the value inserted into the message       |
+| Token                                  | Field                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `{input: placeholder}`                 | Single-line text field, inline                                                           |
+| `{textarea: placeholder}`              | Multi-line text field, inline                                                            |
+| `{choice}` + a `-` list below it       | Pick-one field as a block: the marker on its own line, each list item an option          |
+| `{choice: option 1 \| option 2}`       | Pick-one field inside a line (mid-sentence or as a link's text); `\|` for a literal pipe |
+| `#id` after the kind (`{choice#rule}`) | Optional slug-safe id (`[\w-]+`) that keeps the entered or chosen value between opens    |
+
+Older v2 pages stored pick-one fields as a `selects` array on the reason, referenced from the text as `{select:name}`. Normalization folds each definition into the text as a `{choice}` block and drops the field; it is never written.
 
 ### `NativeReasonSyncState`
 
@@ -193,7 +189,7 @@ Mod macros are stored in `modMacros` as an array of objects. All fields except `
 {
     "id": "xyz98765",
     "title": "Lock and warn",
-    "text": "This thread has been locked for {select:reason}.",
+    "text": "This thread has been locked, {author}, because it has run its course.",
     "remove": false,
     "lockthread": true,
     "distinguish": true,
@@ -282,33 +278,24 @@ Unknown `{…}` content (no colon, no match) is left in the text untouched.
 ```text
 {input: placeholder text}
 {textarea: placeholder text}
-{select:rule}
+
+{choice#rule}
+- Your post breaks rule 1 | see [the rules](https://example.com/rules)
+- Your post breaks rule 2
+
+This is a [{choice: repost | duplicate}](https://example.com/wiki/reposts).
 ```
 
-Select options live in the reason's `selects` array, not inline in the reason text. A select token references one named definition:
+A pick-one `{choice}` field comes in two forms, and its options always live in the reason text. The **block** form puts the marker on its own line with a markdown list of options below it; a `|` in a block option is plain text. The **inline** form, `{choice: a | b}`, sits inside a line (mid-sentence, or as a link's text) and separates its options with `|`, with `\|` for a literal pipe. Either way the picked option replaces the field exactly where it sits.
 
-```json
-{
-    "text": "Please review {select:rule}.",
-    "selects": [
-        {
-            "name": "rule",
-            "prompt": "Pick the rule that applies",
-            "options": [
-                "Your post breaks rule 1 | see [the rules](https://example.com/rules)",
-                "Your post breaks rule 2"
-            ]
-        }
-    ]
-}
-```
+Each token may carry an optional stable id used to persist the entered or chosen value between overlay opens: `{input#flightnum: Flight number}`, `{choice#rule}`, `{choice#kind: a | b}`. A choice's id maps to the HTML `id` attribute of its `<select>` on the v1 mirror. Token content cannot contain braces (the serializer substitutes parens), and option line breaks collapse to spaces because legacy options are single-line.
 
-Each token may carry an optional stable id used to persist the entered value between overlay opens: `{input#flightnum: Flight number}`. For selects, the definition name is the stable id and maps to the HTML `id` attribute on the v1 mirror; a select prompt rides along as a `label` attribute there (invisible in 6.x, recovered on up-convert). Token content cannot contain braces (the serializer substitutes parens), and option line breaks collapse to spaces on the v1 mirror because legacy options are single-line.
-
-The codec for both directions lives in `extension/data/modules/shared/removalReasons/tokens.ts`. Conversion notes:
+The codec for both directions lives in `extension/data/util/wiki/schemas/shared/tokens.ts`. Conversion notes:
 
 - `<br>` becomes a paragraph break (`\n\n`); the v1 mirror keeps plain newlines, which 6.x handles fine.
+- A `<select>` on a line of its own becomes a `{choice}` block; one that shares its line with other text becomes an inline `{choice: ...}` in the same place. Both down-convert to a `<select>` where they stand.
 - A legacy `<option value="x">label</option>` keeps `x` (the value is what 6.x inserted into the removal message); the label is dropped.
+- The older v2 `selects` array (referenced as `{select:name}`) is folded into the text as `{choice}` blocks on normalize and never written.
 
 **Stable entry ids.** Every removal reason and mod macro carries an `id` (eight base-36 characters). Ids are assigned by the editing UI on create and backfilled by `ensureStableIds` during normalization; they are stripped from the v1 mirror (6.x rebuilds entries wholesale on save, so they wouldn't survive there anyway — they're re-backfilled on the next normalize). They exist so reordering and cross-references don't have to rely on array indexes.
 

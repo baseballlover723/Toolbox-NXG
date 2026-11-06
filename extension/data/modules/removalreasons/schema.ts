@@ -141,8 +141,8 @@ export interface RemovalReason {
 	/**
 	 * Markdown body of the removal message. May contain substitution tokens
 	 * (`{subreddit}`, ...) and interactive fill-in tokens (`{input: ...}`,
-	 * `{textarea: ...}`, and a `{choice}` block whose options are the markdown
-	 * list below the marker).
+	 * `{textarea: ...}`, a `{choice}` block whose options are the markdown
+	 * list below the marker, and an inline `{choice: a | b}`).
 	 */
 	text: string
 	title: string

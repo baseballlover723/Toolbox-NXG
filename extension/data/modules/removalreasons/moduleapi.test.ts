@@ -4,6 +4,8 @@
 import {beforeEach, describe, expect, it, vi,} from 'vitest'
 
 const getConfig = vi.hoisted(() => vi.fn())
+const recoverSplitChoiceTexts = vi.hoisted(() => vi.fn())
+const cacheStore = vi.hoisted(() => new Map<string, unknown>())
 
 vi.mock('../config/moduleapi', () => ({getConfig, saveToolboxConfig: vi.fn(),}),)
 
@@ -11,11 +13,50 @@ vi.mock('../config/moduleapi', () => ({getConfig, saveToolboxConfig: vi.fn(),}),
 // transport/webextension-polyfill chain (this suite runs in the node environment).
 vi.mock('../../api/resources/removalReasons', () => ({getNativeRemovalReasons: vi.fn(),}),)
 
-import {getRemovalReasons,} from './moduleapi'
+vi.mock('../../util/wiki/wikiMigration', () => ({recoverSplitChoiceTexts,}),)
+vi.mock('../../util/persistence/cache', () => ({
+	getCache: (moduleID: string, key: string, defaultVal?: unknown,) =>
+		Promise.resolve(cacheStore.get(`${moduleID}.${key}`,) ?? defaultVal,),
+	setCache: (moduleID: string, key: string, value: unknown,) => {
+		cacheStore.set(`${moduleID}.${key}`, value,)
+		return Promise.resolve()
+	},
+}),)
+
+import {findSplitChoiceRepairs, getRemovalReasons, markChoiceRepairChecked,} from './moduleapi'
 
 beforeEach(() => {
 	vi.clearAllMocks()
+	cacheStore.clear()
 },)
+
+describe('findSplitChoiceRepairs', () => {
+	it('returns the repairs found, and checks again next time while any are pending', async () => {
+		const found = new Map([[0, 'Pick {choice: a}',],],)
+		recoverSplitChoiceTexts.mockResolvedValue(found,)
+
+		expect(await findSplitChoiceRepairs('mysub', ['Pick\n\n{choice}\n- a',],),).toBe(found,)
+		await findSplitChoiceRepairs('mysub', ['Pick\n\n{choice}\n- a',],)
+
+		expect(recoverSplitChoiceTexts,).toHaveBeenCalledTimes(2,)
+	})
+
+	it('never scans a subreddit again once nothing was found there', async () => {
+		recoverSplitChoiceTexts.mockResolvedValue(new Map(),)
+
+		await findSplitChoiceRepairs('mysub', ['text',],)
+		await findSplitChoiceRepairs('mysub', ['text',],)
+
+		expect(recoverSplitChoiceTexts,).toHaveBeenCalledTimes(1,)
+	})
+
+	it('skips a subreddit marked checked after a repair was applied or dismissed', async () => {
+		await markChoiceRepairChecked('mysub',)
+
+		expect(await findSplitChoiceRepairs('mysub', ['text',],),).toEqual(new Map(),)
+		expect(recoverSplitChoiceTexts,).not.toHaveBeenCalled()
+	})
+})
 
 describe('getRemovalReasons', () => {
 	it('reads the acting sub with the default mod-gate (no opt-in)', async () => {

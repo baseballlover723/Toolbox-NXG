@@ -82,6 +82,35 @@ describe('renderReasonHtml', () => {
 		expect(doc.querySelector<HTMLInputElement>('input[type="hidden"]#second',)?.value,).toBe('',)
 	})
 
+	it('renders an inline choice token as a radio group inside its paragraph', () => {
+		const html = renderReasonHtml(parser, 'This is a {choice#kind: repost | spam} post.',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		const paragraph = doc.querySelector('p',)!
+		expect(doc.querySelectorAll('p',).length,).toBe(1,)
+		expect(paragraph.querySelector('span.toolbox-radio-group-inline',),).not.toBeNull()
+		expect(paragraph.textContent,).toMatch(/^This is a .* post\.$/,)
+		expect(paragraph.querySelector<HTMLInputElement>('input[type="hidden"]#kind',)?.value,).toBe('repost',)
+	})
+
+	it('unwraps a link whose text is an inline choice so picking does not navigate', () => {
+		const html = renderReasonHtml(parser, 'This is a [{choice: repost | spam}](https://example.com) post.',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		expect(doc.querySelector('a[href="https://example.com"]',),).toBeNull()
+		const link = doc.querySelector('span.toolbox-choice-link',)
+		expect(link?.getAttribute('title',),).toBe('https://example.com',)
+		expect(link?.querySelector('.toolbox-radio-group-inline',),).not.toBeNull()
+	})
+
+	it('renders an inline legacy select in place rather than on its own line', () => {
+		const html = renderReasonHtml(
+			parser,
+			'This is a <select><option>repost</option><option>spam</option></select> post.',
+		)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		expect(doc.querySelectorAll('p',).length,).toBe(1,)
+		expect(doc.querySelector('p .toolbox-radio-group-inline',),).not.toBeNull()
+	})
+
 	it('renders an inline (not own-line) choice marker literally', () => {
 		const html = renderReasonHtml(parser, 'Pick one: {choice#x} now',)
 		expect(html,).not.toContain('toolbox-radio-group',)

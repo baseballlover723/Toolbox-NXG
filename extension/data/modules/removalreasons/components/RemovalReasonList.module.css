@@ -151,6 +151,22 @@
 .previewWrap :global(.toolbox-radio-text) a {
 	color: var(--toolbox-action-text);
 }
+
+/* Inline choices ({choice: a | b}) flow in a row inside their sentence. The doubled class
+   lifts specificity over the .toolbox-radio-group / .toolbox-radio-label column rules above. */
+.previewWrap :global(.toolbox-radio-group.toolbox-radio-group-inline) {
+	display: inline-flex;
+	flex-flow: row wrap;
+	gap: var(--toolbox-sp-3) var(--toolbox-sp-6);
+	margin: 0 var(--toolbox-sp-2);
+	vertical-align: baseline;
+}
+
+.previewWrap :global(.toolbox-radio-group-inline .toolbox-radio-label) {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--toolbox-sp-3);
+}
 /* stylelint-enable selector-class-pattern */
 
 .expandToggle {
@@ -370,4 +386,19 @@
 	font-style: italic;
 	color: var(--toolbox-text-secondary);
 	text-align: right;
+}
+
+/* Body, reason list, and buttons of the split-choice repair prompt (shares .syncNotice's frame). */
+.repairText {
+	margin: 0 0 var(--toolbox-sp-4);
+}
+
+.repairList {
+	margin: 0 0 var(--toolbox-sp-5);
+	padding-left: var(--toolbox-sp-13);
+}
+
+.repairActions {
+	display: flex;
+	gap: var(--toolbox-sp-5);
 }

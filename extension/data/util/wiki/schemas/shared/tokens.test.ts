@@ -257,10 +257,33 @@ describe('substituteTokenValues', () => {
 })
 
 describe('htmlFieldsToTokens', () => {
-	it('rewrites a select with an id into an inline choice block', () => {
-		const html = 'Pick: <select id="rule"><option>Rule 1</option><option>Rule 2</option></select>'
+	it('rewrites a select with an id on its own line into a choice block', () => {
+		const html = 'Pick:\n<select id="rule"><option>Rule 1</option><option>Rule 2</option></select>'
 		expect(canonicalizeChoiceBlocks(htmlFieldsToTokens(html,),),)
 			.toBe('Pick:\n\n{choice#rule}\n- Rule 1\n- Rule 2',)
+	})
+
+	it('keeps a select that shares its line with text inline, in place', () => {
+		const html = 'This is a <select id="rule"><option>repost</option><option>spam</option></select> post.'
+		expect(canonicalizeChoiceBlocks(htmlFieldsToTokens(html,),),)
+			.toBe('This is a {choice#rule: repost | spam} post.',)
+	})
+
+	it('keeps a select used as link text inside the link', () => {
+		const html = 'This is a [<select><option>repost</option><option>spam</option></select>](https://example.com).'
+		expect(canonicalizeChoiceBlocks(htmlFieldsToTokens(html,),),)
+			.toBe('This is a [{choice: repost | spam}](https://example.com).',)
+	})
+
+	it('keeps inline an option that is itself a link, escaping a literal pipe', () => {
+		const html =
+			'See <select><option>\\[the rules\\]\\(https://example.com\\)</option><option>a|b</option></select>'
+		expect(htmlFieldsToTokens(html,),).toBe('See {choice: [the rules](https://example.com) | a\\|b}',)
+	})
+
+	it('round-trips an inline select through the token form', () => {
+		const html = 'This is a <select id="r"><option>repost</option><option>spam</option></select> post.'
+		expect(tokensToHtmlFields(htmlFieldsToTokens(html,),),).toBe(html,)
 	})
 
 	it('drops a missing or non-slug-safe id to a bare choice', () => {
@@ -428,5 +451,49 @@ describe('tokenToLegacyHtml / tokensToHtmlFields', () => {
 	it('collapses multi-line option text on the legacy mirror', () => {
 		expect(tokenToLegacyHtml({kind: 'choice', id: 'r', placeholder: '', options: ['line one\nline two',],},),)
 			.toBe('<select id="r"><option>line one line two</option></select>',)
+	})
+})
+
+describe('inline choice tokens', () => {
+	it('parses options split on unescaped pipes, with an optional id', () => {
+		expect(parseReasonSegments('a {choice#r: one | two \\| three} b',),).toEqual([
+			{type: 'text', text: 'a ',},
+			{
+				type: 'token',
+				token: {kind: 'choice', id: 'r', placeholder: '', options: ['one', 'two | three',], inline: true,},
+			},
+			{type: 'text', text: ' b',},
+		],)
+	})
+
+	it('leaves a choice with no option text literal', () => {
+		expect(parseReasonSegments('a {choice: } b',),).toEqual([{type: 'text', text: 'a {choice: } b',},],)
+		expect(parseReasonSegments('a {choice: | } b',),).toEqual([{type: 'text', text: 'a {choice: | } b',},],)
+	})
+
+	it('serializes back to the same text', () => {
+		const text = 'a {choice#r: one | two \\| three} b'
+		const [, token,] = parseReasonSegments(text,)
+		expect(token?.type === 'token' && serializeToken(token.token,),).toBe('{choice#r: one | two \\| three}',)
+	})
+
+	it('substitutes the picked value in place, keeping surrounding markdown intact', () => {
+		expect(substituteTokenValues('This is a [{choice: repost | spam}](https://x) post.', ['repost',],),)
+			.toBe('This is a [repost](https://x) post.',)
+	})
+
+	it('canonicalizes option spacing and is idempotent', () => {
+		const once = canonicalizeChoiceBlocks('a {choice:one|two} b',)
+		expect(once,).toBe('a {choice: one | two} b',)
+		expect(canonicalizeChoiceBlocks(once,),).toBe(once,)
+	})
+
+	it('down-converts to a select in place', () => {
+		expect(tokensToHtmlFields('a {choice#r: one | two} b',),)
+			.toBe('a <select id="r"><option>one</option><option>two</option></select> b',)
+	})
+
+	it('is not reported as a literal choice marker', () => {
+		expect(findLiteralChoiceMarker('a {choice: one | two} b',),).toBeNull()
 	})
 })

@@ -75,9 +75,10 @@ Removal reason text now uses brace tokens for interactive fill-in fields instead
 
 - `{input: placeholder}` — single-line text field
 - `{textarea: placeholder}` — multi-line text field
-- `{select:name}` — dropdown menu, with options defined separately in the reason
+- `{choice}` on its own line, followed by a `-` list of options — a pick-one field shown as radio buttons
+- `{choice: option 1 | option 2}` — the same pick-one field inside a sentence or a link's text
 
-Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format on the next config save.
+Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format on the next config save. A `<select>` written mid-sentence stays in its sentence.
 
 ## New wiki layout and compatibility
 

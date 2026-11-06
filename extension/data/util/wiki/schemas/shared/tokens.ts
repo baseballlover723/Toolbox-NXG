@@ -11,9 +11,13 @@
  * - `{input: placeholder text}` - a single-line text field
  * - `{textarea: placeholder text}` - a multi-line text field
  * - `{choice}` / `{choice#id}` followed by a markdown list - a pick-one field
+ * - `{choice: a | b}` / `{choice#id: a | b}` - a pick-one field inside a line
  *
  * Inputs and textareas are inline: everything they need is in the token. A
- * choice is a block: the marker sits on its own line and the consecutive
+ * choice comes in two forms. The inline form lists its options in the token,
+ * separated by `|` (`\|` for a literal pipe), and sits inside running text -
+ * mid-sentence or as a link's text - so the picked value lands exactly there.
+ * The block form puts the marker on its own line and the consecutive
  * markdown list items below it are its options. It renders as a radio group
  * (pick one), so it's named "choice" rather than after the dropdown `<select>`
  * widget 6.x produced:
@@ -45,9 +49,10 @@
  * This module is the only code that knows both representations: it parses token
  * text into segments for rendering, and converts between tokens and the legacy
  * HTML form for the classic (v1) wiki mirror. The v1 -> v2 up-convert rewrites
- * each legacy `<select>` into an inline `{choice}` block; the v2 -> v1
- * down-convert expands a `{choice}` block back into `<select>` HTML so 6.x can
- * read it. {@link inlineSelectDefinitions} migrates the older v2 shape (a
+ * each legacy `<select>` into a `{choice}` block when it had a line to itself,
+ * or into an inline `{choice: ...}` token when it shared its line with text;
+ * the v2 -> v1 down-convert expands either form back into `<select>` HTML in
+ * place so 6.x can read it. {@link inlineSelectDefinitions} migrates the older v2 shape (a
  * `{select:name}` reference into a separate definition) into the inline form.
  */
 
@@ -124,6 +129,11 @@ export interface InteractiveToken {
 	placeholder: string
 	/** The option texts for `choice` tokens; empty for the other kinds. */
 	options: string[]
+	/**
+	 * Set on a `choice` written in the inline `{choice: a | b}` form. The chosen value is
+	 * substituted in place in its line rather than as a paragraph of its own.
+	 */
+	inline?: true
 }
 
 /** A piece of reason text: either literal text or an interactive token. */
@@ -132,12 +142,32 @@ export type ReasonSegment =
 	| {type: 'token'; token: InteractiveToken}
 
 /**
- * Matches an inline interactive token (`{input...}` / `{textarea...}`). Groups:
- * 1 is the kind, 2 the optional id, 3 the placeholder content. Content cannot
- * contain `}` - serialization sanitizes braces out of user-facing text so every
- * serialized token re-parses.
+ * Matches an inline interactive token (`{input...}` / `{textarea...}` / `{choice...: ...}`).
+ * Groups: 1 is the kind, 2 the optional id, 3 the content (placeholder, or the
+ * `|`-separated options of a choice). Content cannot contain `}` - serialization
+ * sanitizes braces out of user-facing text so every serialized token re-parses.
  */
-const INLINE_TOKEN_RE = /\{(input|textarea)(?:#([\w-]+))?\s*:([^}]*)\}/gi
+const INLINE_TOKEN_RE = /\{(input|textarea|choice)(?:#([\w-]+))?\s*:([^}]*)\}/gi
+
+/** Splits on a `|` that is not backslash-escaped. */
+const OPTION_SEPARATOR_RE = /(?<!\\)\|/
+
+/**
+ * Splits inline choice content into its options, unescaping `\|`. Returns an
+ * empty list when no option has any text, so a half-typed `{choice:}` stays
+ * literal and fails visibly instead of sending nothing.
+ */
+function splitInlineOptions (content: string,): string[] {
+	const options = collapseToLine(content,)
+		.split(OPTION_SEPARATOR_RE,)
+		.map((option,) => option.replace(/\\\|/g, '|',).trim())
+	return options.some((option,) => option !== '') ? options : []
+}
+
+/** Escapes an option for inline choice content: braces become parens, `|` becomes `\|`. */
+function escapeInlineOption (option: string,): string {
+	return sanitizeSingleLine(option,).replace(/\\?\|/g, '\\|',)
+}
 
 /**
  * Matches a choice marker line (`{choice}` or `{choice#id}`) on its own line; group 1 is the id.
@@ -201,16 +231,19 @@ function choiceBlock (id: string | undefined, options: string[],): string {
  * @param token The token to serialize.
  */
 export function serializeToken (token: InteractiveToken,): string {
+	const idPart = token.id ? `#${token.id}` : ''
 	if (token.kind === 'choice') {
+		if (token.inline) {
+			return `{choice${idPart}: ${token.options.map(escapeInlineOption,).join(' | ',)}}`
+		}
 		return choiceBlock(token.id, token.options,)
 	}
-	const idPart = token.id ? `#${token.id}` : ''
 	return `{${token.kind}${idPart}: ${sanitizeSingleLine(token.placeholder,)}}`
 }
 
 /**
  * Splits reason text into literal-text and interactive-token segments, in
- * document order. Inline `{input}`/`{textarea}` tokens are matched anywhere; a
+ * document order. Inline `{input}`/`{textarea}`/`{choice: ...}` tokens are matched anywhere; a
  * `{choice}` marker is recognized only on its own line and consumes the
  * consecutive markdown list lines below it as its options, skipping any blank
  * lines between the two and stopping at the first non-list line. A marker whose
@@ -230,13 +263,18 @@ export function parseReasonSegments (text: string,): ReasonSegment[] {
 
 		while ((match = INLINE_TOKEN_RE.exec(buffer,)) !== null) {
 			const [, kind, id, content,] = match
+			const lowerKind = kind!.toLowerCase() as InteractiveTokenKind
+			let token: InteractiveToken
+			if (lowerKind === 'choice') {
+				const options = splitInlineOptions(content!,)
+				// No options: leave it in the surrounding text, where it is sent literally.
+				if (options.length === 0) { continue }
+				token = {kind: 'choice', placeholder: '', options, inline: true,}
+			} else {
+				token = {kind: lowerKind, placeholder: collapseToLine(content!,), options: [],}
+			}
 			if (match.index > lastIndex) {
 				segments.push({type: 'text', text: buffer.slice(lastIndex, match.index,),},)
-			}
-			const token: InteractiveToken = {
-				kind: kind!.toLowerCase() as InteractiveTokenKind,
-				placeholder: collapseToLine(content!,),
-				options: [],
 			}
 			if (id) { token.id = id }
 			segments.push({type: 'token', token,},)
@@ -347,7 +385,8 @@ export function findLiteralChoiceMarker (text: string,): LiteralChoiceProblem | 
 /**
  * Rewrites every `{choice}` block in the text to its canonical form: each block
  * separated from surrounding content by exactly one blank line, options on
- * single `- ` lines. Idempotent, so normalizing the NXG text and the
+ * single `- ` lines. Inline `{choice: ...}` tokens stay where they are, with
+ * their options re-serialized to `a | b` spacing. Idempotent, so normalizing the NXG text and the
  * up-converted legacy mirror both land on the same string and config reconcile
  * sees no spurious difference. Text with no choice block is returned unchanged.
  * @param text The reason text to canonicalize.
@@ -362,9 +401,11 @@ export function canonicalizeChoiceBlocks (text: string,): string {
 	for (const segment of segments) {
 		if (segment.type === 'text') {
 			out += segment.text
-		} else if (segment.token.kind === 'choice') {
+		} else if (segment.token.kind === 'choice' && !segment.token.inline) {
 			out += `\n\n${serializeToken(segment.token,)}\n\n`
 		} else {
+			// Inline tokens (including inline choices) re-serialize in place, which also
+			// normalizes an inline choice's option spacing and escaping.
 			out += serializeToken(segment.token,)
 		}
 	}
@@ -374,6 +415,40 @@ export function canonicalizeChoiceBlocks (text: string,): string {
 	// paragraph break are insignificant - so this just tidies the seams the
 	// block splicing above left behind.
 	return out.replace(/[ \t]*\n{2,}[ \t]*/g, '\n\n',).replace(/^\n+/, '',).replace(/\n+$/, '',)
+}
+
+/**
+ * Rewrites every inline `{choice: ...}` token as a `{choice}` block on lines of
+ * its own, then canonicalizes - reproducing how builds before the inline form
+ * stored a legacy `<select>` that sat mid-sentence. Used only to recognise
+ * reason text those builds split, so it can be restored (see
+ * `recoverSplitChoiceTexts` in `wikiMigration.ts`). Text with no inline choice
+ * is returned unchanged.
+ * @param text Token-form reason text.
+ */
+export function splitInlineChoices (text: string,): string {
+	const segments = parseReasonSegments(text,)
+	if (!segments.some((segment,) => segment.type === 'token' && segment.token.inline)) { return text }
+	return canonicalizeChoiceBlocks(
+		segments.map((segment,) => {
+			if (segment.type === 'text') { return segment.text }
+			if (!segment.token.inline) { return serializeToken(segment.token,) }
+			const {inline: _inline, ...block} = segment.token
+			return `\n\n${serializeToken(block,)}\n\n`
+		},).join('',),
+	)
+}
+
+/**
+ * Whether the text holds a `{choice}` block - the only shape an earlier build
+ * could have split out of a sentence.
+ * @param text Token-form reason text.
+ */
+export function hasChoiceBlock (text: string,): boolean {
+	if (!text.includes('{choice',)) { return false }
+	return parseReasonSegments(text,).some((segment,) =>
+		segment.type === 'token' && segment.token.kind === 'choice' && !segment.token.inline
+	)
 }
 
 /**
@@ -443,12 +518,18 @@ function getAttr (tag: string, name: string,): string | undefined {
 	return value.replace(/&quot;/g, '"',).replace(/&amp;/g, '&',)
 }
 
+/** A legacy `<select>` parsed into a choice token, plus its `label` prompt if it had one. */
+interface ParsedLegacySelect {
+	token: InteractiveToken
+	prompt?: string
+}
+
 /**
- * Converts one legacy `<select>...</select>` block to an inline `{choice}`
- * block. A slug-safe `id` attribute is kept as `{choice#id}`; anything else
- * drops to a bare `{choice}` (the options carry the content, so no id is
- * needed). A `label` attribute (the old prompt, written by the down-convert and
- * invisible in 6.x) becomes a markdown line above the marker.
+ * Parses one legacy `<select>...</select>` element into a `{choice}` token. A
+ * slug-safe `id` attribute is kept as `{choice#id}`; anything else drops to a
+ * bare `{choice}` (the options carry the content, so no id is needed). A
+ * `label` attribute (the old prompt, written by the down-convert and invisible
+ * in 6.x) is returned separately for the block form to place above the marker.
  *
  * Mirrors the quirks the old radio-group renderer handled: a `)` directly after
  * `</option>` belongs to a markdown link inside the option (with the `\)`
@@ -463,7 +544,7 @@ function getAttr (tag: string, name: string,): string | undefined {
  * well-formed `</option>` closer: real v1 configs contain hand-typed closers
  * like `</optiom>`, which 6.x's DOM-based parser silently forgave.
  */
-function selectHtmlToChoiceBlock (selectHtml: string,): string {
+function parseLegacySelect (selectHtml: string,): ParsedLegacySelect {
 	const openTag = selectHtml.match(/^<select\b[^>]*>/i,)?.[0] ?? ''
 	const rawId = getAttr(openTag, 'id',)
 	const id = rawId && SLUG_RE.test(rawId,) ? rawId : undefined
@@ -481,9 +562,47 @@ function selectHtmlToChoiceBlock (selectHtml: string,): string {
 		const value = getAttr(`<option${attrs}>`, 'value',)
 		options.push(value !== undefined ? value : text,)
 	}
+	const token: InteractiveToken = {kind: 'choice', placeholder: '', options,}
+	if (id) { token.id = id }
 	const prompt = getAttr(openTag, 'label',)
-	const block = choiceBlock(id, options,)
-	return prompt ? `${prompt}\n\n${block}` : block
+	return prompt ? {token, prompt,} : {token,}
+}
+
+/**
+ * Matches what may share a line with a `<select>` that still counts as having the
+ * line to itself: whitespace, `<br>`, and other `<select>` elements (6.x configs
+ * often put several selects back to back with nothing else on the line).
+ */
+const SELECT_LINE_FILLER_RE = /<br\s*\/?>|<select\b[^>]*>[\s\S]*?<\/select>|\s+/gi
+
+/**
+ * Whether the `<select>` at `start`..`end` of `text` shares its line with other
+ * content, i.e. was written mid-sentence (or as a link's text) rather than on a
+ * line of its own.
+ */
+function isSelectInline (text: string, start: number, end: number,): boolean {
+	const lineStart = text.lastIndexOf('\n', start - 1,) + 1
+	const nextNewline = text.indexOf('\n', end,)
+	const lineEnd = nextNewline === -1 ? text.length : nextNewline
+	const rest = text.slice(lineStart, start,) + text.slice(end, lineEnd,)
+	return rest.replace(SELECT_LINE_FILLER_RE, '',) !== ''
+}
+
+/**
+ * Converts one legacy `<select>...</select>` element to its token form. A select
+ * that shared its line with text becomes an inline `{choice: ...}` token spliced in
+ * place, so the picked value lands mid-sentence just as 6.x inserted it; one on a
+ * line of its own becomes a `{choice}` block between blank lines, its `label`
+ * prompt (if any) as a markdown line above the marker.
+ */
+function selectHtmlToTokenText (selectHtml: string, inline: boolean,): string {
+	const {token, prompt,} = parseLegacySelect(selectHtml,)
+	if (inline) {
+		// The prompt was never visible in 6.x and has no place inside a sentence.
+		return serializeToken({...token, inline: true,},)
+	}
+	const block = serializeToken(token,)
+	return `\n\n${prompt ? `${prompt}\n\n${block}` : block}\n\n`
 }
 
 /** Converts one legacy `<input>` or `<textarea>` tag to the equivalent token. */
@@ -505,8 +624,9 @@ function fieldHtmlToToken (html: string,): InteractiveToken {
 /**
  * Up-converts legacy (schema v1) reason text to token form: `<input>` and
  * `<textarea>` elements become inline tokens, `<br>` becomes a paragraph break,
- * and each `<select>` becomes an inline `{choice}` block (spliced in between
- * blank lines so the block marker lands on its own line; the caller's
+ * and each `<select>` becomes a `{choice}`: an inline `{choice: ...}` token when
+ * the select shared its line with text, otherwise a block spliced in between
+ * blank lines so the marker lands on its own line (the caller's
  * {@link canonicalizeChoiceBlocks} pass tidies the spacing).
  *
  * Token-form text passes through unchanged, so this is safe (and idempotent) to
@@ -515,9 +635,11 @@ function fieldHtmlToToken (html: string,): InteractiveToken {
  * @param text The reason text to up-convert.
  */
 export function htmlFieldsToTokens (text: string,): string {
-	return text.replace(LEGACY_HTML_RE, (matched,) => {
+	return text.replace(LEGACY_HTML_RE, (matched, offset: number,) => {
 		if (/^<br/i.test(matched,)) { return '\n\n' }
-		if (/^<select/i.test(matched,)) { return `\n\n${selectHtmlToChoiceBlock(matched,)}\n\n` }
+		if (/^<select/i.test(matched,)) {
+			return selectHtmlToTokenText(matched, isSelectInline(text, offset, offset + matched.length,),)
+		}
 		return serializeToken(fieldHtmlToToken(matched,),)
 	},)
 }

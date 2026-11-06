@@ -69,12 +69,14 @@ export const nativeReasonError = 'failed to register native removal reason'
  * prompt is plain markdown text above the block, rendered as normal markdown
  * rather than by this function.
  * A `<input type="hidden">` inside the wrapper tracks the selected value for the save logic.
+ * An inline choice (`{choice: a | b}`) renders as a `span` wrapper so it can sit inside a
+ * paragraph; it is otherwise identical.
  * @param parser SnuOwnd parser instance for rendering option markdown labels.
  * @param token The parsed choice token.
  * @param anonId Stable id to use when the choice has no explicit `#id`. Derived from the reason's
  *   position and the choice's position so the selection persists across overlay reopens (a mutable
  *   counter would change each render and orphan the cached value).
- * @returns HTML string containing a `.toolbox-radio-group` div with a hidden input inside.
+ * @returns HTML string containing a `.toolbox-radio-group` element with a hidden input inside.
  */
 export function choiceTokenToRadioGroup (
 	parser: ReturnType<typeof getRemovalReasonParser>,
@@ -88,8 +90,8 @@ export function choiceTokenToRadioGroup (
 	// mutable counter is fine here (unlike `selectId`, which keys the persisted selection).
 	const groupName = `toolbox-rg-${selectId}-${radioGroupCounter++}`
 
-	const wrapper = doc.createElement('div',)
-	wrapper.className = 'toolbox-radio-group'
+	const wrapper = doc.createElement(token.inline ? 'span' : 'div',)
+	wrapper.className = token.inline ? 'toolbox-radio-group toolbox-radio-group-inline' : 'toolbox-radio-group'
 
 	token.options.forEach((option, optionIdx,) => {
 		const label = doc.createElement('label',)
@@ -130,10 +132,44 @@ export function choiceTokenToRadioGroup (
 }
 
 /**
+ * Stand-in for an inline choice while its paragraph goes through the markdown render.
+ * Letters only (followed by an index and a closing `Q`), so markdown leaves it untouched.
+ */
+const inlineChoicePlaceholder = 'TBXINLINECHOICE'
+
+/** Matches a rendered {@link inlineChoicePlaceholder}; group 1 is its index. */
+const inlineChoicePlaceholderRe = new RegExp(`${inlineChoicePlaceholder}(\\d+)Q`, 'g',)
+
+/**
+ * Replaces any link that contains an inline choice with a `span` holding the same
+ * content (the URL kept as its tooltip). A choice used as a link's text would
+ * otherwise sit inside an anchor, and clicking an option would follow the link
+ * instead of picking it. Only the overlay's display changes - the sent markdown
+ * keeps the link around the picked value.
+ */
+function unwrapLinksAroundChoices (html: string,): string {
+	if (!html.includes('<a',)) { return html }
+	const doc = new DOMParser().parseFromString(html, 'text/html',)
+	let changed = false
+	doc.body.querySelectorAll('a',).forEach((anchor,) => {
+		if (!anchor.querySelector('.toolbox-radio-group-inline',)) { return }
+		const span = doc.createElement('span',)
+		span.className = 'toolbox-choice-link'
+		const href = anchor.getAttribute('href',)
+		if (href) { span.title = href }
+		span.append(...Array.from(anchor.childNodes,),)
+		anchor.replaceWith(span,)
+		changed = true
+	},)
+	return changed ? doc.body.innerHTML : html
+}
+
+/**
  * Renders a removal reason text field to HTML.
  * The text is first normalized to token form (legacy limited-HTML configs are
  * up-converted on the fly), then split into segments: `{choice}` blocks become
- * radio groups, `{input: ...}`/`{textarea: ...}` tokens become inline form
+ * radio groups, inline `{choice: ...}` tokens become inline radio groups inside
+ * their paragraph, `{input: ...}`/`{textarea: ...}` tokens become inline form
  * elements carried through the markdown render via the parser's element
  * whitelist, and everything else renders as markdown.
  * @param parser SnuOwnd parser instance.
@@ -157,18 +193,36 @@ export function renderReasonHtml (
 	// Markdown accumulated until the next choice block; inline field tokens are
 	// embedded into it as whitelisted HTML so they stay inside their paragraph.
 	let pending = ''
+	// Rendered radio groups for the inline choices in `pending`, indexed by placeholder.
+	const inlineChoices: string[] = []
 	// Position of the next id-less choice within this reason, for a stable fallback id.
 	let anonChoiceIndex = 0
 	const flush = () => {
-		if (pending) {
-			parts.push(parser.render(pending,),)
-			pending = ''
+		if (!pending) { return }
+		let html = parser.render(pending,)
+		pending = ''
+		if (inlineChoices.length > 0) {
+			html = unwrapLinksAroundChoices(
+				html.replace(
+					inlineChoicePlaceholderRe,
+					(_match, index: string,) => inlineChoices[Number(index,)] ?? '',
+				),
+			)
+			inlineChoices.length = 0
 		}
+		parts.push(html,)
 	}
 
 	for (const segment of parseReasonSegments(healed,)) {
 		if (segment.type === 'text') {
 			pending += segment.text
+		} else if (segment.token.kind === 'choice' && segment.token.inline) {
+			// SnuOwnd would escape the radio group's HTML, so a plain-word placeholder rides
+			// through the markdown render in its place and is swapped for the group after.
+			pending += `${inlineChoicePlaceholder}${inlineChoices.length}Q`
+			inlineChoices.push(
+				choiceTokenToRadioGroup(parser, segment.token, `${idPrefix}-${anonChoiceIndex++}`,),
+			)
 		} else if (segment.token.kind === 'choice') {
 			// SnuOwnd HTML-escapes <select> even when whitelisted, so choices are
 			// spliced in as pre-rendered radio groups between markdown chunks.

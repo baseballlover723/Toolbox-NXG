@@ -617,4 +617,23 @@
 .reasonPreview :global(.toolbox-radio-text) a {
 	color: var(--toolbox-action-text);
 }
+
+/* Inline choices ({choice: a | b}) sit inside a sentence, so their options flow in a row.
+   The doubled class lifts specificity over the .toolbox-radio-group / .toolbox-radio-label
+   column rules above. */
+.reasonContent :global(.toolbox-radio-group.toolbox-radio-group-inline),
+.reasonPreview :global(.toolbox-radio-group.toolbox-radio-group-inline) {
+	display: inline-flex;
+	flex-flow: row wrap;
+	gap: var(--toolbox-sp-3) var(--toolbox-sp-6);
+	margin: 0 var(--toolbox-sp-2);
+	vertical-align: baseline;
+}
+
+.reasonContent :global(.toolbox-radio-group-inline .toolbox-radio-label),
+.reasonPreview :global(.toolbox-radio-group-inline .toolbox-radio-label) {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--toolbox-sp-3);
+}
 /* stylelint-enable selector-class-pattern */

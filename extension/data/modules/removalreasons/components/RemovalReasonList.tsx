@@ -48,6 +48,7 @@ import {
 	type NativeSyncFailure,
 	syncNativeReasons,
 } from '../features/syncNativeReasons'
+import {findSplitChoiceRepairs, markChoiceRepairChecked,} from '../moduleapi'
 import {stripNativeReasons,} from '../nativeSync'
 import type {RemovalReason,} from '../schema'
 import css from './RemovalReasonList.module.css'
@@ -76,6 +77,17 @@ export const formOwnedKeys = [
 
 /** The subset of a reason the form produces; the rest is preserved from the original. */
 type FormReason = Pick<RemovalReason, typeof formOwnedKeys[number]>
+
+/** A reason whose choice field an earlier build split out of its sentence, and its fix. */
+interface ChoiceRepair {
+	/** The reason's runtime `_key` when found. */
+	key: string
+	title: string
+	/** The reason text the repair was proven against. */
+	from: string
+	/** The restored text, with the choice back in its sentence. */
+	text: string
+}
 
 /** Reason enriched with a synthetic runtime key for React/dnd-kit reconciliation; never persisted. */
 interface ReasonEntry extends RemovalReason {
@@ -344,7 +356,8 @@ function ReasonForm ({
 								</ActionButton>
 								<span>
 									A {'{choice}'} on its own line, followed by a {'- '}{' '}
-									list, becomes a pick-one control.
+									list, becomes a pick-one control. Inside a sentence, write{' '}
+									{'{choice: option 1 | option 2}'} instead.
 								</span>
 							</div>
 							{literalChoiceProblem && (
@@ -356,7 +369,8 @@ function ReasonForm ({
 									{literalChoiceProblem === 'inline'
 										? 'A {choice} here shares its line with other text, so it will be sent as '
 											+ 'text - marker, option list and all - instead of becoming a pick-one '
-											+ 'control. Put it on a line of its own, with the list directly below.'
+											+ 'control. Put it on a line of its own, with the list directly below, '
+											+ 'or keep it in the sentence as {choice: option 1 | option 2}.'
 										: 'A {choice} here has no "- " option list under it, so it will be sent as '
 											+ 'text - marker and all - instead of becoming a pick-one control.'}
 								</div>
@@ -706,6 +720,10 @@ export function RemovalReasonList ({state, addRef, disabledRef, sortRef, onSave,
 	// rather than in the config, so a run that just failed - the case this status line exists
 	// for - moves them without anything in this component's props changing.
 	const [syncStatusNonce, setSyncStatusNonce,] = useState(0,)
+	/** Reasons whose mid-sentence choice field an earlier build split onto lines of its own. */
+	const [choiceRepairs, setChoiceRepairs,] = useState<ChoiceRepair[]>([],)
+	/** Guards the split-choice scan so it starts once, after the reasons first load. */
+	const choiceRepairScanStartedRef = useRef(false,)
 
 	useEffect(() => {
 		if (!syncPersistedOn) {
@@ -783,6 +801,24 @@ export function RemovalReasonList ({state, addRef, disabledRef, sortRef, onSave,
 			void runSync(false,)
 		}
 	}, [],) // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Once the reasons are loaded, look (once per subreddit, ever) for choice fields an
+	// earlier build split out of their sentence. Nothing is written until the moderator
+	// accepts the repair below.
+	useEffect(() => {
+		if (!subreddit || reasons.length === 0 || choiceRepairScanStartedRef.current) { return }
+		choiceRepairScanStartedRef.current = true
+		const scanned = reasons
+		void findSplitChoiceRepairs(subreddit, scanned.map((r,) => r.text),)
+			.then((found,) => {
+				setChoiceRepairs([...found,].map(([index, text,],) => {
+					const reason = scanned[index]!
+					return {key: reason._key, title: reason.title, from: reason.text, text,}
+				},),)
+			},)
+			// Best-effort: a failed history read just means no prompt this time.
+			.catch(() => {},)
+	}, [subreddit, reasons,],)
 
 	// Stabilized so child `ReasonForm`/`ReasonCard` instances get a constant
 	// reference; their mount-once loader effects depend on these callbacks but
@@ -899,6 +935,27 @@ export function RemovalReasonList ({state, addRef, disabledRef, sortRef, onSave,
 		const saved = onSave(state.config, note,)
 		setReasons(newReasons,)
 		return saved
+	}
+
+	/**
+	 * Restores every pending split choice field and saves once. A reason edited (or deleted)
+	 * since the scan is left alone: the repair was only proven for the text it was found in.
+	 */
+	const handleApplyChoiceRepairs = () => {
+		const byKey = new Map(choiceRepairs.map((repair,) => [repair.key, repair,]),)
+		const newReasons = reasons.map((r,) => {
+			const repair = byKey.get(r._key,)
+			return repair && repair.from === r.text ? {...r, text: repair.text,} : r
+		},)
+		setChoiceRepairs([],)
+		void Promise.resolve(persistReasons(newReasons, 'restore choice fields split by an earlier version',),)
+			.then(() => markChoiceRepairChecked(subreddit,))
+	}
+
+	/** Hides the split-choice prompt for good on this subreddit without changing anything. */
+	const handleDismissChoiceRepairs = () => {
+		setChoiceRepairs([],)
+		void markChoiceRepairChecked(subreddit,)
 	}
 
 	const handleSaveEdit = (index: number, updated: FormReason, editNote: string,) => {
@@ -1078,6 +1135,28 @@ export function RemovalReasonList ({state, addRef, disabledRef, sortRef, onSave,
 				)}
 			</div>
 			{syncNotice && <div className={css.syncNotice}>{syncNotice}</div>}
+			{choiceRepairs.length > 0 && (
+				<div className={css.syncNotice}>
+					<p className={css.repairText}>
+						An earlier version of Toolbox moved the pick-one field in{' '}
+						{choiceRepairs.length === 1 ? 'this reason' : `these ${choiceRepairs.length} reasons`}{' '}
+						out of its sentence onto lines of its own, so the picked option was sent as a separate paragraph
+						(and a link around it broke). It can be put back exactly as it was written in the classic
+						toolbox:
+					</p>
+					<ul className={css.repairList}>
+						{choiceRepairs.map((repair,) => <li key={repair.key}>{repair.title || '(untitled)'}</li>)}
+					</ul>
+					<div className={css.repairActions}>
+						<ActionButton primary type="button" onClick={handleApplyChoiceRepairs}>
+							Restore and save
+						</ActionButton>
+						<ActionButton type="button" onClick={handleDismissChoiceRepairs}>
+							Leave as is
+						</ActionButton>
+					</div>
+				</div>
+			)}
 			<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
 				<SortableContext items={reasons.map((r,) => r._key)} strategy={verticalListSortingStrategy}>
 					<div id="toolbox-removal-reasons-list" className={css.cardList}>

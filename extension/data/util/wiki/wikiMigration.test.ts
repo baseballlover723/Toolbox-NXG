@@ -1,7 +1,7 @@
 /** Tests for the legacy↔NXG wiki migration operations. */
 
 // @vitest-environment node
-import {beforeEach, describe, expect, it, vi,} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it, vi,} from 'vitest'
 
 const readFromWiki = vi.hoisted(() => vi.fn())
 const postToWiki = vi.hoisted(() => vi.fn())
@@ -80,6 +80,7 @@ import {
 	migrateSubredditToNxg,
 	recoverLegacyDomainTags,
 	recoverLegacyUsernoteColors,
+	recoverSplitChoiceTexts,
 	setCompatibilityMode,
 } from './wikiMigration'
 
@@ -696,5 +697,62 @@ describe('recoverLegacyUsernoteColors', () => {
 		mockRevisions([null, null,],)
 
 		await expect(recoverLegacyUsernoteColors('sub', ['a',],),).rejects.toThrow()
+	})
+
+	describe('recoverSplitChoiceTexts', () => {
+		// The recovery depends on the real v1 decode and up-convert, which the file-wide stub skips.
+		const stubNormalize = normalizeConfig.getMockImplementation()!
+		beforeEach(async () => {
+			const actual = await vi.importActual<typeof import('./schemas/config/schema')>('./schemas/config/schema',)
+			normalizeConfig.mockImplementation(actual.normalizeConfig,)
+		},)
+		afterEach(() => {
+			normalizeConfig.mockImplementation(stubNormalize,)
+		},)
+
+		/** A v1 config page holding the given reason texts, escape()-encoded as 6.x wrote them. */
+		const legacyPage = (...texts: string[]) =>
+			JSON.stringify({
+				ver: 1,
+				removalReasons: {reasons: texts.map((text,) => ({title: 't', text: escape(text,),})),},
+			},)
+
+		const linkSelect =
+			'This is a [<select id="kind"><option>repost</option><option>spam</option></select>](https://example.com) post.'
+		// Exactly what builds before the inline form stored for the two legacy reasons.
+		const splitLink = 'This is a [\n\n{choice#kind}\n- repost\n- spam\n\n](https://example.com) post.'
+		const splitPick = 'Pick\n\n{choice#r}\n- a'
+
+		it('restores reasons whose text is the old split of a historical inline select', async () => {
+			mockRevisions([
+				// NXG's own mirror write, already split - nothing inline to learn from.
+				legacyPage('Pick\n\n<select id="r"><option>a</option></select>',),
+				legacyPage(linkSelect, 'Pick <select id="r"><option>a</option></select>',),
+			],)
+
+			const repairs = await recoverSplitChoiceTexts('sub', [splitLink, 'plain text', splitPick,],)
+
+			expect(repairs,).toEqual(
+				new Map([
+					[0, 'This is a [{choice#kind: repost | spam}](https://example.com) post.',],
+					[2, 'Pick {choice#r: a}',],
+				],),
+			)
+		})
+
+		it('leaves a block that matches no historical inline select alone', async () => {
+			mockRevisions([legacyPage(linkSelect,),],)
+
+			// Edited since: the options differ from anything in history.
+			const edited = 'This is a [\n\n{choice#kind}\n- repost\n- spam\n- other\n\n](https://example.com) post.'
+			expect(await recoverSplitChoiceTexts('sub', [edited, '{choice}\n- a\n- b',],),).toEqual(new Map(),)
+		})
+
+		it('reads no history when no reason has a choice block', async () => {
+			mockRevisions([legacyPage(linkSelect,),],)
+
+			expect(await recoverSplitChoiceTexts('sub', ['plain', '{choice: a | b} inline',],),).toEqual(new Map(),)
+			expect(getWikiRevisions,).not.toHaveBeenCalled()
+		})
 	})
 })

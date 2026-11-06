@@ -383,7 +383,8 @@ describe('normalizeConfig', () => {
 		normalizeConfig(configData,)
 
 		expect(configData.ver,).toBe(2,)
-		expect(configData.removalReasons.reasons[0].text,).toBe('Pick\n\n{choice#r}\n- a',)
+		// The select shared its line with text, so it stays inline in the sentence.
+		expect(configData.removalReasons.reasons[0].text,).toBe('Pick {choice#r: a}',)
 		expect(configData.removalReasons.reasons[0].selects,).toBeUndefined()
 		expect(configData.removalReasons.header,).toBe('hello there',)
 	})
@@ -403,7 +404,8 @@ describe('normalizeConfig', () => {
 
 		normalizeConfig(configData,)
 
-		expect(configData.removalReasons.reasons[0].text,).toBe('Pick\n\n{choice#r}\n- a',)
+		// The select shared its line with text, so it stays inline in the sentence.
+		expect(configData.removalReasons.reasons[0].text,).toBe('Pick {choice#r: a}',)
 		expect(configData.removalReasons.reasons[0].selects,).toBeUndefined()
 	})
 
