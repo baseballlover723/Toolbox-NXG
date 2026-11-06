@@ -14,6 +14,7 @@ import type {FrozenReasonType, FrozenRemovalIntent, ProposedAction,} from '../..
 import type {UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
 import {labelColors, labelNames,} from '../../shared/modnotes/schema'
 import {getRemovalReasonParser,} from '../../shared/removalReasons/parser'
+import {noteTypeColorStyle,} from '../../shared/usernotes/noteTypeColorStyle'
 import css from './ProposalsReviewPopup.module.css'
 
 /** One label/value row in an effects list; renders nothing when `value` is empty. */
@@ -32,7 +33,7 @@ function UsernoteTypeChip ({typeKey, color,}: {typeKey: string; color?: UserNote
 	return (
 		<span
 			className={css.usernoteChip}
-			style={color ? {background: color.color, color: '#fff',} : undefined}
+			style={color ? noteTypeColorStyle(color,) : undefined}
 		>
 			{color ? color.text : typeKey}
 		</span>

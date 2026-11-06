@@ -19,6 +19,7 @@ import {
 	getUser,
 	getUserNotes,
 } from '../../shared/usernotes/moduleapi'
+import {noteTypeColorStyle,} from '../../shared/usernotes/noteTypeColorStyle'
 import {ProposalSpinner,} from './ProposalSpinner'
 import css from './ProposalsReviewPopup.module.css'
 
@@ -34,7 +35,7 @@ function UsernoteRow ({note, colors,}: {note: UserNoteEntry; colors: UserNoteCol
 	return (
 		<li className={css.authorNote}>
 			{color && (
-				<span className={css.itemKind} style={{background: color.color, color: '#fff',}}>{color.text}</span>
+				<span className={css.itemKind} style={noteTypeColorStyle(color,)}>{color.text}</span>
 			)}
 			<span>{note.note}</span>
 			<span className={css.itemMeta}>
