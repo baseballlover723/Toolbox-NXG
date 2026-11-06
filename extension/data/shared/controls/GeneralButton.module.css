@@ -1,13 +1,21 @@
+/*
+ * The --toolbox-general-button-* hooks are unset by default (each var() falls back to the default
+ * look) and set by css/classic.css to the 6.x general-button shape: left accent border only, grey
+ * text, smaller type. Hooks rather than a selector because the button often renders in a shadow
+ * root, where only inherited custom properties can reach it.
+ */
 /* button element included in selector to beat page-level `button { }` resets (specificity 0,1,1) */
 button.generalButton {
-	background-color: var(--toolbox-action-bg);
+	background-color: var(--toolbox-general-button-bg, var(--toolbox-action-bg));
 	font-family: var(--toolbox-font-family);
-	color: var(--toolbox-action-text);
-	font-size: 1em;
+	color: var(--toolbox-general-button-text, var(--toolbox-action-text));
+	font-size: var(--toolbox-general-button-font-size, 1em);
 	font-weight: normal;
-	border: 1px solid var(--toolbox-surface-border);
+	border-style: solid;
+	border-width: var(--toolbox-general-button-border-width, 1px);
+	border-color: var(--toolbox-general-button-border-color, var(--toolbox-surface-border));
 	border-radius: var(--toolbox-radius-md);
-	padding: var(--toolbox-sp-3) var(--toolbox-sp-8);
+	padding: var(--toolbox-general-button-padding, var(--toolbox-sp-3) var(--toolbox-sp-8));
 	margin: 0 var(--toolbox-sp-2);
 	cursor: pointer;
 	display: inline-block;
@@ -30,7 +38,7 @@ button.generalButton:disabled {
    where --toolbox-selected-bg contrasts sharply with --toolbox-action-bg, but it applies in both.
    Declared after :disabled to keep specificity ascending (stylelint no-descending-specificity). */
 button.generalButton:hover:not(:disabled) {
-	background-color: var(--toolbox-selected-bg);
-	border-color: var(--toolbox-border-color);
+	background-color: var(--toolbox-general-button-hover-bg, var(--toolbox-selected-bg));
+	border-color: var(--toolbox-general-button-hover-border-color, var(--toolbox-border-color));
 	text-decoration: none;
 }

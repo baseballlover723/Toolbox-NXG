@@ -48,7 +48,7 @@
 
 .topRow {
 	display: flex;
-	gap: var(--toolbox-sp-12);
+	gap: 1em;
 	flex-wrap: wrap;
 	align-items: flex-start;
 }

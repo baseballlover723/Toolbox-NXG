@@ -1,0 +1,139 @@
+/*
+ * Classic theme - a familiarity shim that makes Toolbox look like Toolbox 6.x. Active while the
+ * General Settings "classic look" toggle puts .toolbox-theme-classic on <html> (modules/general).
+ *
+ * Everything here is a token override, never a component selector: much of the UI renders in shadow
+ * roots, which only inherited custom properties can reach (and Firefox has no :host-context()).
+ *
+ * The light palette is not overridden because the default light palette already is 6.x's
+ * (#cee3f8 headers, #9fbad6 hovers, #72869a borders and so on). What differs is shape: 6.x had
+ * square corners, one small shadow, and general buttons with a left accent border only.
+ *
+ * Overrides are declared on every .toolbox-scope element rather than once on :root. A custom
+ * property that references another is resolved where it is declared, and the dark blocks redeclare
+ * colors on those same elements - declaring here too keeps var() references (shadow color, button
+ * colors) resolving against the dark values in dark mode.
+ */
+
+.toolbox-theme-classic.toolbox-scope,
+.toolbox-theme-classic .toolbox-scope {
+	/* Square corners. xs stays 1px - 6.x action buttons had exactly that. Pills (toggle tracks,
+	   badges) and circles keep their shapes: they have no 6.x counterpart and read wrong squared. */
+	--toolbox-radius-sm: 0;
+	--toolbox-radius-md: 0;
+	--toolbox-radius-lg: 0;
+	--toolbox-radius-xl: 0;
+	--toolbox-radius-2xl: 0;
+
+	/* 6.x used a single small shadow for every raised surface */
+	--toolbox-shadow-xs: none;
+	--toolbox-shadow-md: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	--toolbox-shadow-lg: var(--toolbox-shadow-color) 0 1px 3px 1px;
+	--toolbox-shadow-drawer: var(--toolbox-shadow-color) 0 1px 3px 1px;
+
+	/* 6.x general button (see GeneralButton.module.css), matching the injected
+	   .toolbox-general-button in toolbox-buttons.css */
+	--toolbox-general-button-bg: var(--toolbox-button-bg-solid);
+	--toolbox-general-button-text: var(--toolbox-button-text);
+	--toolbox-general-button-font-size: var(--toolbox-fs-11);
+	--toolbox-general-button-border-width: 0 0 0 3px;
+	--toolbox-general-button-border-color: var(--toolbox-button-border);
+	--toolbox-general-button-padding: 1px 5px;
+	--toolbox-general-button-hover-bg: var(--toolbox-button-hover-bg);
+	--toolbox-general-button-hover-border-color: var(--toolbox-button-border);
+}
+
+/*
+ * Classic dark mode. 6.x had no dark palette: it put `filter: invert(90%) hue-rotate(180deg)` on its
+ * surfaces. Applying that filter here would break fixed positioning and does nothing on the
+ * display: contents shadow hosts, so instead the same transform is applied to each light color
+ * token ahead of time. The block between the markers is generated - do not edit it by hand; run
+ * `UPDATE_CLASSIC_DARK=1 npx vitest run extension/data/css/classic.test.ts` after changing the light
+ * palette in base.css (the test fails until you do).
+ *
+ * Selectors mirror the default dark block in base.css with the classic class added, so they win on
+ * the same elements by specificity.
+ */
+.toolbox-theme-classic.res-nightmode .toolbox-scope,
+.toolbox-theme-classic .res-nightmode .toolbox-scope,
+.toolbox-theme-classic.theme-dark.toolbox-scope,
+.toolbox-theme-classic .theme-dark.toolbox-scope,
+.toolbox-theme-classic.toolbox-os-dark .toolbox-scope {
+	/* BEGIN generated classic dark palette */
+	--toolbox-header-bg: rgb(36 53 69);
+	--toolbox-header-button-bg: rgb(50 62 74);
+	--toolbox-header-button-hover-bg: rgb(65 87 109);
+	--toolbox-border-color: rgb(111 127 143);
+	--toolbox-shadow-color: rgb(78 92 105 / 40%);
+	--toolbox-button-bg: rgb(58 73 89 / 23%);
+	--toolbox-button-bg-solid: rgb(32 36 40);
+	--toolbox-button-text: rgb(146 146 146);
+	--toolbox-button-border: rgb(58 73 89);
+	--toolbox-button-hover-bg: rgb(32 42 51);
+	--toolbox-button-active-bg: rgb(58 73 89);
+	--toolbox-action-bg: rgb(28 30 33);
+	--toolbox-action-text: rgb(174 195 218);
+	--toolbox-input-bg: rgb(25 25 25);
+	--toolbox-input-border: rgb(50 62 74);
+	--toolbox-input-focus: rgb(65 87 109);
+	--toolbox-surface-border: rgb(47 56 66);
+	--toolbox-divider-color: rgb(34 40 45);
+	--toolbox-badge-bg: rgb(32 39 46);
+	--toolbox-selected-bg: rgb(31 38 44);
+	--toolbox-accent-color: rgb(93 146 190);
+	--toolbox-accent-hover: rgb(124 165 203);
+	--toolbox-accent-active: rgb(137 175 210);
+	--toolbox-accent-disabled: rgb(64 104 132);
+	--toolbox-accent-disabled-border: rgb(89 128 152);
+	--toolbox-link-color: rgb(119 159 200);
+	--toolbox-text-muted: rgb(79 102 126);
+	--toolbox-text-heading: rgb(160 177 194);
+	--toolbox-text-body: rgb(147 162 178);
+	--toolbox-text-secondary: rgb(123 135 150);
+	--toolbox-error-color: rgb(248 140 128);
+	--toolbox-error-bg: rgb(38 30 30);
+	--toolbox-error-border: rgb(101 58 58);
+	--toolbox-error-text: rgb(253 167 167);
+	--toolbox-caution-bg: rgb(36 31 16);
+	--toolbox-caution-border: rgb(74 59 16);
+	--toolbox-caution-accent: rgb(132 101 2);
+	--toolbox-caution-text: rgb(172 159 111);
+	--toolbox-success-bg: rgb(31 51 35);
+	--toolbox-success-text: rgb(135 188 147);
+	--toolbox-neutral-bg: rgb(47 48 50);
+	--toolbox-neutral-text: rgb(178 182 185);
+	--toolbox-row-approve: rgb(69 181 69 / 7%);
+	--toolbox-row-approve-alt: rgb(69 181 69 / 10%);
+	--toolbox-row-remove: rgb(255 161 161 / 7%);
+	--toolbox-row-remove-alt: rgb(255 161 161 / 10%);
+	--toolbox-row-ban: rgb(230 134 70 / 8%);
+	--toolbox-row-ban-alt: rgb(230 134 70 / 11%);
+	--toolbox-row-neutral: rgb(229 229 229 / 3%);
+	--toolbox-approve-bg: rgb(36 56 21);
+	--toolbox-remove-bg: rgb(100 62 63);
+	--toolbox-neutral-action-bg: rgb(59 59 59);
+	--toolbox-banned-bg: rgb(185 87 76);
+	--toolbox-positive-color: rgb(55 145 71);
+	--toolbox-positive-hover: rgb(106 171 118);
+	--toolbox-new-mail-color: rgb(25 112 21);
+	--toolbox-hover-overlay: rgb(229 229 229 / 6%);
+	--toolbox-hover-overlay-strong: rgb(229 229 229 / 8%);
+	--toolbox-reddit-nsfw: rgb(255 154 182);
+	--toolbox-reddit-moderator: rgb(86 167 86);
+	--toolbox-reddit-submitter: rgb(107 175 255);
+	--toolbox-vote-neutral: rgb(71 71 71);
+	--toolbox-vote-up: rgb(177 84 49);
+	--toolbox-vote-down: rgb(99 99 184);
+	--toolbox-active-mods-bg: rgb(69 181 69 / 5%);
+	--toolbox-active-mods-border: rgb(69 181 69 / 12%);
+	--toolbox-active-mod-chip: rgb(69 181 69 / 8%);
+	--toolbox-chrome: rgb(77 88 98);
+	--toolbox-bg: rgb(25 25 25);
+	--toolbox-fg: rgb(229 229 229);
+	--toolbox-blockquote-bg: rgb(49 45 45);
+	--toolbox-blockquote-color: rgb(169 169 169);
+	--toolbox-flair-bg: rgb(57 57 57);
+	--toolbox-submission-bg: rgb(37 37 37);
+	--toolbox-highlight-bg: rgb(38 33 5);
+	/* END generated classic dark palette */
+}

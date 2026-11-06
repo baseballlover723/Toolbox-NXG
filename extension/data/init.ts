@@ -5,6 +5,7 @@ import browser from 'webextension-polyfill'
 
 // Bundle the shared base stylesheets so they ship with the extension
 import './css/base.css'
+import './css/classic.css'
 import './css/reddit-integration.css'
 import './css/toolbox-buttons.css'
 

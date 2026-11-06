@@ -5,6 +5,7 @@
         "color-named": "never",
         "unit-disallowed-list": ["rem"],
         "declaration-property-value-disallowed-list": {
+            "/.*/": ["/--toolbox-(sp|fs)-12(?![0-9])/"],
             "/^border(-[a-z]+)*-radius$/": ["/\\d(px|em)/", "/--toolbox-sp-/"],
             "/^(font|font-size|line-height)$/": ["/--toolbox-sp-/"],
             "box-shadow": ["/^-?\\d+(px)? -?\\d+(px)? \\d+px/", "/^var\\(--toolbox-shadow-color\\)/"]

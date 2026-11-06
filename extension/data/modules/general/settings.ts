@@ -1,8 +1,17 @@
-/** Settings definitions for the General Settings module, covering notifications and the context menu. */
+/** Settings definitions for the General Settings module, covering appearance, notifications and the context menu. */
 import {defineSettings, InferSettings,} from '../../framework/module'
 
 export const settings = defineSettings(
 	[
+		{
+			id: 'classicTheme',
+			sharedPolicy: 'raw',
+			type: 'boolean',
+			default: false,
+			advanced: false,
+			description:
+				'Use the classic look from Toolbox 6.x: square corners, flat shadows, 6.x-style buttons and dark mode',
+		},
 		{
 			id: 'nativeNotifications',
 			sharedPolicy: 'raw',

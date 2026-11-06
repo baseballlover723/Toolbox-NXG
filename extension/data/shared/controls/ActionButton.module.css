@@ -66,8 +66,8 @@ button.actionButton.inline:active {
 
 /* Leading spinner shown while the button's action is in flight (the `busy` prop). */
 .spinner {
-	width: var(--toolbox-sp-12);
-	height: var(--toolbox-sp-12);
+	width: 1em;
+	height: 1em;
 	border: 2px solid currentcolor;
 	border-top-color: transparent;
 	border-radius: 50%;
