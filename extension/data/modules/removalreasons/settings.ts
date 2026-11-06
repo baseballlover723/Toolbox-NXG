@@ -33,6 +33,9 @@ export const settings = defineSettings(
 			values: ['Drawer', 'Popup (legacy)',] as const,
 			default: 'Drawer',
 			description: 'How removal reasons should be displayed.',
+			valueNotes: {
+				Drawer: 'Not available with the classic look (General Settings), which always uses the popup.',
+			},
 		},
 		{
 			id: 'silentRemoveDeletedUsers',

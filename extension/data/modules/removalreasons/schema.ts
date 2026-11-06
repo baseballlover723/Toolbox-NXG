@@ -23,6 +23,21 @@ export function isDrawerDisplayMode (displayMode: string | undefined,) {
 }
 
 /**
+ * Resolves the display mode actually used. The classic look (General Settings) always
+ * uses the popup, since Toolbox 6.x had no drawer; otherwise the setting decides.
+ * @param displayMode The raw display mode string from settings.
+ * @param classicTheme Whether the classic look is on.
+ * @returns The display mode to open the overlay in.
+ */
+export function resolveDisplayMode (
+	displayMode: string | undefined,
+	classicTheme: boolean,
+): RemovalReasonsDisplayMode {
+	if (classicTheme) { return 'Popup (legacy)' }
+	return isDrawerDisplayMode(displayMode,) ? 'Drawer' : 'Popup (legacy)'
+}
+
+/**
  * The removal-reasons configuration block stored in the subreddit's toolbox wiki config.
  * All fields except `reasons` are optional because older configs may omit them.
  */

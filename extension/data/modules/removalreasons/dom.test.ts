@@ -16,6 +16,8 @@ const syncNativeReasons = vi.hoisted(() => vi.fn())
 const negativeTextFeedback = vi.hoisted(() => vi.fn())
 const getSubredditAbout = vi.hoisted(() => vi.fn())
 const getSubredditRules = vi.hoisted(() => vi.fn())
+// The General Settings classic look; off unless a test turns it on
+const classicTheme = vi.hoisted(() => ({enabled: false,}))
 // Renderer registry for the uiLocations mock — keyed by location name.
 const uiLocMock = vi.hoisted(() => ({renderers: new Map<string, (...args: unknown[]) => unknown>(),}))
 
@@ -81,6 +83,9 @@ vi.mock('../../store/feedback', () => ({
 // overlay's "leave usernote" gating is computed without touching storage.
 vi.mock('../../util/persistence/settings', () => ({
 	getModuleSettingAsync: vi.fn(async (_moduleID: string, _setting: string, defaultVal: unknown,) => defaultVal),
+	getSettingAsync: vi.fn(async (moduleID: string, setting: string, defaultVal: unknown,) =>
+		moduleID === 'GenSettings' && setting === 'classicTheme' ? classicTheme.enabled : defaultVal
+	),
 }),)
 
 vi.mock('./components/RemovalReasonsOverlay', () => ({
@@ -310,7 +315,9 @@ describe('createRemovalReasonsHandlers', () => {
 		expect(event.stopPropagation,).toHaveBeenCalledOnce()
 		expect(event.stopImmediatePropagation,).toHaveBeenCalledOnce()
 		expect(yesClick,).not.toHaveBeenCalled()
-		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(expect.objectContaining({displayMode: 'Popup',},),)
+		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(
+			expect.objectContaining({displayMode: 'Popup (legacy)',},),
+		)
 		expect(document.body.style.overflow,).toBe('hidden',)
 		showRemovalReasonsOverlay.mock.calls[0]![0].onClose()
 		expect(document.body.style.overflow,).toBe('',)
@@ -549,8 +556,30 @@ describe('createRemovalReasonsHandlers', () => {
 			event,
 		)
 
-		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(expect.objectContaining({displayMode: 'drawer',},),)
+		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(expect.objectContaining({displayMode: 'Drawer',},),)
 		expect(document.body.style.overflow,).toBe('',)
+	})
+
+	it('opens the popup instead of the drawer while the classic look is on', async () => {
+		classicTheme.enabled = true
+		try {
+			document.body.innerHTML = `
+            <div class="thing link" data-fullname="t3_post" data-subreddit="testsub">
+                <span class="remove-button">
+                    <button class="togglebutton">remove</button>
+                </span>
+            </div>
+        `
+			const event = makeClick(document.querySelector('.togglebutton',)!,)
+
+			await createRemovalReasonsHandlers({...handlerSettings, displayMode: 'Drawer',},).handleClick(event,)
+
+			expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(
+				expect.objectContaining({displayMode: 'Popup (legacy)',},),
+			)
+		} finally {
+			classicTheme.enabled = false
+		}
 	})
 
 	it('silently removes deleted-user content when the setting is enabled', async () => {

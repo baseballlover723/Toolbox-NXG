@@ -14,13 +14,13 @@ import {
 } from '../../dom/shreddit/things'
 import {provideLocation, renderAtLocation,} from '../../dom/uiLocations'
 import {createLifecycle,} from '../../framework/lifecycle'
-import {usernotes,} from '../../framework/moduleIds'
+import {genSettings, usernotes,} from '../../framework/moduleIds'
 import {FlatListAction,} from '../../shared/controls/FlatListAction'
 import {negativeTextFeedback,} from '../../store/feedback'
 import {selectorOptionKey,} from '../../util/data/string'
 import createLogger from '../../util/infra/logging'
 import {isOldReddit, RedditPlatform,} from '../../util/infra/platform'
-import {getModuleSettingAsync,} from '../../util/persistence/settings'
+import {getModuleSettingAsync, getSettingAsync,} from '../../util/persistence/settings'
 import {events, sendEvent,} from '../../util/reddit/events'
 import {pageDetails, postSite,} from '../../util/reddit/pageContext'
 import type {ThingInfo,} from '../../util/reddit/thingInfo'
@@ -46,6 +46,7 @@ import {
 	type RemovalReasonsConfig,
 	type RemovalReasonsData,
 	type RemovalReasonsOverlaySettings,
+	resolveDisplayMode,
 } from './schema'
 import {RemovalReasonsSettings,} from './settings'
 import {extractReportReasons, matchSuggestedReasons,} from './suggested'
@@ -516,7 +517,10 @@ export function createRemovalReasonsHandlers ({
 		pendingRemoveButton?: HTMLElement | null
 		thingElement?: HTMLElement | null
 	},) {
-		const drawerMode = isDrawerDisplayMode(displayMode,)
+		// Read per open rather than once at init so toggling the classic look applies without a reload
+		const classicTheme = await getSettingAsync(genSettings, 'classicTheme', false,) === true
+		const effectiveDisplayMode = resolveDisplayMode(displayMode, classicTheme,)
+		const drawerMode = isDrawerDisplayMode(effectiveDisplayMode,)
 		const originalRemoveButtonText = pendingRemoveButton?.textContent ?? ''
 		const resetRemoveButton = () => {
 			if (pendingRemoveButton && pendingRemoveButton.textContent === 'pending') {
@@ -813,7 +817,7 @@ export function createRemovalReasonsHandlers ({
 			visibleReasons,
 			...(nativeMode ? {nativeMode,} : {}),
 			...(suggestedReasonIds.length ? {suggestedReasonIds,} : {}),
-			displayMode,
+			displayMode: effectiveDisplayMode,
 			settings: {
 				reasonTypeSetting,
 				reasonAsSubSetting,
