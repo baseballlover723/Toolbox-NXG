@@ -23,7 +23,7 @@ We generally only change the release name for major or minor bumps. Tradition di
 
 ## Tagging a New Release
 
-1. Make sure the working directory is clear and you're on the `main` branch.
+1. Make sure the working directory is clear and you're on the `main` branch. The release script refuses to run otherwise.
 2. `firefox_manifest.json`'s `strict_min_version` is synced automatically by the release script (step 3): it reads the latest ESR from [Mozilla's product-details feed](https://product-details.mozilla.org/1.0/firefox_versions.json) and bumps the floor to that major version. If the latest ESR is _lower_ than the current floor (or the feed can't be reached), the script keeps the existing value and prints a notice -- no manual action needed unless you intend to override the floor. [The FF release calendar is here for reference](https://whattrainisitnow.com/calendar/).
 3. Run `npm run release`. This script will prompt you for the new four-segment version number, then the release name. Every release is currently a beta and is tagged `vX.Y.Z-beta.<build>`, so there is no release-type prompt.
    - Ensure the major.minor.patch is set correctly. You should only need to update this when starting a new major.minor.patch.

@@ -66,9 +66,22 @@ function writeManifest (location, manifest,) {
 	fs.writeFileSync(location, `${JSON.stringify(manifest, null, 4,)}\n`, 'utf8',)
 }
 
+// Releases are tagged from main only: a tag cut from a feature branch would publish
+// unmerged work. `--show-current` prints nothing on a detached HEAD, which is refused too.
+const releaseBranch = 'main'
+const currentBranch = execSync('git branch --show-current', {encoding: 'utf8',},).trim()
+if (currentBranch !== releaseBranch) {
+	console.error(
+		`releases must be made from the ${releaseBranch} branch, but you are on ${
+			currentBranch ? `"${currentBranch}"` : 'a detached HEAD'
+		}; run \`git switch ${releaseBranch}\` first`,
+	)
+	process.exit(1,)
+}
+
 // Release commits must contain nothing but the version bump, so refuse to run dirty.
 if (execSync('git status --porcelain', {encoding: 'utf8',},)) {
-	console.error('found uncommitted changes; ensure that you are on the main branch and `git status` is clean',)
+	console.error('found uncommitted changes; commit or stash them so `git status` is clean',)
 	process.exit(1,)
 }
 
