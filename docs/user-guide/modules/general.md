@@ -26,5 +26,6 @@ For moderators coming from Toolbox 6.x, the classic look restores the familiar a
 - A single small shadow under raised surfaces, in place of the deeper drop shadows.
 - General buttons with 6.x's left accent bar, grey text and smaller type.
 - 6.x's dark mode: when Reddit (or RES night mode, or your operating system) is dark, colors are an inverted version of the light theme, as in 6.x, rather than Toolbox-NXG's own dark palette.
+- Removal reasons always open as the popup, as in 6.x; the Drawer display mode is unavailable while the classic look is on (see [Removal Reasons](removal-reasons.md)).
 
 The colors in light mode are the same either way - Toolbox-NXG's light palette is 6.x's. The setting takes effect immediately, on old and new Reddit alike.

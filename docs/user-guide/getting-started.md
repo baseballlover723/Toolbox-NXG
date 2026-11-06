@@ -2,7 +2,7 @@
 
 ## First steps after installing
 
-After installing Toolbox-NXG and reloading Reddit, you'll see the Toolbox icon (a toolbox with an antenna) appear in your browser toolbar. The extension activates automatically on any Reddit page.
+After installing Toolbox-NXG, reload any Reddit tabs you already had open. The extension activates automatically on any Reddit page.
 
 On your first visit to a subreddit you moderate, Toolbox-NXG quietly reads your existing toolbox wiki data and sets up the NXG layout in the background. No action is required.
 
@@ -10,15 +10,15 @@ The persistent Modbar appears at the bottom of every Reddit page and is your mai
 
 ## The settings overlay
 
-Open the settings overlay by clicking the gear icon in the Modbar.
+Open the settings overlay by clicking the gear icon (**Toolbox-NXG settings**) in the Modbar.
 
-The overlay is divided into module tabs. Each tab contains the settings for one module. Modules that are always-on (Modbar, General Settings) appear at the top; optional modules follow. Setting changes on any page are persisted while the Settings popup is open, and are saved together with the save and refresh page button in the footer.
+The overlay is divided into tabs. **Core Settings** comes first (backup and restore, advanced and debug options), followed by the always-on modules (such as General Settings, Modbar and Notifier) and **About**. The optional modules follow, grouped under **General Modules**, **Old Reddit Modules** and **Shreddit Modules**. A search box filters the tabs to settings matching what you type. Changes on any tab are kept while the overlay is open and are all saved together with the **Save Settings and Refresh Page** button in the footer.
 
-Some settings are marked **Advanced** and are hidden by default. Reveal them with the "Show advanced settings" toggle at the bottom of any module tab.
+Some settings are marked **Advanced** and are hidden by default. Reveal them with the **Show advanced settings** toggle on the **Core Settings** tab.
 
 ## Modules
 
-Toolbox-NXG functionality is organized into modules. Each module can be individually enabled or disabled from its tab in the settings overlay. Some modules are always on (Modbar, General Settings, Old Reddit / Shreddit infrastructure) and do not show an enable toggle.
+Toolbox-NXG functionality is organized into modules. Each module can be individually enabled or disabled from its tab in the settings overlay. Some modules are always on (General Settings, Modbar, Notifier, Support, and the Old Reddit infrastructure module) and do not show an enable toggle.
 
 See the [Modules](modules/index.md) section for documentation on each module.
 

@@ -12,6 +12,8 @@ The page is restricted to moderator-only access (`permlevel: 2`).
 
 Toolbox 6.x stores domain tags inline on the classic `toolbox` config page as `domainTags`. When a moderator first reads the dedicated domain-tags page and it does not exist yet, NXG creates it, seeded with those tags (`approvalCount: 0`, `removalCount: 0`). The tags are read from the `toolbox` page's revision history (the newest revision carrying any), not its current content: with 6.x compatibility on, NXG rewrites that page from its own data, and turning compatibility off replaces it with a tombstone.
 
+With 6.x compatibility on, NXG writes the tags back into the classic `toolbox` page's `domainTags` array whenever the tags are edited (and on every config mirror write), keeping only `name`, `color`, and `note` (6.x has no counts or thresholds).
+
 Early builds created the page empty instead. A one-time repair restores those tags the same way, but only into a page that is still untouched (a single revision and no tags); either way it records `legacyDomainTags` in `repairs` so it never runs again.
 
 ## Schema reference
@@ -56,6 +58,8 @@ Early builds created the page empty instead. A one-time repair restores those ta
 | `removalCount`     | yes      | integer | Cumulative number of removals of posts from this domain in this subreddit; `0` when none recorded                                                                              |
 | `removalThreshold` | no       | integer | Removal-rate alert threshold (0–100). When `removalCount / (approvalCount + removalCount) ≥ threshold / 100`, the indicator switches to a warning color regardless of `color`. |
 
+On read, entries without a non-empty string `name` are dropped, a missing or empty `color` defaults to `#cee3f8`, counts are coerced to non-negative integers (`0` when absent or invalid), and a `removalThreshold` outside 0–100 or a non-string `note` is removed.
+
 ```{note}
 `approvalCount` and `removalCount` are managed entirely by the extension. External tools that round-trip this page should preserve the existing values unchanged rather than resetting them to `0`.
 ```
@@ -68,7 +72,7 @@ The `name` field on a `DomainTag` is matched against the domain of an incoming p
 2. **Glob** — `name` contains `*`, which matches any sequence of characters, e.g. `*.blogspot.com` matches `foo.blogspot.com` but not `blogspot.net`.
 3. **Suffix** — `name` without `*` is checked as a domain suffix, e.g. `imgur.com` matches `i.imgur.com` and `m.imgur.com`.
 
-The first matching tag wins. To prevent a suffix match from firing on a specific subdomain, add a more-specific exact-match entry for that subdomain.
+An exact match anywhere in the list wins; otherwise the first glob match in list order, then the first suffix match. A tag whose `name` starts with `www.` also matches the same domain without `www.` exactly (not its subdomains), since lookup domains are `www`-normalized. To prevent a suffix match from firing on a specific subdomain, add a more-specific exact-match entry for that subdomain.
 
 ## Approval/removal tracking
 
@@ -88,7 +92,7 @@ The threshold has no effect when both counts are `0`.
 
 ## Versioning
 
-`ver` selects the schema version. The only currently defined version is `1`. Future schema changes will bump this value and may add a migration step in the codec.
+`ver` selects the schema version. The only currently defined version is `1`; a missing `ver` is treated as `1`. NXG refuses to read or overwrite a page whose `ver` is outside the range it supports. Future schema changes will bump this value and may add a migration step in the codec.
 
 ## Interoperability notes
 

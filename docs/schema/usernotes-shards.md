@@ -24,7 +24,7 @@ Each shard is a JSON envelope at schema version 1 containing a compressed payloa
 
 ## Payload
 
-The decompressed payload is a JSON object mapping lowercase usernames to user records:
+The decompressed payload is a JSON object mapping usernames to user records, with keys sorted. Keys are not guaranteed to be lowercase (a user may be stored under their canonical casing); shard placement always hashes the lowercased name, so every casing of a name lands in the same shard:
 
 ```json
 {
@@ -61,16 +61,16 @@ The decompressed payload is a JSON object mapping lowercase usernames to user re
 
 ### Note entry fields
 
-| Field         | Required | Type    | Description                                                                      |
-| ------------- | -------- | ------- | -------------------------------------------------------------------------------- |
-| `index`       | yes      | integer | Stable per-user note index                                                       |
-| `note`        | yes      | string  | Note text                                                                        |
-| `time`        | yes      | integer | Creation timestamp (epoch seconds)                                               |
-| `mod`         | yes      | string  | Username of the creating moderator                                               |
-| `type`        | no       | string  | Note type key; omitted when no type                                              |
-| `link`        | no       | string  | Subreddit-relative permalink, e.g. `/r/sub/comments/abc/-/def/`                  |
-| `messageLink` | no       | string  | Full URL of an associated removal modmail                                        |
-| `archived`    | no       | object  | Set when archived; contains `by` (username or sentinel) and `at` (epoch seconds) |
+| Field         | Required | Type    | Description                                                                         |
+| ------------- | -------- | ------- | ----------------------------------------------------------------------------------- |
+| `index`       | yes      | integer | Stable per-user note index                                                          |
+| `note`        | yes      | string  | Note text                                                                           |
+| `time`        | yes      | integer | Creation timestamp (epoch seconds)                                                  |
+| `mod`         | yes      | string  | Username of the creating moderator                                                  |
+| `type`        | no       | string  | Note type key; omitted when no type                                                 |
+| `link`        | no       | string  | Subreddit-relative permalink, e.g. `/r/sub/comments/abc/-/def/`; omitted when empty |
+| `messageLink` | no       | string  | Full URL of an associated removal modmail; NXG-only, dropped from the v6 mirror     |
+| `archived`    | no       | object  | Set when archived; contains `by` (username or sentinel) and `at` (epoch seconds)    |
 
 `time` and `archived.at` are epoch **seconds** — the same granularity reddit
 itself exposes, and the same unit the classic v6 page stores.
@@ -83,3 +83,11 @@ Two special values may appear in `archived.by`:
 | -------- | ------------------------------------------------------------------------------ |
 | `[6.x]`  | Archived because the note was deleted on the classic wiki page by a 6.x client |
 | `[auto]` | Archived automatically by the per-type auto-archive sweep                      |
+
+## Size limits
+
+Reddit caps ordinary wiki pages at 512 KB (only the literal classic `usernotes` page gets 1 MB). When a save leaves a shard's encoded page above a soft limit of 480,000 bytes, NXG splits it at the median user hash: the manifest `gen` is bumped and both halves are written to new page names, so existing pages are never rewritten mid-split. A shard that cannot split (all of its users share one hash) may grow to a hard limit of 510,000 bytes, beyond which the save fails. Ranges never merge; a shard whose users are all removed is rewritten as a valid empty envelope.
+
+## Retired pages
+
+The wiki API cannot delete pages, so a page retired by a split is overwritten with the plain text `TBUN-RETIRED` after the new manifest is written. If that write fails, the suffix is kept in the manifest's `retired` list and retried on a later save. Readers should ignore any page under `toolbox-nxg/usernotes/` that the manifest's `shards` list does not reference.

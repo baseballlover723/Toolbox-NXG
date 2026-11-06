@@ -6,7 +6,7 @@ Domain Tagger colour-tags link domains on post listings, helping moderators quic
 
 ## Overview
 
-Domain tags are configured per-subreddit in the Config overlay (Domain Tags tab). Each entry maps a domain name to a color. When Domain Tagger encounters a link post whose domain matches a configured entry, it renders a visual indicator in the style selected in your personal settings.
+Domain tags are configured per-subreddit in the Config overlay (**Domain tags** tab). Each entry maps a domain name to a color. When Domain Tagger encounters a link post whose domain matches a configured entry, it renders a visual indicator in the style selected in your personal settings.
 
 ## Features
 

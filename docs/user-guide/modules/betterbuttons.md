@@ -30,14 +30,14 @@ The module injects additional buttons and tweaks button behaviour throughout old
 
 ## Settings
 
-| Setting                                      | Default | Description                                                |
-| -------------------------------------------- | ------- | ---------------------------------------------------------- |
-| Mod-save toggles                             | Off     | Distinguish / distinguish + sticky toggles on reply box    |
-| Distinguish and sticky toggle                | Off     | Sticky shortcut on comments; skip distinguish confirmation |
-| Remove remove/approve confirmation           | Off     | Skip native remove/approve confirmation dialogs            |
-| Approve on ignore                            | Off     | Auto-approve when ignoring reports                         |
-| Ignore on approve                            | Off     | Auto-ignore reports when approving                         |
-| Spam button on ham-removed items             | Off     | Show spam button on non-spam removals                      |
-| Remove (not spam) on spam-removed items      | Off     | Show remove button on spam removals                        |
-| Add sticky/unsticky buttons to post listings | Off     | Sticky controls in listing view                            |
-| Add comment lock button                      | On      | Lock/unlock button on comments                             |
+| Setting                                      | Default | Description                                                  |
+| -------------------------------------------- | ------- | ------------------------------------------------------------ |
+| Mod-save toggles                             | Off     | Distinguish / distinguish + sticky toggles on reply box      |
+| Distinguish and sticky toggle                | Off     | Sticky shortcut on comments; skip distinguish confirmation   |
+| Remove remove/approve confirmation           | Off     | Skip native remove/approve confirmation dialogs _(advanced)_ |
+| Approve on ignore                            | Off     | Auto-approve when ignoring reports                           |
+| Ignore on approve                            | Off     | Auto-ignore reports when approving                           |
+| Spam button on ham-removed items             | Off     | Show spam button on non-spam removals                        |
+| Remove (not spam) on spam-removed items      | Off     | Show remove button on spam removals                          |
+| Add sticky/unsticky buttons to post listings | Off     | Sticky controls in listing view                              |
+| Add comment lock button                      | On      | Lock/unlock button on comments                               |

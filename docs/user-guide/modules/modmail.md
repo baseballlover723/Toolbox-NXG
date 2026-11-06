@@ -22,12 +22,15 @@ This module operates only on `www.reddit.com/mail/`. It adds mod macro support t
 
 **Profile on username click** — when the user info sidebar is already open, clicking a participant's username opens their profile page (in a new tab) instead of re-opening the sidebar. Off by default.
 
+**Single-panel user sidebar** — optionally replaces the Posts/Comments/Log tabs in the modmail user sidebar with a single scrollable panel that shows all sections at once. Off by default.
+
 ## Settings
 
-| Setting                        | Default | Description                                                                               |
-| ------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
-| Markdown preview by default    | On      | Auto-enable preview when typing in the modmail composer                                   |
-| Search bar at top              | On      | Always show the modmail search bar, hide the toggle button                                |
-| Show recent message time       | On      | Show exact time for messages less than 24 hours old                                       |
-| Hide user sidebar profile icon | Off     | Hide the banner + profile picture in the modmail user sidebar and widen the username area |
-| Open profile when sidebar open | Off     | Click a username to open their profile when the user info sidebar is already open         |
+| Setting                        | Default | Description                                                                                 |
+| ------------------------------ | ------- | ------------------------------------------------------------------------------------------- |
+| Markdown preview by default    | On      | Auto-enable preview when typing in the modmail composer                                     |
+| Search bar at top              | On      | Always show the modmail search bar, hide the toggle button                                  |
+| Show recent message time       | On      | Show exact time for messages less than 24 hours old                                         |
+| Hide user sidebar profile icon | Off     | Hide the banner + profile picture in the modmail user sidebar and widen the username area   |
+| Open profile when sidebar open | Off     | Click a username to open their profile when the user info sidebar is already open           |
+| Replace user sidebar tabs      | Off     | Show the user sidebar's Posts/Comments/Log sections in one scrollable panel instead of tabs |

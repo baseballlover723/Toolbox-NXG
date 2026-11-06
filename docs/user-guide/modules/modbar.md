@@ -6,7 +6,7 @@ Modbar provides a persistent toolbar at the bottom of every Reddit page with qui
 
 ## Overview
 
-The Modbar is always on and appears on both old and new Reddit. It shows counters for pending mod queue items and unread modmail, a list of subreddits you moderate, configurable shortcut links, and a button to open the Toolbox settings overlay. The bar can be hidden by clicking the collapse arrow; it reappears on the next page load.
+The Modbar is always on and appears on both old and new Reddit. It shows counters for pending mod queue items and unread modmail, a list of subreddits you moderate, configurable shortcut links, and a button to open the Toolbox settings overlay. The bar can be hidden by clicking the collapse arrow; it stays hidden on later page loads until you click the arrow again to show it.
 
 ## Features
 
@@ -20,9 +20,7 @@ The Modbar is always on and appears on both old and new Reddit. It shows counter
 
 **Custom shortcuts** — add named links to any URL for one-click access from the Modbar.
 
-**Compact mode** — hides label text and shows icons only, reducing the Modbar's footprint.
-
-**Custom CSS** — a hidden field for applying custom CSS to Toolbox UI elements.
+**Compact mode** — starts the Modbar collapsed on every page load, shown only as a small dot-menu button that expands the bar when clicked.
 
 ## Subreddits you moderate drawer
 
@@ -49,10 +47,10 @@ The subreddit name itself is also a link to `/r/<sub>`. The queue and unmoderate
 
 ## Settings
 
-| Setting                   | Default   | Description                                        |
-| ------------------------- | --------- | -------------------------------------------------- |
-| Compact mode              | Off       | Use icon-only compact Modbar layout _(advanced)_   |
-| Show unmoderated icon     | Off       | Add an unmoderated-queue counter to the Modbar     |
-| Show moderated subreddits | On        | List moderated subreddits in the Modbar            |
-| Old/New Reddit toggle     | On        | Show a button to switch between old and new Reddit |
-| Shortcuts                 | _(empty)_ | Named URL shortcuts shown in the Modbar            |
+| Setting                   | Default   | Description                                                        |
+| ------------------------- | --------- | ------------------------------------------------------------------ |
+| Compact mode              | Off       | Start the Modbar collapsed to a small dot-menu button _(advanced)_ |
+| Show unmoderated icon     | Off       | Add an unmoderated-queue counter to the Modbar                     |
+| Show moderated subreddits | On        | List moderated subreddits in the Modbar                            |
+| Old/New Reddit toggle     | On        | Show a button to switch between old and new Reddit                 |
+| Shortcuts                 | _(empty)_ | Named URL shortcuts shown in the Modbar                            |

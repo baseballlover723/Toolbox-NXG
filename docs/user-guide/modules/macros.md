@@ -6,7 +6,7 @@ Mod Macros injects macro selectors into reply areas, letting moderators quickly 
 
 ## Overview
 
-Macros are configured per-subreddit in the Config overlay (Mod Macros tab). Each macro has a title, message text, and a set of optional actions that fire when the macro is sent. They appear as a dropdown inside comment reply boxes on post and comment pages. On new Reddit modmail, macros appear via the [Modmail](modmail.md) module's composer integration.
+Macros are configured per-subreddit in the Config overlay (**Edit mod macros** tab). Each macro has a title, message text, and a set of optional actions that fire when the macro is sent. They appear as a dropdown inside comment reply boxes on post and comment pages. On new Reddit modmail, macros appear via the [Modmail](modmail.md) module's composer integration.
 
 Macro text supports the same substitution tokens as removal reasons.
 

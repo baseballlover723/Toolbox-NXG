@@ -91,19 +91,21 @@ The decompressed `blob` is a JSON object mapping usernames to deflated user reco
 
 ### Deflated note fields
 
-| Field | Description                                                          |
-| ----- | -------------------------------------------------------------------- |
-| `n`   | Note text                                                            |
-| `t`   | Creation timestamp (epoch seconds — note: seconds, not milliseconds) |
-| `m`   | Index into `constants.users` for the creating moderator              |
-| `l`   | Link in compressed form: `"l,<postId>,<commentId>"` or `""`          |
-| `w`   | Index into `constants.warnings` for the note type                    |
+| Field | Description                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------ |
+| `n`   | Note text                                                                                        |
+| `t`   | Creation timestamp (epoch seconds — note: seconds, not milliseconds)                             |
+| `m`   | Index into `constants.users` for the creating moderator                                          |
+| `l`   | Link in compressed form: `"l,<postId>[,<commentId>]"`, `"m,<id>"` for a modmail message, or `""` |
+| `w`   | Index into `constants.warnings` for the note type                                                |
 
-Note types are not stored in the classic format itself. When NXG loads a v6 page it seeds `types` from the built-in defaults (plus any unknown type keys found in existing notes) and embeds them in the manifest on the next save.
+Note types are not stored in the classic format itself; 6.x keeps them in the `usernoteColors` array of the classic `toolbox` config page. When NXG loads a v6 page it seeds `types` from that `usernoteColors` array, falling back to the built-in defaults, plus a placeholder entry (`{"key": k, "text": k, "color": ""}`) for any type key found in existing notes but not defined, and embeds them in the manifest on the next save.
+
+The v6 mirror NXG writes carries **active notes only**: archived notes, `messageLink`, and per-user note indexes are dropped, and users left with no active notes are omitted. Users are written sorted by name. With 6.x compatibility on, the manifest's `types` are written back to the classic config's `usernoteColors` (`key`, `text`, `color` only).
 
 ## `UserNoteColor`
 
-Usernote type definitions are stored in the manifest's `types` array and are the canonical source for a subreddit's note types. When the manifest has no `types` (classic v6 subreddits that have never been saved through NXG), the built-in defaults below are used.
+Usernote type definitions are stored in the manifest's `types` array and are the canonical source for a subreddit's note types. When there is no manifest (classic v6 subreddits that have never been saved through NXG), types are seeded from the classic config's `usernoteColors`, falling back to the built-in defaults below.
 
 ```json
 {
@@ -127,15 +129,15 @@ Usernote type definitions are stored in the manifest's `types` array and are the
 
 **Built-in defaults:**
 
-| key         | text             | color   |
-| ----------- | ---------------- | ------- |
-| `gooduser`  | Good Contributor | green   |
-| `spamwatch` | Spam Watch       | fuchsia |
-| `spamwarn`  | Spam Warning     | purple  |
-| `abusewarn` | Abuse Warning    | orange  |
-| `ban`       | Ban              | red     |
-| `permban`   | Permanent Ban    | darkred |
-| `botban`    | Bot Ban          | black   |
+| key         | text             | color   | colorDark | banDuration |
+| ----------- | ---------------- | ------- | --------- | ----------- |
+| `gooduser`  | Good Contributor | green   | `#53b953` |             |
+| `spamwatch` | Spam Watch       | fuchsia | `#ff71ff` |             |
+| `spamwarn`  | Spam Warning     | purple  | `#ffabff` |             |
+| `abusewarn` | Abuse Warning    | orange  | `#ffb347` |             |
+| `ban`       | Ban              | red     | `#ff8f8f` | `7`         |
+| `permban`   | Permanent Ban    | darkred | `#ffb6b6` | `0`         |
+| `botban`    | Bot Ban          | black   | `#e6e6e6` |             |
 
 ## Schema versions
 
@@ -145,7 +147,7 @@ Usernote type definitions are stored in the manifest's `types` array and are the
 | v7 (manifest) | Sharded manifest (`toolbox-nxg/usernotes`)             | Manifest schema version; introduced by Toolbox-NXG    |
 | v1 (shard)    | Sharded shard pages (`toolbox-nxg/usernotes/<suffix>`) | Shard page schema version; introduced by Toolbox-NXG  |
 
-NXG always up-converts v6 data on read. The version written to the classic mirror is always v6.
+NXG always up-converts v6 data on read; v6 is the only classic version it can read. The version written to the classic mirror is always v6.
 
 ## Reading notes (classic format)
 
@@ -155,8 +157,8 @@ To read usernotes from the classic page:
 2. Parse JSON — the result is a `RawUsernotesBlob` with `ver`, `constants`, and `blob` fields.
 3. Base64-decode `blob`, then zlib-inflate (raw deflate) the result.
 4. Parse the inflated JSON as a `Record<string, DeflatedUser>`.
-5. For each user entry, expand each deflated note by resolving `m` and `w` against `constants.users` and `constants.warnings`.
-6. Timestamps in the classic format are epoch seconds; multiply by 1000 to get milliseconds.
+5. For each user entry, expand each deflated note by resolving `m` and `w` against `constants.users` and `constants.warnings`. NXG also HTML-entity-decodes the note text `n`.
+6. Timestamps in the classic format are epoch seconds; multiply by 1000 to get milliseconds. (NXG heals values that were mistakenly written in milliseconds back to seconds on read.)
 
 ## Writing notes
 

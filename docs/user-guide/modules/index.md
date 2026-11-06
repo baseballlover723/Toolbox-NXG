@@ -8,6 +8,7 @@ These modules cannot be disabled.
 
 - [General Settings](general.md) — cross-module preferences
 - [Modbar](modbar.md) — persistent bottom toolbar
+- [Notifier](notifier.md) — modqueue/modmail counters and notifications
 
 ## Feature modules
 
@@ -19,7 +20,6 @@ These modules cannot be disabled.
 | [History Button](historybutton.md)                | On      | Both       |
 | [Mod Macros](macros.md)                           | On      | Both       |
 | [Mod Button](modbutton.md)                        | On      | Both       |
-| [Notifier](notifier.md)                           | On      | Both       |
 | [Profile Pro](profile.md)                         | On      | Both       |
 | [Proposals](proposals.md)                         | On      | Both       |
 | [Queue Overlay](queue-overlay.md)                 | On      | Both       |
@@ -52,6 +52,7 @@ These modules cannot be disabled.
 
 general
 modbar
+notifier
 ```
 
 ```{toctree}
@@ -65,7 +66,6 @@ domaintagger
 historybutton
 macros
 modbutton
-notifier
 profile
 proposals
 queue-overlay

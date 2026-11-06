@@ -31,7 +31,7 @@ The page holds a single JSON object, `ProposalsData`:
 | `seq`       | no       | integer                    | Monotonic page version, bumped by one on every committed write (see [Page version](#page-version)) |
 | `proposals` | yes      | `Record<string, Proposal>` | All proposals, keyed by their stable `id` (see [`Proposal`](#proposal))                            |
 
-The current build writes, and only accepts, schema version `1`.
+The current build writes schema version `1`. It refuses to write to a page whose `ver` is newer than that, or whose content is not valid JSON, so it never clobbers data it could not read.
 
 ### Page version
 
@@ -69,7 +69,7 @@ Each value in `proposals` is a `Proposal`:
 | `status`          | yes      | `ProposalStatus`       | Current lifecycle status (see [Lifecycle](#lifecycle))                                                                        |
 | `updatedAt`       | yes      | integer                | Epoch seconds of the last mutation to this proposal (any field)                                                               |
 | `note`            | no       | string                 | Optional free-text rationale from the proposer                                                                                |
-| `link`            | no       | string                 | Squashed permalink to the target, for display/linking                                                                         |
+| `link`            | no       | string                 | Permalink to the target (not squashed), for display/linking                                                                   |
 | `resolvedBy`      | no       | string                 | Username of the resolver, or a system sentinel for `obsolete`                                                                 |
 | `resolvedAt`      | no       | integer                | Epoch seconds when the proposal reached a terminal status                                                                     |
 | `feedback`        | no       | string                 | Rejecting reviewer's explanation (reject only)                                                                                |
@@ -220,8 +220,10 @@ The fully-rendered, post-templating intent for a `removal-reason` proposal. Repl
 | `reasonCommentAsSubreddit` | no       | boolean                  | Post the removal reply as the subreddit (vs the mod); omitted when false                                                                                        |
 | `actionLockThread`         | no       | boolean                  | Lock the removed thread; omitted when false                                                                                                                     |
 | `actionLockComment`        | no       | boolean                  | Lock the removal reply comment; omitted when false                                                                                                              |
+| `spam`                     | no       | boolean                  | Remove as spam rather than a plain removal; omitted when false                                                                                                  |
 | `usernote`                 | no       | `FrozenRemovalUsernote`  | Note to leave, and where (see below); omitted when none                                                                                                         |
 | `ban`                      | no       | `FrozenRemovalBan`       | Ban to issue (`permanent`, `days`, `note`); omitted when not banning                                                                                            |
+| `nativeReasonIds`          | no       | `string[]`               | Reddit native removal-reason ids to register in the mod log on replay; omitted for Toolbox-reason removals                                                      |
 | `selection`                | no       | `FrozenRemovalSelection` | The trainee's structured reason selection, captured purely to re-seed the overlay on **Edit & accept** (see below); omitted on captures that predate this field |
 
 #### `FrozenRemovalUsernote`
@@ -261,11 +263,13 @@ Each `FrozenSelectionReason` carries the persistent reason `id` (so the overlay 
 
 A resolved proposal is kept until it is acknowledged or ages out:
 
-- A terminal proposal (`accepted`/`rejected`/`obsolete`) is pruned once its proposer sets `ackedByProposer` (the "Dismiss" action), **or** once `proposalRetentionDays` (a per-subreddit config value, default 14) has elapsed since it resolved.
-- `pending` proposals are never pruned.
+- A terminal proposal (`accepted`/`rejected`/`obsolete`) is pruned once its proposer sets `ackedByProposer` (the "Dismiss" action), **or** once `proposalRetentionDays` (a per-subreddit config value, default 14) has elapsed since its `resolvedAt`. A terminal proposal without a numeric `resolvedAt` is only pruned once acknowledged.
+- `pending` and `needs_attention` proposals are never pruned.
 
 The retention window is configured per subreddit; see `proposalRetentionDays` in the [Subreddit Config Schema](config.md).
 
 ## Writing proposals
 
 The proposals page must have moderator-only edit permissions (`permlevel: 2`). Writers must use optimistic concurrency: pass the current revision as `previous` to `/api/wiki/edit` and retry on a `409 EDIT_CONFLICT`. Preserve proposals and unknown fields you did not author rather than rewriting the whole `proposals` map, and respect the transition rules above — do not move a terminal proposal to another status.
+
+Note that NXG itself normalizes the page on read and does **not** carry unknown fields through its own writes: top-level fields other than `ver`, `seq`, and `proposals` are dropped, each proposal is rebuilt from the fields documented above (the removal `intent` object is kept as stored), and a proposal is dropped entirely when a required field is missing or invalid, its `action.type` is unrecognized, or its map key differs from its `id`. A missing `updatedAt` defaults to `proposedAt`.

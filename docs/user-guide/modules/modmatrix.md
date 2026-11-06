@@ -12,7 +12,11 @@ Clicking the Mod Log Matrix button on a subreddit opens an overlay that fetches 
 
 **Action matrix** — tabular breakdown of mod log entries by moderator and action type (approve, remove, ban, etc.).
 
-**Mod log link** — each cell links to the filtered mod log for that moderator/action combination.
+**Drilldown** — selecting a cell shows the 20 most recent mod log entries for that moderator/action combination, with a link to the filtered mod log.
+
+**Date range** — choose a from/to date, or a preset (7d, 30d, 90d, this month, last month), and click **Generate**.
+
+**CSV export** — once a matrix has been generated, **Download CSV** saves the mod log data as a CSV file.
 
 ## Settings
 

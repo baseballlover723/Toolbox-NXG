@@ -11,6 +11,6 @@ The toolbox development team highly values privacy, these are the measures we ha
 
 _[1]_ toolbox is open-source, you can check the code and used webextension permissions on the repository here. No code is modified before the extension is released to the chrome store or mozilla AMO. Here is how you access the code of the installed version to verify this claim:
 
-- Edge: `C:\Program Files\WindowsApps` will contain the installed extension.
+- Edge: Open `edge://version/` and look for `Profile path` which is the directory containing extensions.
 - Chrome: Open `chrome://version/` and look for `Profile Path` which is the directory containing extensions.
-- Firefox: Navigate to [your profile directory](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data) and then to the `extensions` subdirectory. You'll find `yes@jetpack.xpi` which can be opened as zip file.
+- Firefox: Navigate to [your profile directory](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data) and then to the `extensions` subdirectory. You'll find `adhesivecheese@toolbox-team-nxg.xpi` which can be opened as zip file.

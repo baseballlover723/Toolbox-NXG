@@ -1,12 +1,12 @@
 # Notifier
 
-**Platforms:** Old Reddit and New Reddit · **Default:** Always enabled
+**Platforms:** Old Reddit and New Reddit · **Always on**
 
-The Notifier polls Reddit periodically and shows browser notifications when there are new items in the mod queue or unread modmail.
+The Notifier polls Reddit periodically and shows browser notifications when there are new items in the mod queue (and, optionally, the unmoderated queue). It also keeps the Modbar's queue and modmail counters up to date.
 
 ## Overview
 
-Notifier runs in the background while you have Reddit open in any tab. It compares current queue and modmail counts against the last-seen values and triggers a notification when the count increases. Notifications use the OS notification system by default (configurable in [General Settings](general.md)).
+Notifier runs in the background while you have Reddit open in any tab. It checks the mod queue and unmoderated queue for items you haven't been notified about yet and triggers a notification when new ones appear, and it refreshes the unread modmail count for the Modbar. Notifications use the OS notification system by default (configurable in [General Settings](general.md)).
 
 This poll is also what feeds the counters in the [Modbar](modbar.md), so the module is always
 enabled and has no on/off switch of its own. To stop the notifications while keeping the modbar
@@ -18,7 +18,7 @@ counters up to date, turn off **Show notifications** instead.
 
 **Unmoderated queue notifications** — optionally notifies you when the unmoderated queue grows.
 
-**Modmail notifications** — notifies you when new modmail arrives.
+**Modmail counter** — keeps the Modbar's unread modmail counter up to date. New modmail does not trigger a notification.
 
 **Consolidated notifications** — instead of one notification per item, a single "X new items" notification is shown.
 

@@ -52,7 +52,8 @@ Build output goes to `build/chrome/` and `build/firefox/`.
 npm test             # Run unit tests (Vitest)
 npm run test:watch   # Run tests in watch mode
 npm run typecheck    # TypeScript type-check (no emit)
-npm run lint         # ESLint
+npm run lint         # ESLint, then lint:guard
+npm run lint:guard   # Moderation-import and listing-envelope guards (also run by lint)
 npm run lint:css     # Stylelint
 npm run lint:params  # Parameter-order convention check
 npm run fmt          # Formatting check (dprint)
@@ -61,27 +62,27 @@ npm run fmt:fix      # Auto-fix formatting
 
 ## Pre-commit checklist
 
-Before committing, run the following checks in order. All must pass cleanly.
+CI ([`.github/workflows/main.yml`](../../.github/workflows/main.yml)) runs these
+checks in this order on Node 24. Run them locally before committing; all must
+pass cleanly.
 
 ```sh
-npm run fmt:fix         # Auto-fix formatting with dprint
-npm run lint:css:fix    # Auto-fix CSS style issues with Stylelint
+npm run fmt             # Formatting check (dprint)
+npm run lint            # ESLint + lint:guard
+npm run lint:css        # Stylelint
+npm run lint:params     # Parameter-order and naming conventions
 npm run typecheck       # TypeScript type-check (no emit)
 npm test                # Unit tests (Vitest)
-npm run lint:params     # Parameter-order and naming conventions
 npm run build           # Full production build (Chrome + Firefox)
 ```
 
-The auto-fix steps (`fmt:fix`, `lint:css:fix`) should be run first so the
-subsequent checks operate on already-formatted code. If `typecheck`, `test`,
-`lint:params`, or `build` report any errors, resolve them before committing.
-
-For issues that cannot be auto-fixed, the plain check variants are available:
+When `fmt`, `lint`, or `lint:css` fail, the auto-fix variants resolve most
+issues; re-run the checks afterwards:
 
 ```sh
-npm run fmt             # Formatting check only (no changes)
-npm run lint:css        # CSS lint check only (no changes)
-npm run lint            # ESLint (no changes)
+npm run fmt:fix         # Auto-fix formatting with dprint
+npm run lint:fix        # Auto-fix ESLint issues
+npm run lint:css:fix    # Auto-fix CSS style issues with Stylelint
 ```
 
 ## Documentation

@@ -78,13 +78,13 @@ Removal reason text now uses brace tokens for interactive fill-in fields instead
 - `{choice}` on its own line, followed by a `-` list of options — a pick-one field shown as radio buttons
 - `{choice: option 1 | option 2}` — the same pick-one field inside a sentence or a link's text
 
-Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format on the next config save. A `<select>` written mid-sentence stays in its sentence.
+Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format when NXG reads the config, and stored that way on the `toolbox-nxg` page; the original `toolbox` page keeps the HTML form for original Toolbox. A `<select>` written mid-sentence stays in its sentence.
 
 ## New wiki layout and compatibility
 
-NXG stores subreddit data on new `toolbox-nxg` wiki pages alongside the originals. This migration happens automatically when a mod with wiki-edit permissions first views a subreddit — your existing `toolbox` pages are never deleted.
+NXG stores subreddit data on new `toolbox-nxg` wiki pages alongside the originals. This migration happens automatically when a mod with wiki-edit permissions first views a subreddit — the migration never modifies or deletes your existing pages.
 
-By default, NXG also keeps the original `toolbox` page in sync on every save, so moderators still using original Toolbox on the same subreddit continue to see up-to-date data. You can toggle this per-subreddit from the NXG settings overlay.
+On subreddits that already had Toolbox data, NXG by default also keeps the original pages (`toolbox`, `usernotes`, and the `notes/` pages) in sync on every save, so moderators still using original Toolbox on the same subreddit continue to see up-to-date data. You can toggle this per-subreddit from the NXG settings overlay. Turning it off replaces the original `toolbox` page's contents with a marker telling original Toolbox that the subreddit has moved; the page's history keeps the old config.
 
 For full technical details, see [Schema Changes](schema-changes.md).
 
@@ -93,10 +93,10 @@ For full technical details, see [Schema Changes](schema-changes.md).
 Your existing config, usernotes, and personal settings carry over automatically:
 
 - **Subreddit config** (removal reasons, mod macros, usernote types, domain tags) — read and up-converted on first access; no manual steps needed.
-- **Usernotes** — migrated to the new layout on first access; the original `usernotes` page is left untouched.
+- **Usernotes** — migrated to the new layout on first access; the migration leaves the original `usernotes` page as it is, and NXG only rewrites it to keep it in sync while 6.x compatibility is on.
 - **Personal settings** — can be restored from your personal subreddit if you backed them up in Legacy Toolbox.
 
 ## Known limitations
 
-- **6.x compatibility and the 1 MB limit** — subreddits whose active usernotes exceed 1 MB cannot keep the original `toolbox` usernotes page in sync; the legacy page's size allowance is the binding constraint.
-- **Archived notes are NXG-only** — archived notes are stripped from the legacy `toolbox` usernotes mirror and will not be visible to mods running original Toolbox.
+- **6.x compatibility and the 1 MB limit** — subreddits whose active usernotes exceed 1 MB cannot keep the original `usernotes` page in sync; the legacy page's size allowance is the binding constraint.
+- **Archived notes are NXG-only** — archived notes are stripped from the legacy `usernotes` mirror and will not be visible to mods running original Toolbox.

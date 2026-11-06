@@ -29,7 +29,7 @@ Start with the minimal set and add files when a real concern arises.
 - `index.ts` — always
 - `settings.ts` — always (even if the array is empty)
 
-**Add `schema.ts` when** the module has domain data structures that exist independently of settings: wiki-stored config shapes, API response types, multi-valued data models, or any type shared between `api.ts` and `components/`. Skip it if the module only reads/writes typed settings with no external storage.
+**Add `schema.ts` when** the module has domain data structures that exist independently of settings: wiki-stored config shapes, API response types, multi-valued data models, or any type shared between `moduleapi.ts` and `components/`. Skip it if the module only reads/writes typed settings with no external storage.
 
 **Add `moduleapi.ts` when** the module reads from or writes to a subreddit wiki page or performs schema upgrades on stored data.
 
@@ -278,8 +278,8 @@ The `Lifecycle` object manages everything that needs cleanup when the module re-
 
 - `any` is permitted only at genuine external boundaries: raw Reddit API JSON, extension storage reads
 - Use `unknown` + narrowing (`instanceof Error`) in `catch` blocks
-- For `fetch` / `TBApi.getJSON` results: `any` at the immediate response boundary is acceptable; don't carry `any` deeper into business logic
-- Domain types flow from `schema.ts` → `api.ts` / `dom.ts` / `components/`; never in reverse
+- For raw Reddit JSON responses (inside `api/` resource modules): `any` at the immediate response boundary is acceptable, with an inline `eslint-disable` justification (`@typescript-eslint/no-explicit-any` is an error); don't carry `any` deeper into business logic
+- Domain types flow from `schema.ts` → `moduleapi.ts` / `dom.ts` / `components/`; never in reverse
 
 ### Listing pagination
 
@@ -296,12 +296,21 @@ cursor-connection API — so it stays inside `api/`.
 (`RedditThing.replies`, and a `more` node's `children` array of comment ids), so that access is
 legitimate tree traversal rather than pagination.
 
+### Moderation actions
+
+UI code must not import the mutating moderation primitives (`approveThing`, `removeThing`, `banUser`, `flairUser`, and the rest) from `api/resources/things`, `api/resources/relationships`, `api/resources/flair`, or `api/resources/removalReasons` directly. Route every such action through the proposals gateway (`modules/shared/proposals/gateway`), so training and second-opinion mode can capture it as a reviewable proposal instead of performing it.
+
+Two guards enforce this:
+
+- `npm run lint:guard` (`scripts/check-moderation-imports.mjs`) fails when a file outside its `ALLOWLIST` imports a restricted primitive. Only extend the allowlist with a written justification.
+- At runtime, each primitive calls `assertActionAllowed` (`util/infra/captureGuard.ts`), which blocks a real action for a sandboxed user even if a code path skipped the gateway.
+
 ---
 
 ## Pre-PR checklist
 
-1. `npm test` passes
-2. `npm run build` passes for Chrome and Firefox
+1. The full CI gate passes (see the [pre-commit checklist](building.md#pre-commit-checklist)), including `npm test` and `npm run build` for Chrome and Firefox
+2. No direct imports of mutating moderation primitives outside the proposals gateway (`npm run lint:guard`)
 3. `index.ts` contains no helper function definitions, inline business logic, DOM queries, or state initialization
 4. `dom.ts` factory functions contain no `lifecycle.on` / `lifecycle.observe` calls
 5. All domain interfaces live in `schema.ts`, not inline in component files

@@ -6,9 +6,9 @@ Subreddit Notes provides wiki-backed shared notes at the subreddit level, visibl
 
 ## Overview
 
-Subreddit Notes is a new module introduced in Toolbox-NXG with no equivalent in the original Toolbox. Unlike usernotes (which are attached to user accounts), subreddit notes are free-form documents attached to the subreddit itself — useful for pinning team procedures, escalation contacts, ban templates, or any other information moderators need to share.
+Subreddit Notes is the Toolbox-NXG version of the feature called "personal notes" in Toolbox 6.x; when 6.x compatibility is on, notes are mirrored to the legacy wiki pages that 6.x reads. Unlike usernotes (which are attached to user accounts), subreddit notes are free-form documents attached to the subreddit itself — useful for pinning team procedures, escalation contacts, ban templates, or any other information moderators need to share.
 
-Notes are stored on the subreddit wiki and are accessible to all moderators of that subreddit. Each note is a separate wiki page with its own title, tags, and content; an index page (`toolbox-nxg/notes/index`) lists all notes for easy navigation.
+Notes are stored on the subreddit wiki and are accessible to all moderators of that subreddit. Each note is a separate wiki page with its own title, tags, and content; an index page (`toolbox-nxg/notes`) lists all notes for easy navigation.
 
 Access the Subreddit Notes panel from the Modbar.
 

@@ -2,7 +2,7 @@
 
 ## Browser support
 
-Toolbox-NXG runs on Chromium-based browsers (Chrome, Edge, Brave, etc.) and Firefox.
+Toolbox-NXG runs on Chromium-based browsers (Chrome, Edge, Brave, etc.) and Firefox (version 153 or newer).
 
 ## Installing on Chrome (and other Chromium browsers)
 
@@ -21,28 +21,29 @@ Install Toolbox-NXG from Firefox Add-ons (AMO):
 
 Updates are delivered automatically by the browser.
 
-## Installing a release build manually (advanced)
+## Loading a build from source (advanced)
 
-You can also install a build directly from
-[GitHub Releases](https://github.com/toolbox-nxg/toolbox-nxg/releases) — useful for
-testing a specific build.
+You can also build Toolbox-NXG yourself and load it unpacked — useful for testing a specific
+commit. Building requires Node.js 24 or newer; see [Building and Testing](../developer/building.md)
+for the full instructions. `npm install` followed by `npm run build` writes the extension to
+`build/chrome/` and `build/firefox/`.
 
 ### Chromium
 
-1. Download the latest `chrome.zip` release artifact and extract it.
-2. Go to `chrome://extensions`.
-3. Enable "Developer mode".
-4. Click "Load unpacked" and select the extracted directory.
+1. Go to `chrome://extensions` (or `edge://extensions`, etc.).
+2. Enable "Developer mode".
+3. Click "Load unpacked" and select the `build/chrome` directory.
 
 ### Firefox
 
-1. Download the latest `firefox.zip` release artifact.
-2. Go to `about:addons`.
-3. Click the gear icon → "Install Add-on From File…".
-4. Select the `.zip` file.
+1. Go to `about:debugging`.
+2. Click "This Firefox" in the sidebar.
+3. Click "Load Temporary Add-on..." and select `build/firefox/manifest.json`.
+
+Firefox removes a temporary add-on when the browser restarts.
 
 ## Updating
 
 Builds installed from the Chrome Web Store or Firefox Add-ons update themselves automatically.
-Builds installed manually from GitHub Releases do not — to update one of those, download the
-latest release artifact and repeat the installation steps above.
+Builds loaded from source do not — to update one of those, pull the latest code, rebuild, and
+reload the extension (or load the temporary add-on again in Firefox).

@@ -8,7 +8,7 @@ Developer Tools is intended for people working on Toolbox-NXG itself. It exposes
 
 ## Overview
 
-The Developer Tools module only appears in the settings overlay when **debug mode** is enabled (General Settings → Debug mode). For regular users with debug mode off, the module is hidden and inactive.
+The Developer Tools module only appears in the settings overlay when **debug mode** is enabled (Core Settings → **Enable debug mode**, which is shown once **Show advanced settings** is on). For regular users with debug mode off, the module is hidden and inactive.
 
 Once visible, its features are individually toggled from its settings tab. Both options are marked **Advanced**, so you may also need to enable "Show advanced settings" to see them.
 

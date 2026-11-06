@@ -12,11 +12,12 @@ This module runs only on the Shreddit UI. On old Reddit, Toolbox-NXG provides it
 
 **Inline action buttons** — quick controls for the most common moderator actions are placed directly on each post and comment:
 
-- **Remove as Spam** and **Remove** — remove the item, optionally feeding into removal reasons.
-- **Lock** — lock the post or comment.
+- **Spam** and **Remove** — remove the item (as spam, or as a regular removal) via the removal reasons options. Shown only while the item is not already removed.
+- **Approve** — approve the item. Always shown, so you can also clear reports on an item that has not been removed.
+- **Lock / Unlock** — lock or unlock the post or comment.
 - **Distinguish** — distinguish your own comment as a moderator (Reddit only allows distinguishing your own comments).
 - **Sticky / Unsticky** — pin a post to the subreddit, or distinguish-and-sticky your own top-level comment. Reddit only allows stickying top-level comments, so the control is not offered on nested replies.
-- **Mark NSFW** — toggle the item's NSFW flag.
+- **Mark NSFW / Unmark NSFW** — toggle a post's NSFW flag (posts only).
 
 The recent moderator actions taken on an item are surfaced separately, by the [Queue Tools](queue-tools.md) module's recent-actions table (available on both old and new Reddit).
 

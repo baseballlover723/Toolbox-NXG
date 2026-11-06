@@ -20,11 +20,11 @@ Queue Tools extends the mod queue with information and controls that Reddit's na
 
 ## Settings
 
-| Setting                               | Default | Description                                                   |
-| ------------------------------------- | ------- | ------------------------------------------------------------- |
-| Show recent actions on approved items | On      | Show the recent-actions table on approved (not removed) items |
-| Show recent actions on removed items  | On      | Show the recent-actions table on removed items                |
-| Auto-expand action table              | On      | Expand the action table by default in queues                  |
-| Auto-expand action table everywhere   | Off     | Expand the action table by default on every page it appears   |
-| Show reports on ignored-report items  | On      | Add a button to reveal reports on items with ignored reports  |
-| Queue creature                        | kitteh  | Creature shown at the bottom of an empty queue                |
+| Setting                               | Default | Description                                                                                             |
+| ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| Show recent actions on approved items | On      | Show the recent-actions table on approved (not removed) items                                           |
+| Show recent actions on removed items  | On      | Show the recent-actions table on removed items                                                          |
+| Auto-expand action table              | On      | Expand the action table by default in queues                                                            |
+| Auto-expand action table everywhere   | Off     | Expand the action table by default on every page it appears                                             |
+| Show reports on ignored-report items  | On      | Add a button to reveal reports on items with ignored reports                                            |
+| Queue creature                        | kitteh  | Creature shown at the bottom of an empty queue (kitteh, puppy, /r/spiderbros, piggy, or i have no soul) |

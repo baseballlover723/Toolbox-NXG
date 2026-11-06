@@ -22,16 +22,20 @@ Comments improves the experience of reading and moderating comment threads. Most
 
 **Remove (not spam) on spam-removed comments** _(old Reddit)_ — shows a "remove" button on spam-removed comments, letting you convert the classification to a regular remove.
 
-**Hide old comments button** _(old Reddit)_ — adds a button to collapse comments older than a threshold, helping focus on recent activity.
+**Hide seen comments button** _(old Reddit)_ — adds a "hide seen" / "show seen" button that collapses the comments you have already read, based on Reddit's new-comment highlighting, helping focus on recent activity.
+
+**Hide mod actions button** _(old Reddit)_ — adds a "hide mod actions" / "show mod actions" button to the comment thread controls that hides moderator-action comments on the page.
+
+**Comment flat view** — on comment threads, a "comment flat view" item in the context menu shows the thread's comments in chronological order in an overlay.
 
 ## Settings
 
-| Setting                                    | Default   | Description                                            |
-| ------------------------------------------ | --------- | ------------------------------------------------------ |
-| Open context in popup                      | On        | Add a popup-context link to comments where appropriate |
-| Highlight keywords                         | _(empty)_ | Keywords to highlight in comment text (one per line)   |
-| Hide removed comments                      | Off       | Hide removed comments by default _(old Reddit)_        |
-| Show approve button on all comments        | Off       | Approve button on every comment _(old Reddit)_         |
-| Spam button on ham-removed comments        | Off       | Spam button on non-spam removals _(old Reddit)_        |
-| Remove (not spam) on spam-removed comments | Off       | Remove button on spam removals _(old Reddit)_          |
-| Show hide-old-comments button              | On        | Button to collapse old comments _(old Reddit)_         |
+| Setting                                    | Default   | Description                                               |
+| ------------------------------------------ | --------- | --------------------------------------------------------- |
+| Open context in popup                      | On        | Add a popup-context link to comments where appropriate    |
+| Highlight keywords                         | _(empty)_ | Keywords to highlight in comment text (one per line)      |
+| Hide removed comments                      | Off       | Hide removed comments by default _(old Reddit, advanced)_ |
+| Show approve button on all comments        | Off       | Approve button on every comment _(old Reddit)_            |
+| Spam button on ham-removed comments        | Off       | Spam button on non-spam removals _(old Reddit)_           |
+| Remove (not spam) on spam-removed comments | Off       | Remove button on spam removals _(old Reddit)_             |
+| Show hide-old-comments button              | On        | Button to collapse already-seen comments _(old Reddit)_   |

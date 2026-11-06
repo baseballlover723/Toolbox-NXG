@@ -9,17 +9,21 @@ like, including cases where the existing codebase has not yet been fully migrate
 Most style rules are automatically enforced. Before submitting a pull request, run:
 
 ```sh
-npm run fmt       # check formatting (dprint)
-npm run fmt:fix   # auto-fix formatting
-npm run lint      # check linting (ESLint)
-npm run lint:css  # check CSS linting (stylelint)
-npm run typecheck # type-check without emitting (tsc)
+npm run fmt         # check formatting (dprint)
+npm run fmt:fix     # auto-fix formatting
+npm run lint        # check linting (ESLint), then the lint:guard scanners
+npm run lint:css    # check CSS linting (stylelint)
+npm run lint:params # check parameter order and naming
+npm run typecheck   # type-check without emitting (tsc)
 ```
+
+The full CI gate (which also runs the tests and the build) is listed in
+[Building and Testing](building.md#pre-commit-checklist).
 
 | Tool                                                        | Enforces                                                                                                                      |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | [dprint](https://dprint.dev/)                               | Formatting: indentation, line width, quotes, semicolons, trailing commas                                                      |
-| [ESLint](https://eslint.org/)                               | Code quality: variable declarations, arrow callbacks, strict equality, import rules                                           |
+| [ESLint](https://eslint.org/)                               | Code quality: variable declarations, arrow callbacks, strict equality, restricted imports, React Hooks rules                  |
 | [stylelint](https://stylelint.io/)                          | CSS quality: no hex colors, no named colors, no `rem`, `--toolbox-*` custom property naming, radius/shadow tokens, type scale |
 | [TypeScript](https://www.typescriptlang.org/) (strict mode) | Type safety, unused locals, optional property exactness                                                                       |
 
@@ -66,9 +70,11 @@ Always required for control flow bodies, even single-line:
 if (condition) {
 	doSomething()
 }
+```
 
+```text
 // incorrect
-if (condition) { doSomething() }
+if (condition) doSomething()
 ```
 
 ### Arrow function parentheses
@@ -80,10 +86,12 @@ single argument:
 // correct
 const doubled = (x,) => x * 2
 items.map((item,) => item.id)
+```
 
+```text
 // incorrect
-const doubled = (x,) => x * 2
-items.map((item,) => item.id)
+const doubled = x => x * 2
+items.map(item => item.id)
 ```
 
 Consistent parentheses make it easier to add a second parameter, apply a type
@@ -223,9 +231,10 @@ Avoid `as` assertions. Prefer type narrowing via guards:
 // correct
 if (value instanceof Error) {
 	log.error(value.message,)
-} // avoid — suppresses the type system
+}
 
-;(value as Error).message
+// avoid — suppresses the type system
+const message = (value as Error).message
 ```
 
 Use the `satisfies` operator when you want both the inferred type and a
@@ -277,9 +286,9 @@ export const formatDate = (date: Date,): string => date.toLocaleDateString()
 
 ### Arrow body style
 
-Use whichever form is clearer. Implicit returns are fine for simple expressions;
-explicit `return` with braces is preferred for multi-statement logic (easier to
-set breakpoints, add logging, or add a second statement later):
+Implicit returns are expected for simple expressions: ESLint's
+`arrow-body-style: as-needed` rejects a braced body whose only statement is a
+`return`. Use braces and an explicit `return` for multi-statement logic:
 
 ```ts
 // simple transform — implicit return is fine
@@ -500,7 +509,7 @@ background: #cee3f8;
 color: red;
 ```
 
-**CSS variable naming** — Custom properties must follow the `--toolbox-<category>-<purpose>` convention:
+**CSS variable naming** — Custom properties must start with `--toolbox-` (stylelint enforces the prefix). Follow the `--toolbox-<category>-<purpose>` convention for the rest of the name:
 
 ```css
 --toolbox-accent-color
@@ -523,7 +532,7 @@ border-radius: 3px;
 box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
 ```
 
-**Type scale** — `font-size`, `line-height`, and `font` use the `--toolbox-fs-*` tokens (`fs-N` = N px at the 12px base, `1em` for 12), never the `--toolbox-sp-*` spacing scale. The two scales have the same values today, but keeping them apart lets spacing be retuned without resizing text.
+**Type scale** — `font-size`, `line-height`, and `font` use the `--toolbox-fs-*` tokens (`fs-N` = N px at the 12px base, `1em` for 12), never the `--toolbox-sp-*` spacing scale. The two scales have the same values today, but keeping them apart lets spacing be retuned without resizing text. There is no `fs-12` or `sp-12` token, and stylelint rejects both: write `1em`.
 
 ```css
 /* correct */
@@ -537,6 +546,8 @@ font-size: var(--toolbox-sp-11);
 **`!important`** _(warning)_ — Every use of `!important` is flagged. See the manual section below for when it is acceptable.
 
 **Descending specificity** — A rule that appears later but has lower specificity than an earlier rule targeting the same property is an error.
+
+**CSS Module class names** — Classes in `*.module.css` files are `camelCase` (`selector-class-pattern`). Global classes referenced through `:global()` keep their kebab-case names behind a `stylelint-disable selector-class-pattern` comment.
 
 ---
 
@@ -576,6 +587,8 @@ background-color: rgb(255 255 22); /* intentional: bright yellow is the canonica
 Toolbox's UI typography base is `12px`. Convert typography relative to that base: `10px = 0.8333em`, `11px = 0.9167em`, `12px = 1em`, `13px = 1.0833em`, `14px = 1.1667em`.
 
 Use `px` for borders, radii, fixed icon sizes, and fixed control geometry; `em` for typography and text-coupled spacing inside Toolbox UI components; `%` for container-relative widths; `vh`/`vw` for full-page overlays.
+
+**Design tokens and themes** — `extension/data/css/base.css` defines the token families: colors (`--toolbox-bg`, `--toolbox-text-*`, `--toolbox-accent-*`, and so on, with dark-mode values set in the same file), spacing (`--toolbox-sp-*`), type scale (`--toolbox-fs-*`), corner radii (`--toolbox-radius-*`), shadows (`--toolbox-shadow-*`), and stacking (`--toolbox-z-*`). Much of the UI renders in shadow roots, which only inherited custom properties can reach, so a theme overrides tokens and never targets component selectors. The classic theme (`css/classic.css`, active while the General Settings module puts `.toolbox-theme-classic` on `<html>`) is the reference. When a theme needs a component-specific tweak that no shared token covers, the component exposes hook properties with fallbacks to its default, for example `var(--toolbox-general-button-bg, var(--toolbox-action-bg))` in `shared/controls/GeneralButton.module.css`, and the theme sets the hooks. The classic dark palette is generated from the light palette in `base.css`; after changing a light color, regenerate it with `UPDATE_CLASSIC_DARK=1 npx vitest run extension/data/css/classic.test.ts` (the test fails until you do).
 
 **CSS Modules vs. global CSS** — CSS Modules (`.module.css`) for all React component styles; global `.css` for legacy Reddit DOM injection and theme variables. Do not add new global CSS rules for React components.
 

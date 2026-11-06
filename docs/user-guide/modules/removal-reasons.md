@@ -8,21 +8,21 @@ Removal Reasons wires up the removal button to display a dialog with your subred
 
 When you click the remove button on a post or comment, Removal Reasons intercepts the action and shows a panel listing your subreddit's configured reasons. Select one, fill in any interactive fields, and confirm — the item is removed and the message is sent in the configured reply method. If a subreddit has no removal reasons configured, Removal Reasons can still show an empty box for a custom message.
 
-Removal reasons are configured per-subreddit in the Config overlay (Removal Reasons tab).
+Removal reasons are configured per-subreddit in the Config overlay (**Edit removal reasons** tab, with message template and delivery options on the **Removal reasons settings** tab).
 
 ## Features
 
-**Drawer or popup display** — the removal reason dialog can appear as a side drawer (default) or a modal popup. The drawer keeps the removed content visible alongside the dialog.
+**Drawer or popup display** — the removal reason dialog can appear as a side drawer (default) or a modal popup. The drawer keeps the removed content visible alongside the dialog. While the [Classic look](general.md#classic-look) is on, removal reasons always open as the popup and the drawer is unavailable.
 
 **Interactive fill-in fields** — reasons can include `{input:…}`, `{textarea:…}`, and `{select:…}` tokens that become fill-in fields in the dialog (see [Removal reason format](#removal-reason-format)).
 
 **Substitution tokens** — reason text is processed for substitution tokens (`{author}`, `{subreddit}`, etc.) before sending.
 
-**Multiple reply methods** — configure per-subreddit whether the removal message is sent as a comment reply, a PM, both, or only logged to the log subreddit.
+**Multiple reply methods** — configure per-subreddit whether the removal message is sent as a comment reply, a modmail, both, or only logged to the log subreddit.
 
 **Send as subreddit** — optionally send the removal message as the subreddit account.
 
-**Auto-archive PM** — optionally archive the removal PM after sending.
+**Auto-archive modmail** — optionally archive the removal modmail after sending.
 
 **Sticky and distinguish** — optionally sticky and/or distinguish the removal comment.
 
@@ -185,11 +185,11 @@ As with imported reasons, removing something with a native reason registers that
 | Enable comment removal reasons             | Off           | Show removal reasons when removing comments                                                                         |
 | Always show empty removal box              | Off           | Show the dialog even for subreddits with no configured reasons                                                      |
 | Use Reddit's removal reasons as a fallback | On            | Offer Reddit's native removal reasons in subreddits that have no toolbox reasons                                    |
-| Display mode                               | Drawer        | Show reasons as a side drawer or legacy popup                                                                       |
+| Display mode                               | Drawer        | Show reasons as a side drawer or legacy popup. The classic look always uses the popup                               |
 | Silent removal for deleted users           | Off           | Skip the dialog and silently remove deleted-user content                                                            |
-| Reply method                               | Comment reply | How the removal message is sent (comment, PM, both, or none)                                                        |
-| Send as subreddit                          | Off           | Send removal messages as the subreddit account                                                                      |
-| Auto-archive sent PM                       | Off           | Archive the removal PM after sending                                                                                |
+| Reply method                               | Comment reply | How the removal message is sent (comment, modmail, both, or none; none requires a log subreddit)                    |
+| Send as subreddit                          | On            | Hide your username when sending the removal modmail                                                                 |
+| Auto-archive sent modmail                  | Off           | Archive the removal modmail after sending                                                                           |
 | Sticky removal comment                     | Off           | Sticky the removal reason comment                                                                                   |
 | Reply as /u/subreddit-ModTeam              | Off           | Send removal comment as ModTeam account                                                                             |
 | Lock thread after removal                  | Off           | Lock the thread when removing                                                                                       |

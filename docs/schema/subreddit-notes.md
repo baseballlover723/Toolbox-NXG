@@ -4,14 +4,14 @@ Subreddit notes are moderator-written wiki pages attached to a shared index. The
 
 ## Overview
 
-| Layout      | Wiki pages                                          | Used by                                 |
-| ----------- | --------------------------------------------------- | --------------------------------------- |
-| NXG (v2)    | `notes/index`, `notes/<slug>`, …                    | Toolbox-NXG                             |
-| Legacy (v1) | `notes/index` (notes array only), `notes/<slug>`, … | Older Toolbox builds; NXG compat mirror |
+| Layout      | Wiki pages                                                 | Used by                                 |
+| ----------- | ---------------------------------------------------------- | --------------------------------------- |
+| NXG (v2)    | `toolbox-nxg/notes` (index), `toolbox-nxg/notes/<slug>`, … | Toolbox-NXG                             |
+| Legacy (v1) | `notes/index` (notes array only), `notes/<slug>`, …        | Older Toolbox builds; NXG compat mirror |
 
-NXG always reads and writes the `notes/` prefix. When the index page is missing, NXG scans existing wiki pages for the `notes/` prefix and builds a bootstrap index from any pages it finds.
+NXG reads and writes the `toolbox-nxg/notes` index and `toolbox-nxg/notes/<slug>` pages. When 6.x compatibility is on, every write is mirrored to the legacy `notes/index` and `notes/<slug>` pages; subreddits that could not be moved onto the NXG layout use the legacy pages only. When the index page is missing or malformed, NXG scans existing wiki pages for the note page prefix and builds a bootstrap index from any pages it finds.
 
-## Index page (`notes/index`)
+## Index page (`toolbox-nxg/notes`, legacy `notes/index`)
 
 The index is a JSON object that lists every note and caches aggregate metadata. NXG writes schema v2; the legacy mirror is a v1 subset with the aggregate fields stripped.
 
@@ -56,51 +56,51 @@ The legacy index has only `version` and `notes`; the `tags` and `authors` aggreg
 
 ### `SubredditNoteMeta`
 
-Each entry in the `notes` array is a metadata record for one note. The note's body content is not stored in the index — it lives in the note's own wiki page (`notes/<slug>`).
+Each entry in the `notes` array is a metadata record for one note. The note's body content is not stored in the index — it lives in the note's own wiki page (`toolbox-nxg/notes/<slug>`, mirrored to `notes/<slug>`).
 
-| Field       | Required | Type       | Description                                                                                  |
-| ----------- | -------- | ---------- | -------------------------------------------------------------------------------------------- |
-| `slug`      | yes      | string     | URL-safe identifier; used as the wiki page name suffix (`notes/<slug>`). Never `"index"`.    |
-| `title`     | yes      | string     | Human-readable display title. Derived from the slug (`"my-note"` → `"My Note"`) if absent.   |
-| `createdAt` | yes      | integer    | Creation timestamp in epoch milliseconds                                                     |
-| `updatedAt` | yes      | integer    | Last-updated timestamp in epoch milliseconds                                                 |
-| `archived`  | yes      | boolean    | When `true`, the note is hidden from the default list but retained                           |
-| `tags`      | yes      | `string[]` | Free-form tag strings; empty array when none                                                 |
-| `author`    | no       | string     | Reddit username of the mod who created the note; absent on notes migrated from older formats |
+| Field       | Required | Type       | Description                                                                                           |
+| ----------- | -------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| `slug`      | yes      | string     | URL-safe identifier; used as the wiki page name suffix (`toolbox-nxg/notes/<slug>`). Never `"index"`. |
+| `title`     | yes      | string     | Human-readable display title. Derived from the slug (`"my-note"` → `"My Note"`) if absent.            |
+| `createdAt` | yes      | integer    | Creation timestamp in epoch milliseconds                                                              |
+| `updatedAt` | yes      | integer    | Last-updated timestamp in epoch milliseconds                                                          |
+| `archived`  | yes      | boolean    | When `true`, the note is hidden from the default list but retained                                    |
+| `tags`      | yes      | `string[]` | Free-form tag strings; empty array when none                                                          |
+| `author`    | no       | string     | Reddit username of the mod who created the note; absent on notes migrated from older formats          |
 
-Slugs are deduplicated on read: if the same slug appears twice in the raw `notes` array, only the first occurrence is kept. The slug `"index"` is rejected and never stored.
+Slugs are trimmed and deduplicated on read: if the same slug appears twice in the raw `notes` array, only the first occurrence is kept. The slug `"index"` is rejected and never stored. Other fields are coerced on read: a missing `createdAt`/`updatedAt` becomes the current time, `archived` is `true` only when literally `true`, and non-string or blank tags are dropped.
 
-## Note content pages (`notes/<slug>`)
+## Note content pages (`toolbox-nxg/notes/<slug>`)
 
-Each note's body is stored as a plain wiki page at `notes/<slug>`. The content is plain Reddit Markdown with no JSON envelope — you read and write it directly as the wiki page content.
+Each note's body is stored as a plain wiki page at `toolbox-nxg/notes/<slug>` (legacy: `notes/<slug>`). The content is plain Reddit Markdown with no JSON envelope — you read and write it directly as the wiki page content.
 
-There is no content schema version. The index is the authoritative list of which slugs exist; a wiki page at `notes/<slug>` without a matching index entry is ignored by Toolbox but is otherwise harmless.
+There is no content schema version. The index is the authoritative list of which slugs exist; a note page without a matching index entry is ignored by Toolbox but is otherwise harmless.
 
 ## Reading notes
 
 To enumerate all notes:
 
-1. Fetch and parse `notes/index`. If the page is missing or not valid JSON, treat the subreddit as having no notes.
+1. Fetch and parse `toolbox-nxg/notes` (or `notes/index` on a subreddit still on the legacy layout). If the page is missing or not valid JSON, treat the subreddit as having no notes.
 2. Normalize: if `version` is `1`, the `tags` and `authors` aggregates are absent — compute them from the `notes` array yourself if you need them.
-3. For each entry in `notes`, the note body is at `notes/<slug>` as plain wiki content.
+3. For each entry in `notes`, the note body is at `toolbox-nxg/notes/<slug>` (legacy: `notes/<slug>`) as plain wiki content.
 
 ## Writing notes
 
 To create or update a note:
 
-1. Read and normalize the current `notes/index`.
-2. Write the note body to `notes/<slug>` as plain wiki content.
+1. Read and normalize the current `toolbox-nxg/notes` index.
+2. Write the note body to `toolbox-nxg/notes/<slug>` as plain wiki content.
 3. Add or update the `SubredditNoteMeta` entry for `<slug>` in the index's `notes` array.
 4. Recompute `tags` and `authors` from the updated `notes` array (sort and deduplicate).
-5. Write the updated index back to `notes/index` as JSON.
+5. Write the updated index back to `toolbox-nxg/notes` as JSON. If 6.x compatibility is on, also write the body to `notes/<slug>` and the v1 index (`version` and `notes` only) to `notes/index`.
 
 To archive a note without deleting it, set `archived: true` in the index entry and leave the content page untouched.
 
-To delete a note permanently, remove it from the index's `notes` array and optionally delete the `notes/<slug>` wiki page. NXG never propagates deletions from the legacy mirror into the NXG index (a missing legacy entry is indistinguishable from a failed mirror write), so deletions performed via the legacy `notes/index` will not remove entries from the NXG index.
+To delete a note permanently, remove it from the index's `notes` array and optionally delete the note's wiki page. NXG never propagates deletions from the legacy mirror into the NXG index (a missing legacy entry is indistinguishable from a failed mirror write), so deletions performed via the legacy `notes/index` will not remove entries from the NXG index.
 
 ## Reconciliation with the legacy index
 
-When both a NXG (v2) index and a legacy (v1) index exist, NXG merges them by slug union:
+When both a NXG (v2) index and a legacy (v1) index exist and 6.x compatibility is on (and again whenever the layout migration re-runs), NXG merges them by slug union:
 
 - Slugs only in the legacy index were created by an older Toolbox build and are appended to the NXG index.
 - Slugs only in the NXG index are kept unchanged; a deletion in the legacy index is assumed to be a mirror write failure, not a real delete.

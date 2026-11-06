@@ -8,7 +8,7 @@ For the full technical specification of each schema version, see [Subreddit Conf
 
 NXG makes three major changes to how subreddit data is stored:
 
-1. **New wiki paths** — subreddit config moves from `toolbox` to `toolbox-nxg`; usernotes move from `usernotes` to a sharded layout under `toolbox-nxg/usernotes/*`.
+1. **New wiki paths** — subreddit config moves from `toolbox` to `toolbox-nxg`; usernotes move from `usernotes` to a sharded layout under `toolbox-nxg/usernotes/*`; the subreddit notes index and pages move from `notes/index` and `notes/<slug>` to `toolbox-nxg/notes` and `toolbox-nxg/notes/<slug>`; the settings backup moves from `tbsettings` to `toolbox-nxg/user-settings`. Domain tags and usernote types, which 6.x keeps inside the `toolbox` config, move to `toolbox-nxg/domain-tags` and the usernotes manifest.
 2. **Config schema v2** — the config JSON format gains plain-text storage (no URI encoding), brace-token interactive fields, and stable entry IDs. The classic v1 format is still written to the `toolbox` page when 6.x compatibility is enabled.
 3. **Usernote archiving** — the NXG usernote format adds an `archived` field per note, letting notes be hidden rather than deleted.
 
@@ -35,7 +35,7 @@ Re-running migration (e.g. to fold in 6.x edits) is safe and idempotent: when a 
 
 **Brace tokens instead of HTML** — v1 reason text could embed `<input>`, `<textarea>`, and `<select>` elements. v2 replaces them with brace tokens. The v1 mirror down-converts them back to HTML for 6.x compatibility. See [Brace tokens](#brace-tokens) below for the full syntax.
 
-**Stable entry IDs** — every removal reason and mod macro in v2 carries a stable 8-character base-36 `id`. IDs are assigned on create and backfilled by `ensureStableIds` during normalization. They survive reordering and are stripped from the v1 mirror.
+**Stable entry IDs** — every removal reason, mod macro, and suggested-reason mapping in v2 carries a stable 8-character base-36 `id`. IDs are assigned on create and backfilled by `ensureStableIds` during normalization. They survive reordering and are stripped from the v1 mirror.
 
 ## Brace tokens
 
@@ -162,7 +162,7 @@ The NXG layout splits usernotes across multiple wiki pages to work around Reddit
 
 ### Migration
 
-On first access, NXG decodes the classic `usernotes` blob, re-encodes it in the sharded NXG format, and writes the shards. On subsequent accesses (e.g. after 6.x edits), NXG reconcile-merges the classic page into the existing shards: new and changed notes flow in, NXG-only state (archived notes, stable indexes) is preserved.
+On first access, NXG decodes the classic `usernotes` blob, re-encodes it in the sharded NXG format, and writes the shards. Note types are seeded from the classic config's `usernoteColors` (or the built-in defaults) and stored in the manifest. On subsequent accesses with 6.x compatibility on (e.g. after 6.x edits), NXG reconcile-merges the classic page into the existing shards: notes added on the classic page flow in, notes removed there are archived (an edited note therefore shows up as a new note plus an archived original), and NXG-only state (archived notes, stable indexes) is preserved.
 
 ### Archiving
 
@@ -178,4 +178,6 @@ Each note in the NXG format has a per-user `index` (assigned from `nextIndex` an
 
 ## Personal settings
 
-Personal settings (stored in browser extension storage, not the wiki) carry forward without migration. No schema bumps or key renames are required when upgrading from original Toolbox to Toolbox-NXG.
+Personal settings are stored in browser extension storage, not the wiki. Toolbox-NXG is a separate extension, so bring them across by restoring a settings backup (the `tbsettings` wiki page; `toolbox-nxg/user-settings` once the backup subreddit is on the NXG layout). The backup format is unchanged, and backups from Toolbox versions older than 3.0 are rejected.
+
+On every startup NXG renames stored keys for modules whose ids changed (for example `Toolbox.RReasons.*` to `Toolbox.RemovalReasons.*`, `Toolbox.PNotes.*` to `Toolbox.SubredditNotes.*`, `Toolbox.DTagger.*` to `Toolbox.DomainTagger.*`), copies the relevant `Toolbox.QueueTools.*` settings to the split-out `MassModeration` and `ModViewEnhancements` modules, maps `Toolbox.Notifier.enabled: false` to `Toolbox.Notifier.showNotifications: false`, and on a version change deletes settings for removed features. No manual steps are needed.

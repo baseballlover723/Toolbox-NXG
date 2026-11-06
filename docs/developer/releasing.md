@@ -6,7 +6,7 @@ Toolbox version numbers are identified by a major.minor.patch stable release ide
 
 Git tags of stable releases use only the major.minor.patch identifier with a `v` prefix (e.g. `v6.1.13`). Prereleases also include a `-beta.#` suffix, where `#` is the build number (e.g. `v7.0.0-beta.1`).
 
-The manifest `version` field combines the major.minor.patch and the build number into a single four-segment version string (e.g. `6.1.13.1`). The `version_name` field uses only the major.minor.patch, in addition to whatever fun name is selected for the release (e.g. `6.1.13 "Delaying Donkey"`).
+The manifest `version` field combines the major.minor.patch and the build number into a single four-segment version string (e.g. `6.1.13.1`). The `version_name` field uses only the major.minor.patch, in addition to whatever fun name is selected for the release (e.g. `6.1.13: "Delaying Donkey"`).
 
 As an example, a release timeline might look something like this:
 
