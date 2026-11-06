@@ -64,7 +64,7 @@ export interface SettingDefinition {
 	max?: number | null
 	/** Step size for numeric settings */
 	step?: number
-	/** When true, this setting only applies on old Reddit. */
+	/** When true, this setting only applies on old Reddit; the settings dialog tags it as such on new Reddit. */
 	oldReddit?: boolean
 	/** Used by `type: 'selector'` */
 	values?: readonly string[]

@@ -59,6 +59,16 @@
 	margin-top: var(--toolbox-sp-4);
 }
 
+.platformTag {
+	margin-right: var(--toolbox-sp-4);
+	padding: 0 var(--toolbox-sp-3);
+	border: 1px solid var(--toolbox-surface-border);
+	border-radius: var(--toolbox-radius-sm);
+	font-size: var(--toolbox-fs-10);
+	color: var(--toolbox-text-secondary);
+	white-space: nowrap;
+}
+
 .valueNote {
 	font-size: var(--toolbox-fs-11);
 	color: var(--toolbox-text-secondary);

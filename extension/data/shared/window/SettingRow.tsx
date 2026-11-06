@@ -5,6 +5,7 @@ import type {SettingDefinition,} from '../../framework/module'
 import {syntaxThemes,} from '../../modules/syntax/syntaxThemes'
 import type {SyntaxTheme,} from '../../modules/syntax/syntaxThemes'
 import {selectorOptionKey,} from '../../util/data/string'
+import {isOldReddit,} from '../../util/infra/platform'
 import {sendEvent,} from '../../util/reddit/events'
 import {cleanSubredditName,} from '../../util/reddit/reddit-domain'
 import {createEditor,} from '../../util/ui/codemirrorSetup'
@@ -153,6 +154,13 @@ export function SettingRow ({
 		)
 		: null
 
+	// Settings are shared across platforms, so an old-Reddit-only setting stays editable on
+	// new Reddit (as old-Reddit-only modules do) but is tagged there so it isn't mistaken for a
+	// setting that does something on the current page.
+	const oldRedditTag = settingDef.oldReddit && !isOldReddit
+		? <span className={css.platformTag}>Old Reddit only</span>
+		: null
+
 	// Action type: standalone button, no link
 	if (settingDef.type === 'action') {
 		if (!settingDef.event || !settingDef.class) { return null }
@@ -182,6 +190,7 @@ export function SettingRow ({
 						checked={!!(value ?? settingDef.default)}
 						onChange={(event,) => onChange(event.target.checked,)}
 					/>{' '}
+					{oldRedditTag}
 					{linkButton}
 				</div>
 				{linkInputs}
@@ -374,7 +383,8 @@ export function SettingRow ({
 	return (
 		<div {...rowProps}>
 			<div className={css.labelRow}>
-				<span className={css.label}>{settingDef.description}:</span> {linkButton}
+				<span className={css.label}>{settingDef.description}:</span> {oldRedditTag}
+				{linkButton}
 			</div>
 			{settingDef.preview}
 			{settingDef.previewImageUrl && (

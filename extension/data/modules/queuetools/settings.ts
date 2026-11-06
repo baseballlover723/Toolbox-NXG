@@ -39,6 +39,7 @@ export const settings = defineSettings(
 			sharedPolicy: 'raw',
 			type: 'boolean',
 			default: true,
+			oldReddit: true,
 			description:
 				'Add a button on old reddit posts/comments with removed or dismissed reports to view those reports.',
 		},
