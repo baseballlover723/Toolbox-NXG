@@ -5,21 +5,22 @@
  */
 
 import {getSiteTable,} from '../../../dom/oldReddit/page'
+import {isModpage,} from '../../../util/reddit/pageContext'
 import type {MassModerationSettings,} from '../settings'
 
 /** Class on `#siteTable` that forces every `.report-reasons` block open (see massmoderation.css). */
 export const reportsExpandedClass = 'toolbox-reports-expanded'
 
 /**
- * Expands queue report details when the `expandReports` setting is on.
- * No page-type gate: Reddit only renders `.report-reasons` for a moderator of the sub in
- * question, so the class is inert everywhere else.
+ * Expands queue report details when the `expandReports` setting is on and this is a mod page.
+ * Gated on `isModpage` because Reddit also renders `.report-reasons` on ordinary listings of a
+ * sub the user moderates, where auto-expanding them clutters normal browsing.
  * @param settings Subset of Mass Moderation settings this factory reads.
  * @returns `{cleanup}`; `index.ts` passes `cleanup` to `lifecycle.mount`.
  */
 export function createExpandReportsHandlers ({expandReports,}: Pick<MassModerationSettings, 'expandReports'>,) {
 	const siteTable = getSiteTable()
-	if (expandReports) { siteTable?.classList.add(reportsExpandedClass,) }
+	if (expandReports && isModpage) { siteTable?.classList.add(reportsExpandedClass,) }
 
 	return {
 		/** Clears the class so teardown leaves Reddit's markup as it was found. */

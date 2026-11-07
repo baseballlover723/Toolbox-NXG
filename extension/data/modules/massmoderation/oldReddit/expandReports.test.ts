@@ -1,11 +1,17 @@
 /** Tests for the expand-reports site-table class factory. */
 
-import {beforeEach, describe, expect, it,} from 'vitest'
+import {beforeEach, describe, expect, it, vi,} from 'vitest'
+
+// Mutable so tests can simulate queue vs. ordinary listing pages. `isModpage` mirrors the real
+// export, which is a (truthy) RegExpMatchArray or (falsy) null.
+const mockPageContext = vi.hoisted(() => ({isModpage: [true,] as unknown,}))
+vi.mock('../../../util/reddit/pageContext', () => mockPageContext,)
 
 import {createExpandReportsHandlers, reportsExpandedClass,} from './expandReports'
 
 describe('createExpandReportsHandlers', () => {
 	beforeEach(() => {
+		mockPageContext.isModpage = ['/about/modqueue',]
 		document.body.innerHTML = '<div id="siteTable" class="sitetable"></div>'
 	},)
 
@@ -24,6 +30,14 @@ describe('createExpandReportsHandlers', () => {
 
 	it('leaves the site table alone when the setting is off', () => {
 		createExpandReportsHandlers({expandReports: false,},)
+
+		expect(siteTable().classList.contains(reportsExpandedClass,),).toBe(false,)
+	})
+
+	it('leaves the site table alone off mod pages even when the setting is on', () => {
+		mockPageContext.isModpage = null
+
+		createExpandReportsHandlers({expandReports: true,},)
 
 		expect(siteTable().classList.contains(reportsExpandedClass,),).toBe(false,)
 	})
