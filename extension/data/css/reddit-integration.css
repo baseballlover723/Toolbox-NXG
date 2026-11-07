@@ -88,6 +88,14 @@
 	bottom: var(--toolbox-modbar-height);
 }
 
+/* RES pins its notification stack (#RESNotifications) to the viewport bottom with its own fixed
+   `bottom` offset, so the modbar covers its lower edge. Keep RES's gap but measure it from the top
+   of the modbar. The class lift beats RES's lone #RESNotifications rule at (1,0,0). */
+/* stylelint-disable-next-line selector-id-pattern -- RES's DOM element, its id is not ours to rename */
+.toolbox-scope.toolbox-modbar-shown #RESNotifications {
+	bottom: calc(var(--toolbox-modbar-height) + 10px); /* 10px matches RES's default gap */
+}
+
 /* Shreddit modmail / mod hub fills the viewport height and pins the user-sidebar's "add a mod note"
    form to the bottom of its own scroll column, which the modbar overlaps. Shrinking the aside itself
    only clips that form into a hidden-scrollbar overflow; instead shrink the layout container that
