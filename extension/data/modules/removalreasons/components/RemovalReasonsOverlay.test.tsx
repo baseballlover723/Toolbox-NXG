@@ -649,7 +649,7 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 	}
 
 	/** Renders the overlay and selects the noted reason, opening the note section. */
-	async function renderWithNote (defaultNoteDestination?: NoteDestination,) {
+	async function renderWithNote (defaultNoteDestination?: NoteDestination, nativeNotesAvailable = true,) {
 		await act(async () => {
 			root.render(
 				<RemovalReasonsOverlay
@@ -658,6 +658,7 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 					displayMode="Popup"
 					settings={settings}
 					{...(defaultNoteDestination ? {defaultNoteDestination,} : {})}
+					nativeNotesAvailable={nativeNotesAvailable}
 					onClose={onClose}
 				/>,
 			)
@@ -721,10 +722,20 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 		expect(container.textContent,).not.toContain('Include link to removed item',)
 	})
 
-	it('starts on Reddit when that is the moderator\'s default notes tab', async () => {
+	it('starts on Reddit when that is the moderator\'s default note destination', async () => {
 		await renderWithNote('native',)
 
 		expect(destinationRadio('Reddit mod note',).checked,).toBe(true,)
+	})
+
+	it('hides the destination choice when the Native Mod Log module is off', async () => {
+		await renderWithNote(undefined, false,)
+
+		expect(container.querySelector('input[type="radio"][value="native"]',),).toBeNull()
+		expect(container.querySelector('input[type="radio"][value="toolbox"]',),).toBeNull()
+		// The Toolbox note controls still show.
+		expect(chipLabels(),).toContain('Spam',)
+		expect(container.textContent,).toContain('Include link to removed item',)
 	})
 
 	it('carries a hand-picked Toolbox type across to Reddit\'s label', async () => {

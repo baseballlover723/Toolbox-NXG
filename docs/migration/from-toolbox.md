@@ -56,6 +56,10 @@ Original Toolbox stores all usernotes in a single wiki page, which Reddit caps a
 
 When leaving a usernote, you can optionally issue a ban at the same time — the ban form is embedded in the usernote flow so you don't have to navigate away and fill out the same context twice. NXG also lets you attach a link to the associated removal notice as part of the note, keeping a permanent record of what was sent alongside the note itself.
 
+### Native Mod Log (formerly Mod Notes)
+
+The Toolbox 7.x **Mod Notes** module is now called [Native Mod Log](../user-guide/modules/native-mod-log.md). It still has its own **NN** button and a popup with All Activity, Notes, and Mod Actions tabs, and it can be turned on and off separately from Toolbox usernotes. New options let you hide Reddit's AI-generated user summaries and mod actions. It is **disabled by default**; turn it on in the Toolbox settings. Mod Notes settings restored from a 7.x backup carry over.
+
 ### Dark-mode note type colors
 
 Each usernote type now has an optional separate dark-mode color. The built-in default types ship with hand-tuned dark variants. Custom types you create in the config editor can also specify a dark color.

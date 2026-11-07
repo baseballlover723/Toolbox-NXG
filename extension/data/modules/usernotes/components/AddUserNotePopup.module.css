@@ -291,20 +291,6 @@
 	resize: vertical;
 }
 
-.nativeBanRow {
-	display: flex;
-	align-items: center;
-	gap: var(--toolbox-sp-5);
-	white-space: nowrap;
-	margin-right: auto;
-}
-
-.banDaysInput {
-	width: 52px;
-	box-sizing: border-box;
-	padding: var(--toolbox-sp-2) var(--toolbox-sp-4);
-}
-
 /* Archived notes shown via the history toggle. */
 .noteCardHidden {
 	opacity: 0.55;

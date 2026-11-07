@@ -14,7 +14,7 @@ import {
 } from '../../dom/shreddit/things'
 import {provideLocation, renderAtLocation,} from '../../dom/uiLocations'
 import {createLifecycle,} from '../../framework/lifecycle'
-import {genSettings, usernotes,} from '../../framework/moduleIds'
+import {genSettings, nativeModLog, removalReasons, usernotes,} from '../../framework/moduleIds'
 import {FlatListAction,} from '../../shared/controls/FlatListAction'
 import {negativeTextFeedback,} from '../../store/feedback'
 import {selectorOptionKey,} from '../../util/data/string'
@@ -690,24 +690,29 @@ export function createRemovalReasonsHandlers ({
 			personalRequireType,
 			personalRequireText,
 			personalRequireLink,
-			defaultNotesTab,
+			defaultNoteDestinationSetting,
+			nativeModLogEnabled,
 		] = await Promise.all([
 			getConfig(baseData.subreddit,).catch(() => undefined),
 			getModuleSettingAsync<boolean>(usernotes, 'requireNoteType', false,),
 			getModuleSettingAsync<boolean>(usernotes, 'requireNoteText', true,),
 			getModuleSettingAsync<boolean>(usernotes, 'requireNoteLink', false,),
-			getModuleSettingAsync<string>(usernotes, 'defaultNotesTab', 'toolbox_notes',),
+			getModuleSettingAsync<string>(removalReasons, 'defaultNoteDestination', 'toolbox_note',),
+			// Must match the Native Mod Log module's `enabledByDefault: false`.
+			getModuleSettingAsync<boolean>(nativeModLog, 'enabled', false,),
 		],)
 		const usernoteRequire = resolveUsernoteRequirements(
 			subUsernoteRequireFromConfig(reqConfig,),
 			{type: !!personalRequireType, text: !!personalRequireText, link: !!personalRequireLink,},
 		)
-		// A moderator who opens the notes popup on Native Notes works in Reddit's mod
-		// notes, so default the removal note to the same place. Still overridable per
-		// removal by the destination selector. Normalized through `selectorOptionKey`
-		// because a selector setting is stored either as the derived key or as the raw
-		// display label ("Native Notes"), and both are valid on read.
-		const defaultNoteDestination: NoteDestination = selectorOptionKey(defaultNotesTab,) === 'native_notes'
+		// Reddit mod notes are only offered while the Native Mod Log module is on, so with
+		// it off the default falls back to a Toolbox note whatever the setting says. Still
+		// overridable per removal by the destination selector. Normalized through
+		// `selectorOptionKey` because a selector setting is stored either as the derived
+		// key or as the raw display label ("Reddit mod note"), and both are valid on read.
+		const nativeNotesAvailable = !!nativeModLogEnabled
+		const defaultNoteDestination: NoteDestination = nativeNotesAvailable
+				&& selectorOptionKey(defaultNoteDestinationSetting,) === 'reddit_mod_note'
 			? 'native'
 			: 'toolbox'
 		if (!drawerRequestIsCurrent()) {
@@ -831,6 +836,7 @@ export function createRemovalReasonsHandlers ({
 			},
 			usernoteRequire,
 			defaultNoteDestination,
+			nativeNotesAvailable,
 			onRemoved,
 			onClose: () => {
 				if (!drawerMode) {

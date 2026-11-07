@@ -4,6 +4,8 @@
 
 Usernotes lets moderators attach persistent notes to Reddit user accounts. Notes are stored in the subreddit wiki and visible to all moderators of that subreddit.
 
+Reddit's own native mod notes are a separate feature with their own button; see [Native Mod Log](native-mod-log.md).
+
 ## Overview
 
 Usernotes appear next to usernames throughout Reddit — in post listings, comment threads, and the mod queue. A colored tag shows the most recent active note type; hovering or clicking reveals the full note list for that user in the current subreddit.
@@ -62,15 +64,13 @@ Notes can be archived manually from the popup, or automatically:
 
 ## Settings
 
-| Setting                               | Default       | Description                                                            |
-| ------------------------------------- | ------------- | ---------------------------------------------------------------------- |
-| Show Usernotes Manager link in Modbar | On            | Add a usernotes manager link to the Modbar                             |
-| Default notes tab                     | Toolbox Notes | Which notes tab opens by default (Toolbox Notes or Native Notes)       |
-| Default native note label             | None          | Default label for new Reddit native notes                              |
-| Close popup after saving a note       | On            | Dismiss the usernotes popup automatically after saving                 |
-| Require a note type                   | Off           | Require a type/tag before a note can be saved                          |
-| Require note text                     | On            | Require body text before a note can be saved                           |
-| Require a link to the content         | Off           | Require a link to the relevant post/comment before a note can be saved |
-| Show date in note preview             | Off           | Include the note date in the inline tag preview                        |
-| Show current note on mod pages        | Off           | Display the current note inline on ban/contrib/mod pages               |
-| Max characters in note preview        | 20            | Maximum characters shown in the inline tag _(advanced)_                |
+| Setting                               | Default | Description                                                            |
+| ------------------------------------- | ------- | ---------------------------------------------------------------------- |
+| Show Usernotes Manager link in Modbar | On      | Add a usernotes manager link to the Modbar                             |
+| Close popup after saving a note       | On      | Dismiss the usernotes popup automatically after saving                 |
+| Require a note type                   | Off     | Require a type/tag before a note can be saved                          |
+| Require note text                     | On      | Require body text before a note can be saved                           |
+| Require a link to the content         | Off     | Require a link to the relevant post/comment before a note can be saved |
+| Show date in note preview             | Off     | Include the note date in the inline tag preview                        |
+| Show current note on mod pages        | Off     | Display the current note inline on ban/contrib/mod pages               |
+| Max characters in note preview        | 20      | Maximum characters shown in the inline tag _(advanced)_                |

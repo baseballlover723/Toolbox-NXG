@@ -20,7 +20,6 @@ import {startSpinner, stopSpinner,} from '../../store/spinnerSlice'
 import {debounce,} from '../../util/data/async'
 import {byteLength,} from '../../util/data/encoding'
 import {forEachChunked,} from '../../util/data/iter'
-import {selectorOptionKey,} from '../../util/data/string'
 import {nowInSeconds,} from '../../util/data/time'
 import createLogger from '../../util/infra/logging'
 import type {TBPageContext,} from '../../util/reddit/pageContext'
@@ -47,7 +46,6 @@ import {getConfig,} from '../config/moduleapi'
 import {proposeOrBan,} from '../shared/proposals/gateway'
 import {getMessageLink,} from '../shared/usernotes/messageLinkCache'
 import {
-	createLatestModNoteFetcher,
 	findSubredditColor,
 	getSubredditColors,
 	getUser,
@@ -58,13 +56,13 @@ import {applyUserNoteMutation, makeUserNoteEntry, type UserNoteMutation,} from '
 import {subUsernoteRequireFromConfig,} from '../shared/usernotes/requireRules'
 import {getSubredditNotes, publishSubredditNotes,} from '../shared/usernotes/store'
 import {showAddUserNotePopup,} from './components/AddUserNotePopup'
-import {CombinedNoteTag,} from './components/CombinedNoteTag'
 import {showUserNotesManagerOverlay,} from './components/UserNotesManagerOverlay'
 import {
 	createPrunePreview,
 	shouldPruneNoteByArchived,
 	type UsernotesStorageInfo,
 } from './components/UserNotesManagerOverlay.helpers'
+import {UsernoteTag,} from './components/UsernoteTag'
 import {type UserNotesSettings,} from './settings'
 
 const log = createLogger('UserNotes',)
@@ -79,8 +77,6 @@ export interface NotesDisplayHandlers {
 	 * Opens the add-note popup for a user in a subreddit.
 	 * @param link Permalink of the linked thing (empty string if none).
 	 * @param disableLink When true, the "Include link" option is disabled.
-	 * @param contextID Reddit fullname of the thing being linked to the note.
-	 * @param initialTabIndex Tab to open by default (0 = Toolbox, 1 = Native).
 	 */
 	openNotesPopup: (
 		subreddit: string,
@@ -88,8 +84,6 @@ export interface NotesDisplayHandlers {
 		link: string,
 		disableLink: boolean,
 		initialPosition: {top: number; left: number},
-		contextID?: string,
-		initialTabIndex?: number,
 	) => Promise<void>
 }
 
@@ -98,14 +92,9 @@ export interface NotesDisplayHandlers {
  * Registers note tags at the `authorActions` UI location.
  */
 export function createNotesDisplay (
-	{maxChars, showDate, showOnModPages, defaultNotesTab,}: UserNotesSettings,
+	{maxChars, showDate, showOnModPages,}: UserNotesSettings,
 ): NotesDisplayHandlers {
 	const lifecycle = createLifecycle()
-	const getLatestModNote = createLatestModNoteFetcher()
-	// A selector setting reads back as either the derived key or the raw display label
-	// ("Native Notes"), so normalize before comparing - a raw label would otherwise fall
-	// through to the Toolbox tab.
-	const defaultTabIndex = selectorOptionKey(defaultNotesTab,) === 'native_notes' ? 1 : 0
 	const subs: string[] = []
 	const pendingSubs = new Set<string>()
 	let queueTimeout: ReturnType<typeof setTimeout> | undefined
@@ -226,8 +215,6 @@ export function createNotesDisplay (
 						top: positions.topPosition,
 						left: positions.leftPosition,
 					},
-					undefined,
-					defaultTabIndex,
 				)
 			})()
 		)
@@ -241,14 +228,13 @@ export function createNotesDisplay (
 				context={context}
 				target={target}
 				renderTag={(handler,) => (
-					<CombinedNoteTag
+					<UsernoteTag
 						subreddit={context.subreddit!}
 						author={context.author!}
 						defaultText="N"
 						maxChars={maxChars}
 						showDate={showDate}
-						getLatestModNote={getLatestModNote}
-						onClick={handler}
+						onNoteTagClick={handler}
 					/>
 				)}
 			/>
@@ -297,8 +283,6 @@ export function createNotesDisplay (
 		link: string,
 		disableLink: boolean,
 		initialPosition: {top: number; left: number},
-		contextID?: string,
-		initialTabIndex?: number,
 	) {
 		const [colors, modListResult, layout, currentUser, config,] = await Promise.all([
 			getSubredditColors(subreddit,),
@@ -339,8 +323,6 @@ export function createNotesDisplay (
 			colors,
 			initialNotes,
 			findColor: (key: string,) => findSubredditColor(colors, key,),
-			contextID,
-			initialTabIndex,
 			targetIsMod,
 			archivingAvailable,
 			currentUser,

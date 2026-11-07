@@ -170,11 +170,17 @@ interface RemovalReasonsOverlayProps {
 	 */
 	usernoteRequire?: UsernoteRequireFlags
 	/**
-	 * Where a note defaults to being written, from the moderator's "Default tab for the
-	 * notes popup" setting. Overridden per removal by the destination selector, and by
+	 * Where a note defaults to being written, from the moderator's "default note
+	 * destination" setting. Overridden per removal by the destination selector, and by
 	 * {@link seededFromIntent} when replaying a proposal.
 	 */
 	defaultNoteDestination?: NoteDestination
+	/**
+	 * Whether a Reddit mod note can be chosen as the destination (the Native Mod Log
+	 * module is enabled). When false the destination selector is hidden and notes go to
+	 * Toolbox, unless a replayed proposal already chose a mod note.
+	 */
+	nativeNotesAvailable?: boolean
 	/**
 	 * Pre-fill captured from a proposal, for Edit & Accept. When set, the overlay seeds
 	 * its selection/usernote/ban/delivery from it. Direct-perform mode is driven by
@@ -236,6 +242,7 @@ export function RemovalReasonsOverlay ({
 	settings,
 	usernoteRequire = {type: false, text: true, link: false,},
 	defaultNoteDestination = 'toolbox',
+	nativeNotesAvailable = true,
 	seededFromIntent,
 	suggestedReasonIds,
 	acceptGate,
@@ -467,6 +474,9 @@ export function RemovalReasonsOverlay ({
 		seededFromIntent?.usernote?.destination ?? defaultNoteDestination,
 	)
 	const [nativeLabel, setNativeLabel,] = useState<string | undefined>(seededFromIntent?.usernote?.nativeLabel,)
+	// A frozen proposal that chose a mod note keeps the choice visible for the reviewer,
+	// even if this moderator has the Native Mod Log module turned off.
+	const showNoteDestinations = nativeNotesAvailable || seededFromIntent?.usernote?.destination === 'native'
 	/** Always-current ref so the sync effect can read usernoteText without depending on it. */
 	const usernoteTextRef = useRef('',)
 	usernoteTextRef.current = usernoteText
@@ -1332,24 +1342,26 @@ export function RemovalReasonsOverlay ({
 				/>
 				{leaveUsernote && (
 					<div className={css.subOptions}>
-						<div className={css.noteDestinations}>
-							{([['toolbox', 'Toolbox note',], ['native', 'Reddit mod note',],] as const).map((
-								[value, label,],
-							) => (
-								<DeliveryOption key={value} selected={noteDestination === value}>
-									<label className={css.deliveryLabel}>
-										<input
-											type="radio"
-											name={`note-destination-${data.subreddit}`}
-											value={value}
-											checked={noteDestination === value}
-											onChange={() => handleNoteDestinationChange(value,)}
-										/>
-										{label}
-									</label>
-								</DeliveryOption>
-							))}
-						</div>
+						{showNoteDestinations && (
+							<div className={css.noteDestinations}>
+								{([['toolbox', 'Toolbox note',], ['native', 'Reddit mod note',],] as const).map((
+									[value, label,],
+								) => (
+									<DeliveryOption key={value} selected={noteDestination === value}>
+										<label className={css.deliveryLabel}>
+											<input
+												type="radio"
+												name={`note-destination-${data.subreddit}`}
+												value={value}
+												checked={noteDestination === value}
+												onChange={() => handleNoteDestinationChange(value,)}
+											/>
+											{label}
+										</label>
+									</DeliveryOption>
+								))}
+							</div>
+						)}
 						{noteDestination === 'native'
 							? (
 								<div className={css.noteTypeChips}>

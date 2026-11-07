@@ -8,6 +8,7 @@ import type {TbCacheForceTimeoutMessage,} from '../../background/messages'
 import {queueTools, syntax, utils,} from '../../framework/moduleIds'
 import {syntaxThemes,} from '../../modules/syntax/syntaxThemes'
 import {negativeTextFeedback,} from '../../store/feedback'
+import {selectorOptionKey,} from '../data/string'
 import createLogger from '../infra/logging'
 import {getLastVersion, versionNumber,} from '../infra/version'
 import {navigateTo,} from '../ui/navigation'
@@ -254,6 +255,39 @@ export async function doSettingsUpdates () {
 			migratedWrites[newKey] = false
 		}
 		migratedDeletes.push(oldNotifierEnabledKey,)
+	}
+
+	// Native mod notes moved out of Usernotes into the Native Mod Log module. The note-label
+	// default moves with them; the old "Native Notes" default popup tab (now gone) was also
+	// how removal reasons picked a note's default destination, so it becomes that setting.
+	const oldNoteLabelKey = 'Toolbox.UserNotes.defaultNoteLabel'
+	if (oldNoteLabelKey in allSettings) {
+		const newKey = 'Toolbox.NativeModLog.defaultNoteLabel'
+		if (!(newKey in allSettings)) { migratedWrites[newKey] = allSettings[oldNoteLabelKey] }
+		migratedDeletes.push(oldNoteLabelKey,)
+	}
+	const oldNotesTabKey = 'Toolbox.UserNotes.defaultNotesTab'
+	if (oldNotesTabKey in allSettings) {
+		const newKey = 'Toolbox.RemovalReasons.defaultNoteDestination'
+		if (!(newKey in allSettings)) {
+			// Stored as either the derived key or the raw display label.
+			const oldTab = selectorOptionKey(String(allSettings[oldNotesTabKey],),)
+			migratedWrites[newKey] = oldTab === 'native_notes' ? 'reddit_mod_note' : 'toolbox_note'
+		}
+		migratedDeletes.push(oldNotesTabKey,)
+	}
+
+	// Toolbox 7.x had a "Mod Notes" module, which Native Mod Log replaces. Settings restored
+	// from a 7.x backup carry over; 7.x's "actions" tab is now keyed "mod_actions".
+	for (const setting of ['enabled', 'defaultTabName', 'defaultNoteLabel',]) {
+		const oldKey = `Toolbox.ModNotes.${setting}`
+		if (!(oldKey in allSettings)) { continue }
+		const newKey = `Toolbox.NativeModLog.${setting}`
+		if (!(newKey in allSettings) && !(newKey in migratedWrites)) {
+			const value = allSettings[oldKey]
+			migratedWrites[newKey] = setting === 'defaultTabName' && value === 'actions' ? 'mod_actions' : value
+		}
+		migratedDeletes.push(oldKey,)
 	}
 
 	const oldQueueToolsEnabled = allSettings['Toolbox.QueueTools.enabled'] as unknown

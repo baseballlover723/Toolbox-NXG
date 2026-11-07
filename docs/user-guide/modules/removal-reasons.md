@@ -42,6 +42,8 @@ Removal reasons are configured per-subreddit in the Config overlay (**Edit remov
 
 **Fall back to Reddit's removal reasons** — in subreddits with no toolbox reasons at all, offer Reddit's native ones rather than nothing (see [Falling back to Reddit's removal reasons](#falling-back-to-reddits-removal-reasons)).
 
+**Leave a note for the user** — record the removal as a [Toolbox usernote](usernotes.md) or, while the [Native Mod Log](native-mod-log.md) module is enabled, as a Reddit mod note. **Default note destination** picks which one is selected first; with Native Mod Log turned off, the choice is hidden and the note is always a Toolbox note.
+
 ## Removal reason format
 
 Reason text supports two kinds of tokens:
@@ -222,3 +224,4 @@ As with imported reasons, removing something with a native reason registers that
 | Disable remove button after removal        | Off           | Grey out the remove button after an item is removed                                                                 |
 | Pre-select suggested removal reasons       | On            | Pre-select reasons mapped from an item's reports, and flag matching items with "(suggestions)" on the remove button |
 | Lock removal reason order                  | Off           | Hide the overlay's drag handles so selected reasons are always combined in the subreddit's configured order         |
+| Default note destination                   | Toolbox note  | Whether a removal's note defaults to a Toolbox note or a Reddit mod note (the latter needs Native Mod Log enabled)  |

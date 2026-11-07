@@ -5,7 +5,6 @@ import {createRoot, type Root,} from 'react-dom/client'
 import {afterEach, describe, expect, it, vi,} from 'vitest'
 
 let settingValues = vi.hoisted(() => ({
-	defaultNoteLabel: 'none' as string,
 	closePopupAfterNoteSave: true,
 	// Personal usernote save-requirement settings, at their shipped defaults.
 	requireNoteType: false,
@@ -22,17 +21,12 @@ vi.mock('../../../util/ui/hooks', async (importOriginal,) => ({
 	useSetting: (_moduleName: string, settingName: keyof typeof settingValues, defaultValue: unknown,) =>
 		settingValues[settingName] ?? defaultValue,
 }),)
-vi.mock('../../../api/resources/modnotes', () => ({createModNote: vi.fn(),}),)
-vi.mock('../../shared/proposals/gateway', () => ({proposeOrBan: vi.fn(),}),)
 vi.mock('../../../store', () => ({default: {dispatch: vi.fn(), getState: vi.fn(), subscribe: vi.fn(),},}),)
 vi.mock('../../../store/feedback', () => ({
 	negativeTextFeedback: vi.fn(),
 	positiveTextFeedback: vi.fn(),
 }),)
 vi.mock('../../../util/infra/logging', () => ({default: () => ({error: vi.fn(),}),}),)
-vi.mock('../../shared/modnotes/ModNotesPager', () => ({
-	ModNotesPager: () => <div>Native note history</div>,
-}),)
 ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true
 
 import type {ExistingNote, UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
@@ -104,7 +98,6 @@ afterEach(() => {
 	}
 	document.body.innerHTML = ''
 	settingValues = {
-		defaultNoteLabel: 'none',
 		closePopupAfterNoteSave: true,
 		requireNoteType: false,
 		requireNoteText: true,
@@ -460,17 +453,5 @@ describe('AddUserNotePopup', () => {
 		// A type with no text is now a valid, saveable note.
 		clickByText(host, 'Spam',)
 		expect(saveButton.disabled,).toBe(false,)
-	})
-
-	it('does not offer AI-generated user summary as a native note label', () => {
-		const host = renderPopup()
-
-		clickByText(host, 'Native Notes',)
-
-		const buttonTexts = Array.from(host.querySelectorAll('button[aria-pressed]',),).map((button,) =>
-			button.textContent
-		)
-		expect(buttonTexts,).toContain('Helpful User',)
-		expect(buttonTexts,).not.toContain('AI-generated user summary',)
 	})
 })

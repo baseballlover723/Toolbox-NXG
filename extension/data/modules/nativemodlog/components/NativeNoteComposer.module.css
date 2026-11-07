@@ -1,0 +1,96 @@
+.error {
+	composes: errorcolor from "../../../css/Base.module.css";
+}
+
+.toggle {
+	composes: toggle from "../../../css/Base.module.css";
+}
+
+.composerPane {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--toolbox-sp-10);
+	border-top: 1px solid var(--toolbox-input-border);
+	padding-top: 1em;
+}
+
+.composerHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--toolbox-sp-8);
+	font-weight: bold;
+}
+
+.typeList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toolbox-sp-4);
+}
+
+.typeButton {
+	border: 1px solid var(--toolbox-border-color);
+	border-radius: var(--toolbox-radius-lg);
+	background: transparent;
+	cursor: pointer;
+	padding: var(--toolbox-sp-4) var(--toolbox-sp-6);
+	text-align: left;
+	line-height: 1.2;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+}
+
+.typeButton:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+
+.typeButton:hover:not(:disabled) {
+	background-color: var(--toolbox-button-hover-bg);
+}
+
+.selectedType {
+	background-color: var(--toolbox-button-hover-bg);
+	outline: solid 1px var(--toolbox-link-color);
+}
+
+.selectedType::before {
+	content: "\2713";
+	margin-right: var(--toolbox-sp-3);
+}
+
+.noteInput {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--toolbox-sp-2);
+}
+
+.banMessageInput {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--toolbox-sp-4) var(--toolbox-sp-6);
+	resize: vertical;
+}
+
+.composerFooter {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: var(--toolbox-sp-8);
+}
+
+.banRow {
+	display: flex;
+	align-items: center;
+	gap: var(--toolbox-sp-5);
+	white-space: nowrap;
+	margin-right: auto;
+}
+
+.banDaysInput {
+	width: 52px;
+	box-sizing: border-box;
+	padding: var(--toolbox-sp-2) var(--toolbox-sp-4);
+}

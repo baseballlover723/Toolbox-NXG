@@ -1,4 +1,4 @@
-/** Popup for creating and viewing usernotes, with tabs for both Toolbox notes and native Reddit mod notes. */
+/** Popup for creating, editing, and viewing a user's Toolbox usernotes. */
 
 import {useEffect, useRef, useState,} from 'react'
 import {Provider,} from 'react-redux'
@@ -8,14 +8,8 @@ import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
 import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {Window,} from '../../../shared/window/Window'
-import {WindowTabs,} from '../../../shared/window/WindowTabs'
-import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
-import {defaultNoteLabelValueToLabelType, labelColors, selectableLabelNames,} from '../../shared/modnotes/schema'
-import {proposeOrBan,} from '../../shared/proposals/gateway'
 
-import {createModNote,} from '../../../api/resources/modnotes'
 import store from '../../../store'
-import {positiveTextFeedback,} from '../../../store/feedback'
 import {nowInSeconds,} from '../../../util/data/time'
 import createLogger from '../../../util/infra/logging'
 import {useSetting,} from '../../../util/ui/hooks'
@@ -97,10 +91,6 @@ export interface AddUserNotePopupProps {
 	/** Called after mount to replace the initial history with freshly loaded Toolbox notes. */
 	onRefreshNotes?: (() => Promise<ExistingNote[]>) | undefined
 	onClose: () => void
-	/** Reddit fullname of the linked thing (e.g. a comment or post), used as context for the note. */
-	contextID?: string | undefined
-	/** Tab index to open by default (0 = Toolbox Notes, 1 = Native Notes). */
-	initialTabIndex?: number | undefined
 	/** When true, auto-ban options are suppressed since mods cannot be banned. */
 	targetIsMod?: boolean | undefined
 	/**
@@ -111,7 +101,7 @@ export interface AddUserNotePopupProps {
 	subRequire?: SubUsernoteRequire | undefined
 }
 
-/** Renders a draggable popup with Toolbox and Native Notes tabs for adding, editing, and viewing usernotes. */
+/** Renders a draggable popup for adding, editing, and viewing a user's Toolbox usernotes. */
 export function AddUserNotePopup ({
 	subreddit,
 	user,
@@ -130,20 +120,16 @@ export function AddUserNotePopup ({
 	currentUser,
 	onRefreshNotes,
 	onClose,
-	contextID,
-	initialTabIndex = 0,
 	targetIsMod = false,
 	subRequire,
 }: AddUserNotePopupProps,) {
 	const inputRef = useRef<HTMLInputElement>(null,)
-	const nativeInputRef = useRef<HTMLInputElement>(null,)
 	const [noteText, setNoteText,] = useState('',)
 	const [includeLink, setIncludeLink,] = useState(!disableLink,)
 	const [includeMessageLink, setIncludeMessageLink,] = useState(true,)
 	const [selectedType, setSelectedType,] = useState<string | undefined>(initialNotes[0]?.type,)
 	const [notes, setNotes,] = useState(initialNotes,)
 	const [error, setError,] = useState<string | undefined>()
-	const [activeTabIndex, setActiveTabIndex,] = useState(initialTabIndex,)
 	const [editableNoteIds, setEditableNoteIds,] = useState<Set<number>>(() => new Set())
 	const [editingNoteId, setEditingNoteId,] = useState<number | undefined>()
 	const [saving, setSaving,] = useState(false,)
@@ -153,7 +139,6 @@ export function AddUserNotePopup ({
 	const [banMessage, setBanMessage,] = useState('',)
 	const notesTouchedRef = useRef(false,)
 
-	const defaultNoteLabel = useSetting(usernotes, 'defaultNoteLabel', 'none',)
 	const closePopupAfterNoteSave = useSetting(usernotes, 'closePopupAfterNoteSave', true,)
 
 	// Effective save requirements: the moderator's personal settings combined
@@ -185,23 +170,10 @@ export function AddUserNotePopup ({
 	const nothingToSave = !usernoteDraft.hasText && !usernoteDraft.hasType
 	const saveDisabled = saving || requirementMessage !== null || nothingToSave
 
-	const [nativeNoteText, setNativeNoteText,] = useState('',)
-	const [selectedNativeLabel, setSelectedNativeLabel,] = useState<string | undefined>(
-		// An unmapped or `none` default label intentionally leaves the native label
-		// unset; fall back to `undefined` explicitly so that case reads as deliberate.
-		() => defaultNoteLabelValueToLabelType[defaultNoteLabel as string] ?? undefined,
-	)
-	const [nativeSaving, setNativeSaving,] = useState(false,)
-	const [nativeError, setNativeError,] = useState<string | undefined>()
-	const [nativeRefreshKey, setNativeRefreshKey,] = useState(0,)
-	const [nativeTriggerBan, setNativeTriggerBan,] = useState(true,)
-	const [nativeBanDays, setNativeBanDays,] = useState(7,)
-	const [nativeBanMessage, setNativeBanMessage,] = useState('',)
-
+	// Using autoFocus would make the page jump; focus manually without scrolling instead.
 	useEffect(() => {
-		if (activeTabIndex === 0) { inputRef.current?.focus({preventScroll: true,},) }
-		else { nativeInputRef.current?.focus({preventScroll: true,},) }
-	}, [activeTabIndex,],)
+		inputRef.current?.focus({preventScroll: true,},)
+	}, [],)
 
 	useEffect(() => {
 		if (!onRefreshNotes) { return }
@@ -216,12 +188,6 @@ export function AddUserNotePopup ({
 			alive = false
 		}
 	}, [onRefreshNotes,],)
-
-	useEffect(() => {
-		setNativeTriggerBan(true,)
-		setNativeBanDays(7,)
-		setNativeBanMessage('',)
-	}, [selectedNativeLabel,],)
 
 	useEffect(() => {
 		setTriggerBan(true,)
@@ -353,44 +319,6 @@ export function AddUserNotePopup ({
 		setEditingNoteId(undefined,)
 		setNoteText('',)
 		setError(undefined,)
-	}
-
-	async function handleNativeSave () {
-		if (!nativeNoteText.trim()) {
-			setNativeError('Note text is required',)
-			return
-		}
-		setNativeError(undefined,)
-		setNativeSaving(true,)
-		try {
-			await createModNote({
-				user,
-				subreddit,
-				redditID: contextID,
-				note: nativeNoteText.trim(),
-				label: selectedNativeLabel,
-			},)
-			if (nativeTriggerBan && (selectedNativeLabel === 'BAN' || selectedNativeLabel === 'PERMA_BAN')) {
-				await proposeOrBan(
-					{subreddit, itemId: user, itemKind: 'user', link: `https://www.reddit.com/user/${user}`,},
-					{
-						permanent: selectedNativeLabel === 'PERMA_BAN',
-						days: nativeBanDays,
-						note: nativeNoteText.trim(),
-						message: nativeBanMessage,
-					},
-				)
-			}
-			positiveTextFeedback('Note saved',)
-			setNativeNoteText('',)
-			setNativeRefreshKey((k,) => k + 1)
-			onClose()
-		} catch (error) {
-			log.error('Failed to create native note:', error,)
-			setNativeError('Failed to save note',)
-		} finally {
-			setNativeSaving(false,)
-		}
 	}
 
 	const archivedNotes = notes.filter((note,) => note.archived)
@@ -640,117 +568,6 @@ export function AddUserNotePopup ({
 		</div>
 	)
 
-	const nativeNotesContent = (
-		<div className={css.toolboxLayout}>
-			<section className={css.historyPane} aria-label="Native note history">
-				<ModNotesPager key={nativeRefreshKey} user={user} subreddit={subreddit} filter="NOTE" />
-			</section>
-			<section className={css.composerPane} aria-label="Create native note">
-				<div className={css.composerHeader}>
-					<span>Add native note</span>
-				</div>
-				<div className={css.types}>
-					<div className={css.typeList}>
-						{Object.entries(selectableLabelNames,).map(([key, name,],) => (
-							<button
-								type="button"
-								key={key}
-								className={`${css.typeButton} ${selectedNativeLabel === key ? css.selectedType : ''}`}
-								style={{color: labelColors[key],}}
-								aria-pressed={selectedNativeLabel === key}
-								onClick={() => setSelectedNativeLabel((prev,) => prev === key ? undefined : key)}
-								disabled={nativeSaving}
-							>
-								{name}
-							</button>
-						))}
-					</div>
-				</div>
-				<input
-					ref={nativeInputRef}
-					type="text"
-					className={`${css.noteInput} toolbox-input`}
-					placeholder="Add a note..."
-					value={nativeNoteText}
-					disabled={nativeSaving}
-					onChange={(event,) => {
-						setNativeNoteText(event.target.value,)
-						if (nativeError) { setNativeError(undefined,) }
-					}}
-					onKeyDown={(event,) => {
-						if (event.key === 'Enter') {
-							event.preventDefault()
-							void handleNativeSave()
-						}
-					}}
-				/>
-				{(selectedNativeLabel === 'BAN' || selectedNativeLabel === 'PERMA_BAN') && nativeTriggerBan
-					&& !targetIsMod && (
-						<textarea
-							className={`${css.banMessageInput} toolbox-input`}
-							placeholder="ban note to user"
-							rows={2}
-							value={nativeBanMessage}
-							disabled={nativeSaving}
-							onChange={(event,) => setNativeBanMessage(event.target.value,)}
-						/>
-					)}
-				<div className={css.composerFooter}>
-					{selectedNativeLabel === 'PERMA_BAN' && (
-						<label className={css.nativeBanRow}>
-							<input
-								type="checkbox"
-								className={css.toggle}
-								checked={nativeTriggerBan && !targetIsMod}
-								disabled={nativeSaving || targetIsMod}
-								onChange={(e,) => setNativeTriggerBan(e.target.checked,)}
-							/>
-							<span>Issue Permanent Ban{targetIsMod ? ' (user is a mod)' : ''}</span>
-						</label>
-					)}
-					{selectedNativeLabel === 'BAN' && (
-						<label className={css.nativeBanRow}>
-							<input
-								type="checkbox"
-								className={css.toggle}
-								checked={nativeTriggerBan && !targetIsMod}
-								disabled={nativeSaving || targetIsMod}
-								onChange={(e,) => setNativeTriggerBan(e.target.checked,)}
-							/>
-							<span>Issue Ban{targetIsMod ? ' (user is a mod)' : ' for'}</span>
-							{!targetIsMod && (
-								<>
-									<input
-										type="number"
-										className={`${css.banDaysInput} toolbox-input`}
-										min={1}
-										max={999}
-										value={nativeBanDays}
-										disabled={nativeSaving || !nativeTriggerBan}
-										onChange={(e,) => {
-											const v = parseInt(e.target.value, 10,)
-											if (!isNaN(v,) && v >= 1 && v <= 999) { setNativeBanDays(v,) }
-										}}
-									/>
-									<span>days</span>
-								</>
-							)}
-						</label>
-					)}
-					{nativeError && <span className={css.error}>{nativeError}</span>}
-					<ActionButton type="button" primary disabled={nativeSaving} onClick={() => void handleNativeSave()}>
-						{nativeSaving ? 'Saving...' : `Save for /r/${subreddit}`}
-					</ActionButton>
-				</div>
-			</section>
-		</div>
-	)
-
-	const tabs = [
-		{title: 'Toolbox Notes', content: toolboxNotesContent,},
-		{title: 'Native Notes', content: nativeNotesContent,},
-	]
-
 	return (
 		<Window
 			title={
@@ -764,11 +581,7 @@ export function AddUserNotePopup ({
 			onClose={onClose}
 			footer={undefined}
 		>
-			<WindowTabs
-				tabs={tabs}
-				defaultTabIndex={initialTabIndex}
-				onTabChange={setActiveTabIndex}
-			/>
+			{toolboxNotesContent}
 		</Window>
 	)
 }

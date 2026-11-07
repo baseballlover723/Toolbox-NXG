@@ -1,0 +1,13 @@
+.popup {
+	max-width: 90vw;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Scroll the history so the composer below it stays in view. */
+.history {
+	max-height: 360px;
+	overflow: auto;
+	padding-right: var(--toolbox-sp-2);
+}

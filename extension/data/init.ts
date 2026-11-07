@@ -44,6 +44,7 @@ import ModButton from './modules/modbutton'
 import Modmail from './modules/modmail'
 import ModMatrix from './modules/modmatrix'
 import ModViewEnhancements from './modules/modviewenhancements'
+import NativeModLog from './modules/nativemodlog'
 import Notifier from './modules/notifier'
 import NukeComments from './modules/nukecomments'
 import OldReddit from './modules/oldreddit'
@@ -156,6 +157,7 @@ async function startToolbox () {
 			General,
 			Notifier,
 			Usernotes,
+			NativeModLog,
 			Comment,
 			Macros,
 			SubredditNotes,

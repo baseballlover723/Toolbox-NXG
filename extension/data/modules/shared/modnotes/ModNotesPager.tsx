@@ -1,6 +1,6 @@
 /** Paginated list of mod notes for a given user/subreddit pair, with delete support. */
 
-import {map, page, pipeAsync,} from 'iter-ops'
+import {filter, map, page, pipeAsync,} from 'iter-ops'
 import {useCallback, useMemo, useState,} from 'react'
 
 import {deleteModNote, getAllModNotes,} from '../../../api/resources/modnotes'
@@ -24,13 +24,17 @@ interface ModNotesPagerProps {
 	 * Card layout reflows in narrow containers where the table's columns would overflow.
 	 */
 	layout?: 'table' | 'card'
+	/** When true, Reddit's AI-generated `USER_SUMMARY` notes are left out of the list. */
+	hideAiSummaries?: boolean
 }
 
 /**
  * Renders a paginated table or card list of Reddit mod notes for a given user/subreddit,
  * with a delete button on each note.
  */
-export function ModNotesPager ({user, subreddit, filter: noteFilter, layout,}: ModNotesPagerProps,) {
+export function ModNotesPager (
+	{user, subreddit, filter: noteFilter, layout, hideAiSummaries = false,}: ModNotesPagerProps,
+) {
 	const [refreshKey, setRefreshKey,] = useState(0,)
 	const asCards = layout ? layout === 'card' : noteFilter === 'NOTE'
 
@@ -49,6 +53,8 @@ export function ModNotesPager ({user, subreddit, filter: noteFilter, layout,}: M
 		() =>
 			pipeAsync(
 				getAllModNotes(subreddit, user, noteFilter,),
+				// Filter before paging so hidden summaries never leave a page short.
+				filter((note,) => !hideAiSummaries || note.user_note_data?.label !== 'USER_SUMMARY'),
 				page(20,),
 				map((pageItems,) =>
 					asCards
@@ -89,7 +95,7 @@ export function ModNotesPager ({user, subreddit, filter: noteFilter, layout,}: M
 			),
 		// refreshKey is unused in the body on purpose: bumping it after a delete re-runs the fetch.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[subreddit, user, noteFilter, asCards, refreshKey, deleteNote,],
+		[subreddit, user, noteFilter, hideAiSummaries, asCards, refreshKey, deleteNote,],
 	)
 
 	return (

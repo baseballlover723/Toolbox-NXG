@@ -133,6 +133,17 @@ export const settings = defineSettings(
 				'Disable drag-to-reorder of removal reasons in the removal overlay; selected reasons are always combined in the subreddit\'s configured order.',
 		},
 		{
+			id: 'defaultNoteDestination',
+			sharedPolicy: 'raw',
+			type: 'selector' as const,
+			values: ['Toolbox note', 'Reddit mod note',] as const,
+			default: 'toolbox_note',
+			description: 'Where a removal reason\'s user note is written by default.',
+			valueNotes: {
+				'Reddit mod note': 'Only offered when the Native Mod Log module is enabled.',
+			},
+		},
+		{
 			id: 'customRemovalReason',
 			type: 'text' as const,
 			default:

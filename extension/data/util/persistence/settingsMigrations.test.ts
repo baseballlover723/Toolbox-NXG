@@ -122,6 +122,54 @@ describe('settings migrations', () => {
 		expect(store.get('Toolbox.Notifier.showNotifications',),).toBe(true,)
 	})
 
+	it('moves the native note label default from Usernotes to Native Mod Log', async () => {
+		store.set('Toolbox.UserNotes.defaultNoteLabel', 'spam_watch',)
+
+		await doSettingsUpdates()
+
+		expect(store.has('Toolbox.UserNotes.defaultNoteLabel',),).toBe(false,)
+		expect(store.get('Toolbox.NativeModLog.defaultNoteLabel',),).toBe('spam_watch',)
+	})
+
+	it.each([
+		['native_notes', 'reddit_mod_note',],
+		['Native Notes', 'reddit_mod_note',],
+		['toolbox_notes', 'toolbox_note',],
+	],)('turns a %s default notes tab into the %s removal note destination', async (oldTab, destination,) => {
+		store.set('Toolbox.UserNotes.defaultNotesTab', oldTab,)
+
+		await doSettingsUpdates()
+
+		expect(store.has('Toolbox.UserNotes.defaultNotesTab',),).toBe(false,)
+		expect(store.get('Toolbox.RemovalReasons.defaultNoteDestination',),).toBe(destination,)
+	},)
+
+	it('does not overwrite an existing removal note destination', async () => {
+		store.set('Toolbox.UserNotes.defaultNotesTab', 'native_notes',)
+		store.set('Toolbox.RemovalReasons.defaultNoteDestination', 'toolbox_note',)
+
+		await doSettingsUpdates()
+
+		expect(store.get('Toolbox.RemovalReasons.defaultNoteDestination',),).toBe('toolbox_note',)
+		expect(store.has('Toolbox.UserNotes.defaultNotesTab',),).toBe(false,)
+	})
+
+	it('carries restored Toolbox 7.x Mod Notes settings over to Native Mod Log', async () => {
+		store.set('Toolbox.ModNotes.enabled', true,)
+		store.set('Toolbox.ModNotes.defaultTabName', 'actions',)
+		store.set('Toolbox.ModNotes.defaultNoteLabel', 'ban',)
+
+		await doSettingsUpdates()
+
+		expect(store.get('Toolbox.NativeModLog.enabled',),).toBe(true,)
+		// 7.x keyed the mod-actions tab "actions"; it is "mod_actions" now.
+		expect(store.get('Toolbox.NativeModLog.defaultTabName',),).toBe('mod_actions',)
+		expect(store.get('Toolbox.NativeModLog.defaultNoteLabel',),).toBe('ban',)
+		expect(store.has('Toolbox.ModNotes.enabled',),).toBe(false,)
+		expect(store.has('Toolbox.ModNotes.defaultTabName',),).toBe(false,)
+		expect(store.has('Toolbox.ModNotes.defaultNoteLabel',),).toBe(false,)
+	})
+
 	it('drops showActionReason without forcing the per-state toggles off when it was on', async () => {
 		store.set('Toolbox.QueueTools.showActionReason', true,)
 

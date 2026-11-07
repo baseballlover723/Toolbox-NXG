@@ -1,6 +1,5 @@
 /** API layer for loading, saving, and querying usernotes from the subreddit wiki. */
 
-import {getRecentModNotes,} from '../../../api/resources/modnotes'
 import {postToWiki, readFromWiki,} from '../../../api/resources/wiki'
 import {utils,} from '../../../framework/moduleIds'
 import {negativeTextFeedback, neutralTextFeedback, positiveTextFeedback,} from '../../../store/feedback'
@@ -42,7 +41,6 @@ import {readShardedUsernotes, writeShardedUsernotes,} from '../../../util/wiki/s
 import {OLD_WIKI_PATHS,} from '../../../util/wiki/wikiConstants'
 import {recoverLegacyUsernoteColors,} from '../../../util/wiki/wikiMigration'
 import {compatMirrorEnabled, resolveWikiLayout,} from '../../../util/wiki/wikiPaths'
-import {type ModNote, type PendingNoteRequest,} from '../modnotes/schema'
 import {type FoundUser, resolveDualKeyUser,} from './noteMutations'
 
 const log = createLogger('TBUsernotes',)
@@ -533,49 +531,4 @@ export function findSubredditColor (colors: UserNoteColor[], key: string,): User
 		if (colors[i]!.key === key) { return colors[i]! }
 	}
 	return {key: 'none', color: '', text: '',}
-}
-
-/**
- * Creates a debounced fetcher for the most recent mod note on a user in a
- * subreddit. Batches up to 500 concurrent requests into a single API call.
- * Does not return AI-generated user summary "notes."
- */
-export function createLatestModNoteFetcher (): (subreddit: string, user: string,) => Promise<ModNote | null> {
-	let pendingLatestNoteRequests: PendingNoteRequest[] = []
-	let fetchLatestNotesTimeout: ReturnType<typeof setTimeout> | null = null
-
-	async function processQueue () {
-		const queuedRequests = pendingLatestNoteRequests
-		pendingLatestNoteRequests = []
-		fetchLatestNotesTimeout = null
-		try {
-			const subreddits = queuedRequests.map((entry,) => entry.subreddit)
-			const users = queuedRequests.map((entry,) => entry.user)
-			const rawNotes = await getRecentModNotes(subreddits, users,)
-			const notes: (ModNote | null)[] = rawNotes.map(
-				(note,) => note?.user_note_data?.label === 'USER_SUMMARY' ? null : note,
-			)
-			for (const [i, {resolve,},] of Object.entries(queuedRequests,)) {
-				resolve(notes[parseInt(i, 10,)] ?? null,)
-			}
-		} catch (error) {
-			for (const {reject,} of queuedRequests) {
-				reject(error,)
-			}
-		}
-	}
-
-	return function getLatestModNote (subreddit: string, user: string,): Promise<ModNote | null> {
-		return new Promise((resolve, reject,) => {
-			pendingLatestNoteRequests.push({subreddit, user, resolve, reject,},)
-			if (fetchLatestNotesTimeout != null) {
-				clearTimeout(fetchLatestNotesTimeout,)
-			}
-			if (pendingLatestNoteRequests.length === 500) {
-				void processQueue()
-				return
-			}
-			fetchLatestNotesTimeout = setTimeout(processQueue, 500,)
-		},)
-	}
 }

@@ -20,6 +20,7 @@ These modules cannot be disabled.
 | [History Button](historybutton.md)                | On      | Both       |
 | [Mod Macros](macros.md)                           | On      | Both       |
 | [Mod Button](modbutton.md)                        | On      | Both       |
+| [Native Mod Log](native-mod-log.md)               | Off     | Both       |
 | [Profile Pro](profile.md)                         | On      | Both       |
 | [Proposals](proposals.md)                         | On      | Both       |
 | [Queue Overlay](queue-overlay.md)                 | On      | Both       |
@@ -66,6 +67,7 @@ domaintagger
 historybutton
 macros
 modbutton
+native-mod-log
 profile
 proposals
 queue-overlay

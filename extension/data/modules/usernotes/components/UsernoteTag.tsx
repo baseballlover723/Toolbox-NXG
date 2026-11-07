@@ -2,7 +2,7 @@
 
 import {useEffect, useState,} from 'react'
 
-import {GeneralButton,} from '../../../shared/controls/GeneralButton'
+import {AuthorButton,} from '../../../shared/controls/AuthorButton'
 import {activeNotes, findSubredditColor, getUser,} from '../../shared/usernotes/moduleapi'
 import {noteTypeColorStyle,} from '../../shared/usernotes/noteTypeColorStyle'
 import {getSubredditNotes, type SubredditNoteState, subscribeSubredditNotes,} from '../../shared/usernotes/store'
@@ -32,7 +32,7 @@ export function UsernoteTag ({subreddit, author, defaultText, maxChars, showDate
 	// Archived and soft-deleted notes don't show on the tag.
 	const visibleNotes = u ? activeNotes(u.notes,) : []
 	if (!subData || visibleNotes.length < 1) {
-		return <GeneralButton type="button" onClick={onNoteTagClick}>{defaultText}</GeneralButton>
+		return <AuthorButton type="button" onClick={onNoteTagClick}>{defaultText}</AuthorButton>
 	}
 
 	const noteData = visibleNotes[0]!
@@ -49,7 +49,7 @@ export function UsernoteTag ({subreddit, author, defaultText, maxChars, showDate
 	const countText = visibleNotes.length > 1 ? `  (+${visibleNotes.length - 1})` : ''
 
 	return (
-		<GeneralButton
+		<AuthorButton
 			type="button"
 			style={noteTypeColorStyle(color,)}
 			title={title}
@@ -57,6 +57,6 @@ export function UsernoteTag ({subreddit, author, defaultText, maxChars, showDate
 		>
 			<b>{note}</b>
 			<span>{countText}</span>
-		</GeneralButton>
+		</AuthorButton>
 	)
 }
