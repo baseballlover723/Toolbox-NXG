@@ -15,8 +15,11 @@ interface SortableReasonCardProps {
 	/** Zero-based display position; shown as a 1-based number badge. */
 	position: number
 	selected: boolean
-	/** Native-reason fallback mode: hides the drag handle (reordering native reasons is meaningless). */
-	nativeMode?: boolean
+	/**
+	 * Whether the card can be dragged to reorder. Off in native-reason fallback mode (where
+	 * reordering is meaningless) and when the moderator has locked reason order.
+	 */
+	reorderable?: boolean
 	/**
 	 * Whether Reddit owns this reason's wording, which hides the inline edit affordance.
 	 * Editing would be misleading rather than useful: the message sent has to be the one
@@ -46,7 +49,7 @@ export function SortableReasonCard ({
 	position,
 	selected,
 	suggested,
-	nativeMode,
+	reorderable = false,
 	locked,
 	onToggle,
 	setContentRef,
@@ -60,6 +63,7 @@ export function SortableReasonCard ({
 }: SortableReasonCardProps,) {
 	const {attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging,} = useSortable({
 		id: item.id,
+		disabled: !reorderable,
 	},)
 	const style = {
 		transform: CSS.Transform.toString(transform,),
@@ -100,7 +104,7 @@ export function SortableReasonCard ({
 			}}
 		>
 			<div className={css.reasonCardHeader}>
-				{!nativeMode && (
+				{reorderable && (
 					<button
 						ref={setActivatorNodeRef}
 						type="button"

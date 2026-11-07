@@ -393,6 +393,41 @@ describe('RemovalReasonsOverlay', () => {
 			)
 	})
 
+	it('hides the drag handles when reason order is locked', () => {
+		act(() => {
+			root.render(
+				<RemovalReasonsOverlay
+					data={data}
+					visibleReasons={[reason, {...reason, text: 'Second reason',},]}
+					displayMode="Popup"
+					settings={settings}
+					lockReasonOrder
+					onClose={onClose}
+				/>,
+			)
+		},)
+
+		expect(container.querySelectorAll('input[aria-label^="Select removal reason"]',),).toHaveLength(2,)
+		expect(container.querySelector('button[aria-label="Drag to reorder removal reason"]',),).toBeNull()
+	})
+
+	it('hides the drag handles in native-reason mode', () => {
+		act(() => {
+			root.render(
+				<RemovalReasonsOverlay
+					data={data}
+					visibleReasons={[reason,]}
+					displayMode="Popup"
+					settings={settings}
+					nativeMode
+					onClose={onClose}
+				/>,
+			)
+		},)
+
+		expect(container.querySelector('button[aria-label="Drag to reorder removal reason"]',),).toBeNull()
+	})
+
 	it('pre-selects suggested reasons by persistent id and keeps them through the mount reset', () => {
 		const r1: RemovalReason = {...reason, id: 'reasonAAA', title: 'Meta', text: 'meta',}
 		const r2: RemovalReason = {...reason, id: 'reasonBBB', title: 'Spam', text: 'spam',}

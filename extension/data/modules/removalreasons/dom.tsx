@@ -494,6 +494,7 @@ export function createRemovalReasonsHandlers ({
 	actionLockComment: actionLockCommentSetting,
 	disableRemoveButton,
 	preselectSuggestedReasons,
+	lockReasonOrder,
 }: RemovalReasonsSettings,): RemovalReasonsHandlers {
 	const lifecycle = createLifecycle()
 	const openOverlays = new Map<string, OpenOverlay>()
@@ -816,6 +817,7 @@ export function createRemovalReasonsHandlers ({
 			...(spam ? {spam,} : {}),
 			visibleReasons,
 			...(nativeMode ? {nativeMode,} : {}),
+			...(lockReasonOrder ? {lockReasonOrder,} : {}),
 			...(suggestedReasonIds.length ? {suggestedReasonIds,} : {}),
 			displayMode: effectiveDisplayMode,
 			settings: {

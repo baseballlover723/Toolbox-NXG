@@ -155,6 +155,11 @@ interface RemovalReasonsOverlayProps {
 	 * suppresses drag-sorting, which is meaningless for native reasons.
 	 */
 	nativeMode?: boolean
+	/**
+	 * From the moderator's "lock reason order" setting: hides the drag handles so selected
+	 * reasons are always combined in the subreddit's configured order.
+	 */
+	lockReasonOrder?: boolean
 	displayMode?: RemovalReasonsDisplayMode
 	/** Moderator-level default delivery settings. */
 	settings: RemovalReasonsOverlaySettings
@@ -226,6 +231,7 @@ export function RemovalReasonsOverlay ({
 	spam,
 	visibleReasons,
 	nativeMode = false,
+	lockReasonOrder = false,
 	displayMode = 'Popup (legacy)',
 	settings,
 	usernoteRequire = {type: false, text: true, link: false,},
@@ -751,7 +757,11 @@ export function RemovalReasonsOverlay ({
 	}
 	const handleReasonEditCancel = () => setEditingId(null,)
 
+	// Native reasons have no meaningful order, and a locked order must not change.
+	const reorderable = !nativeMode && !lockReasonOrder
+
 	const handleReasonDragEnd = (event: DragEndEvent,) => {
+		if (!reorderable) { return }
 		const {active, over,} = event
 		if (over && active.id !== over.id) {
 			setReasonOrder((prev,) => {
@@ -1248,7 +1258,7 @@ export function RemovalReasonsOverlay ({
 										position={reasonIndex}
 										selected={selected.has(reason.id,)}
 										suggested={suggestedIdSet.has(reason.id,)}
-										{...(nativeMode ? {nativeMode,} : {})}
+										reorderable={reorderable}
 										{...(reason.reason.nativeReasonId ? {locked: true,} : {})}
 										onToggle={() => toggleSelected(reason.id,)}
 										isEditing={editingId === reason.id}

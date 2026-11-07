@@ -32,6 +32,8 @@ Removal reasons are configured per-subreddit in the Config overlay (**Edit remov
 
 **Comment reasons** — optionally enable removal reasons for comments, not just posts.
 
+**Reorder reasons per removal** — drag reason cards in the overlay to change the order the selected reasons are combined in. The new order applies to that removal only and is not saved. Turn on **Lock removal reason order** to remove the drag handles, so reasons always go out in the subreddit's configured order.
+
 **Silent removal for deleted users** — skip the removal dialog and silently remove items authored by deleted accounts.
 
 **Suggested removal reasons** — map report text to removal reasons so the right reasons are pre-selected when you open the overlay on a reported item (see [Suggested removal reasons](#suggested-removal-reasons)).
@@ -219,3 +221,4 @@ As with imported reasons, removing something with a native reason registers that
 | Lock removal comment                       | Off           | Lock the removal reason comment                                                                                     |
 | Disable remove button after removal        | Off           | Grey out the remove button after an item is removed                                                                 |
 | Pre-select suggested removal reasons       | On            | Pre-select reasons mapped from an item's reports, and flag matching items with "(suggestions)" on the remove button |
+| Lock removal reason order                  | Off           | Hide the overlay's drag handles so selected reasons are always combined in the subreddit's configured order         |

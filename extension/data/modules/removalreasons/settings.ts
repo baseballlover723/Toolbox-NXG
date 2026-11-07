@@ -125,6 +125,14 @@ export const settings = defineSettings(
 				'Pre-select removal reasons suggested by an item\'s reports, and flag matching items with "(suggestions)" on the remove button.',
 		},
 		{
+			id: 'lockReasonOrder',
+			sharedPolicy: 'raw',
+			type: 'boolean' as const,
+			default: false,
+			description:
+				'Disable drag-to-reorder of removal reasons in the removal overlay; selected reasons are always combined in the subreddit\'s configured order.',
+		},
+		{
 			id: 'customRemovalReason',
 			type: 'text' as const,
 			default:

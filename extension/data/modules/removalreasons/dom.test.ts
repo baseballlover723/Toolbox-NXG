@@ -138,6 +138,7 @@ const handlerSettings: RemovalReasonsSettings = {
 	actionLockComment: false,
 	disableRemoveButton: false,
 	preselectSuggestedReasons: true,
+	lockReasonOrder: false,
 }
 
 function setRemovalConfig () {
@@ -558,6 +559,21 @@ describe('createRemovalReasonsHandlers', () => {
 
 		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(expect.objectContaining({displayMode: 'Drawer',},),)
 		expect(document.body.style.overflow,).toBe('',)
+	})
+
+	it('forwards the lock-reason-order setting to the overlay', async () => {
+		document.body.innerHTML = `
+            <div class="thing link" data-fullname="t3_post" data-subreddit="testsub">
+                <span class="remove-button">
+                    <button class="togglebutton">remove</button>
+                </span>
+            </div>
+        `
+		const event = makeClick(document.querySelector('.togglebutton',)!,)
+
+		await createRemovalReasonsHandlers({...handlerSettings, lockReasonOrder: true,},).handleClick(event,)
+
+		expect(showRemovalReasonsOverlay,).toHaveBeenCalledWith(expect.objectContaining({lockReasonOrder: true,},),)
 	})
 
 	it('opens the popup instead of the drawer while the classic look is on', async () => {
