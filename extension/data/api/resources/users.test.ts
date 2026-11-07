@@ -27,8 +27,8 @@ describe('users API', () => {
 
 		await expect(getUserSubmissions('alice',),).resolves.toEqual([{id: 'a',}, {id: 'b',},],)
 		expect(apiOauthGetJSON.mock.calls,).toEqual([
-			['/user/alice/submitted.json', {after: undefined, sort: 'new', limit: '100',},],
-			['/user/alice/submitted.json', {after: 'after_a', sort: 'new', limit: '100',},],
+			['/user/alice/submitted.json', {after: undefined, sort: 'new', limit: '100', raw_json: '1',},],
+			['/user/alice/submitted.json', {after: 'after_a', sort: 'new', limit: '100', raw_json: '1',},],
 		],)
 	})
 

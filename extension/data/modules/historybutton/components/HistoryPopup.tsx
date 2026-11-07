@@ -1,4 +1,4 @@
-/** Draggable popup that displays a user's submission and comment history broken down by domain and subreddit. */
+/** Draggable popup that displays a user's submission and comment history broken down by domain, subreddit, and linked account. */
 import {useMemo, useState,} from 'react'
 import {Provider,} from 'react-redux'
 
@@ -12,6 +12,7 @@ import {useFetched, useSetting,} from '../../../util/ui/hooks'
 import {classes, mountPopup,} from '../../../util/ui/reactMount'
 import {getCommentHistoryData, getSubmissionHistoryData, getUserInfo,} from '../moduleapi'
 
+import {AccountTable,} from './AccountTable'
 import css from './historybutton.module.css'
 
 /** Props for the HistoryPopup component. */
@@ -74,6 +75,11 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 
 	const hasSecondRow = (commentReportShown && commentData != null)
 		|| Object.keys(submissionData.textLinkDomains,).length > 0
+
+	const hasSubmittedAccounts = Object.keys(submissionData.accounts,).length > 0
+	const hasSelfpostAccounts = Object.keys(submissionData.textLinkAccounts,).length > 0
+	const hasCommentAccounts = commentReportShown && commentData != null
+		&& Object.keys(commentData.linkAccounts,).length > 0
 
 	return (
 		<Window
@@ -204,6 +210,34 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 					</table>
 				</div>
 			</div>
+			{(hasSubmittedAccounts || hasSelfpostAccounts || hasCommentAccounts) && (
+				<div className={css.row}>
+					{hasSubmittedAccounts && (
+						<div>
+							<AccountTable
+								heading="account submitted from"
+								accounts={submissionData.accounts}
+								total={submissionData.total}
+								ratioClassName={ratioClassName}
+								asPercentage={asPercentage}
+							/>
+						</div>
+					)}
+					{hasSelfpostAccounts && (
+						<div>
+							<AccountTable
+								heading="account linked in selfposts"
+								accounts={submissionData.textLinkAccounts}
+							/>
+						</div>
+					)}
+					{hasCommentAccounts && (
+						<div>
+							<AccountTable heading="account linked in comments" accounts={commentData.linkAccounts} />
+						</div>
+					)}
+				</div>
+			)}
 			{hasSecondRow && (
 				<div className={css.row}>
 					{commentReportShown && commentData && (

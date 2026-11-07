@@ -53,7 +53,13 @@ async function fetchUserListing (
 	try {
 		return await fetchAllListingPages<unknown>(
 			(after,) =>
-				apiOauthGetJSON<UserListingPage>(`/user/${user}/${listing}.json`, {after, sort: 'new', limit: '100',},),
+				// raw_json keeps text fields (selftext, body, oEmbed author names) free of HTML entities
+				apiOauthGetJSON<UserListingPage>(`/user/${user}/${listing}.json`, {
+					after,
+					sort: 'new',
+					limit: '100',
+					raw_json: '1',
+				},),
 			{maxCount,},
 		)
 	} catch (error) {
