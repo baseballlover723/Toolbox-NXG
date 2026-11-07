@@ -5,7 +5,8 @@ import SnuOwnd from 'snuownd'
 /**
  * Returns a SnuOwnd parser that extends the default Reddit renderer with a whitelist
  * of extra HTML elements and attributes needed by removal reason templates
- * (`<select>`, `<option>`, `<textarea>`, `<input>`, `id`, `placeholder`, `label`, `value`).
+ * (`<select>`, `<option>`, `<textarea>`, `<input>`, `id`, `placeholder`, `label`, `value`,
+ * `required`).
  */
 export function getRemovalReasonParser () {
 	const renderer = SnuOwnd.getRedditRenderer(
@@ -29,6 +30,8 @@ export function getRemovalReasonParser () {
 		'placeholder',
 		'label',
 		'value',
+		// Marks a required inline field (`{input!: ...}`) so the overlay can style it.
+		'required',
 	]
 	return SnuOwnd.getParser(renderer,)
 }

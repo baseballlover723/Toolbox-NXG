@@ -14,7 +14,7 @@ Removal reasons are configured per-subreddit in the Config overlay (**Edit remov
 
 **Drawer or popup display** — the removal reason dialog can appear as a side drawer (default) or a modal popup. The drawer keeps the removed content visible alongside the dialog. While the [Classic look](general.md#classic-look) is on, removal reasons always open as the popup and the drawer is unavailable.
 
-**Interactive fill-in fields** — reasons can include `{input:…}`, `{textarea:…}`, and `{select:…}` tokens that become fill-in fields in the dialog (see [Removal reason format](#removal-reason-format)).
+**Interactive fill-in fields** — reasons can include `{input:…}`, `{textarea:…}`, `{choice}`, `{multi}`, and `{highlight}` tokens that become text fields, pick-one options, and tick boxes in the dialog (see [Removal reason format](#removal-reason-format)).
 
 **Substitution tokens** — reason text is processed for substitution tokens (`{author}`, `{subreddit}`, etc.) before sending.
 
@@ -48,28 +48,51 @@ Reason text supports two kinds of tokens:
 
 These are replaced with contextual values before the message is sent:
 
-| Token         | Value                                 |
-| ------------- | ------------------------------------- |
-| `{subreddit}` | Subreddit name                        |
-| `{author}`    | Username of the removed item's author |
-| `{mod}`       | Username of the acting moderator      |
-| `{title}`     | Post title                            |
-| `{url}`       | Post URL                              |
-| `{permalink}` | Permalink to the post or comment      |
-| `{domain}`    | Link domain                           |
-| `{body}`      | Post or comment body text             |
+| Token          | Value                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `{subreddit}`  | Subreddit name                                                                              |
+| `{author}`     | Username of the removed item's author                                                       |
+| `{mod}`        | Username of the acting moderator                                                            |
+| `{title}`      | Post title                                                                                  |
+| `{url}`        | Post URL                                                                                    |
+| `{permalink}`  | Permalink to the post or comment                                                            |
+| `{domain}`     | Link domain                                                                                 |
+| `{body}`       | Post or comment body text                                                                   |
+| `{modmail}`    | Link for messaging the subreddit's moderators                                               |
+| `{wiki: page}` | Link to a page of the subreddit's wiki; `{wiki: rules#wiki_image_posts}` links to a section |
+
+`{modmail}` and `{wiki: …}` build their links from the subreddit, so a reason that uses them keeps working when it is copied to another subreddit. For example, `[message the mods]({modmail})`.
 
 ### Interactive tokens
 
 These become fill-in fields in the removal dialog:
 
-| Token                     | Result                                                         |
-| ------------------------- | -------------------------------------------------------------- |
-| `{input: placeholder}`    | Single-line text field                                         |
-| `{textarea: placeholder}` | Multi-line text field                                          |
-| `{select:name}`           | Dropdown menu; options defined in the reason's `selects` array |
+| Token                                 | Result                                                                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `{input: placeholder}`                | Single-line text field                                                                                               |
+| `{textarea: placeholder}`             | Multi-line text field                                                                                                |
+| `{choice}` above a `-` list           | Pick one: the chosen option is sent                                                                                  |
+| `{choice: option 1 \| option 2}`      | Pick one, inside a sentence or a link's text                                                                         |
+| `{multi}` above a `- [ ]` list        | Tick any number: only the ticked items are sent, as a list                                                           |
+| `{highlight}` above a `- [ ]` list    | Tick any number: every item is sent as a list, the ticked ones in bold                                               |
+| `{check: text}` / `{highlight: text}` | One tick box inside a line: `check` sends the text only when ticked, `highlight` always sends it, bolded when ticked |
 
-A stable field ID can be appended for persistence between dialog opens: `{input#flightnum: Flight number}`.
+| `{note: text}` | Guidance for moderators, shown in the dialog and never sent |
+
+Write `- [x]` (or `{check: [x] text}`) to start a box ticked. For example, to list a rule's requirements and bold the ones a post broke:
+
+```
+Image posts must:
+
+{highlight}
+- [ ] be original content you created
+- [ ] include the source in the title of the post
+- [ ] not exceed two image posts in the last 7 days
+```
+
+Add `!` after a field's kind to make it required, as in `{input!: why}`, `{choice!}`, or `{multi!}`. The dialog won't send until it is filled, a non-blank option is picked, or at least one box is ticked, and it outlines anything left unfilled. A blank first option in a required `{choice!}` makes the moderator pick one deliberately.
+
+A stable field ID can be appended for persistence between dialog opens: `{input#flightnum: Flight number}`, `{choice#rule}`, `{highlight#imagerules}`. See [Schema Changes](../../migration/schema-changes.md#brace-tokens) for the full syntax.
 
 ## Suggested removal reasons
 
@@ -167,7 +190,7 @@ In a subreddit that has **no** toolbox removal reasons, the overlay offers Reddi
 
 It is deliberately either/or — you never see toolbox reasons and native ones mixed together. As soon as a subreddit has a single toolbox reason configured, the fallback stops applying there and syncing becomes the way to combine the two.
 
-Fallback reasons behave like your own in most respects. Fill-in fields (`{input:…}`, `{textarea:…}`, `{select:…}`) and substitution tokens (`{author}`, `{subreddit}`, …) work exactly as they do in configured reasons, and if your subreddit has a message template — header, footer, modmail subject, removal-log settings — it is applied to them too. Only the reason list itself is coming from Reddit.
+Fallback reasons behave like your own in most respects. Fill-in fields (`{input:…}`, `{textarea:…}`, `{choice}`, `{multi}`, `{highlight}`) and substitution tokens (`{author}`, `{subreddit}`, …) work exactly as they do in configured reasons, and if your subreddit has a message template — header, footer, modmail subject, removal-log settings — it is applied to them too. Only the reason list itself is coming from Reddit.
 
 They are more limited in two ways:
 

@@ -29,7 +29,7 @@ import {
 import type {LegacyDomainTag, LegacyUsernoteColor, ToolboxConfig,} from './schemas/config/schema'
 import {decodeDomainTagsPage,} from './schemas/domaintags/codec'
 import type {DomainTag,} from './schemas/domaintags/schema'
-import {hasChoiceBlock, splitInlineChoices,} from './schemas/shared/tokens'
+import {demoteToggles, hasChoiceBlock, splitInlineChoices,} from './schemas/shared/tokens'
 import {
 	buildIndexFromWikiPages,
 	encodeLegacyIndex,
@@ -422,7 +422,9 @@ export async function recoverSplitChoiceTexts (
 		// Each historical reason with an inline choice, keyed by how the old build stored it.
 		const restored = new Map<string, string>()
 		for (const reason of (raw as ToolboxConfig).removalReasons.reasons) {
-			const split = splitInlineChoices(reason.text,)
+			// Normalize promoted any faked tick box in the historical text; the old build saw
+			// (and split) the inline choices it was written as.
+			const split = splitInlineChoices(demoteToggles(reason.text,),)
 			if (split !== reason.text) { restored.set(split, reason.text,) }
 		}
 		for (const index of pending) {

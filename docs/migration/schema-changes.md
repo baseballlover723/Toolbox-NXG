@@ -80,6 +80,74 @@ This is a [{choice: repost | duplicate}](https://www.reddit.com/r/example/wiki/r
 
 Write `\|` for a pipe that belongs to an option's text. A brace inside an option is saved as a parenthesis, since `}` ends the token. An inline choice with no option text, such as `{choice:}`, is sent as written.
 
+**`{multi}`** and **`{highlight}`** — tick-box fields, shown in the overlay as a group of checkboxes, so the mod can tick any number of items. They have no 6.x counterpart. The marker goes on a line of its own with the items as a GFM task list directly below it: `- [ ] item`, or `- [x] item` for an item that starts ticked. As with `{choice}`, blank lines between the marker and the list are fine, any bullet (`-`, `*`, `+`, `1.`) is accepted, and the block is tidied to the form below on save. What is sent is always a `-` list, with the boxes removed:
+
+- `{multi}` sends only the ticked items. Nothing ticked sends nothing.
+- `{highlight}` sends every item and bolds the ticked ones. Use it to list a rule's requirements and mark the ones a post broke:
+
+```
+Image posts must meet the following rules:
+
+{highlight}
+- [ ] be original content you created
+- [ ] include the source in the title of the post
+- [ ] not be a repost of something shared in the last 30 days. Search the subreddit before posting
+- [ ] not exceed two image posts in the last 7 days
+```
+
+A ticked item is bolded as a whole. Its text is wrapped in `**`, or in `__` if it already contains `**`, so the two can't pair up wrongly.
+
+The list must be in task-list style. A `{multi}` or `{highlight}` marker followed by plain `-` items, or a `{choice}` marker followed by `- [ ]` items, is not a field. It is sent as written, and the editor and overlay warn about it and say which style the marker takes.
+
+For a single tick box inside a line, use the inline forms. **`{check: text}`** sends its text only when ticked; **`{highlight: text}`** always sends it, bolded when ticked. Start the text with `[x]` to begin ticked:
+
+```
+- {highlight: not be a repost of something shared in the last 30 days}. Search the subreddit before posting.
+
+Your post was also {check: [x] missing a source}.
+```
+
+An inline tick box with no text, such as `{check:}`, is sent as written. A `[x]` followed directly by `(`, as in a link `[x](url)`, is part of the text, not a box.
+
+**`{note: text}`** — guidance for the moderator. The overlay shows it in muted italics where it sits, and it is never sent. Use it for when-to-use advice that used to be crammed into the reason's title, or left in the message for the mod to delete by hand. The text may contain markdown such as a link:
+
+```
+{note: Only for image posts. Text posts fall under [Rule 6](https://www.reddit.com/r/example/wiki/rules).}
+Image posts must be your own original work.
+```
+
+A note with no text, such as `{note:}`, is sent as written.
+
+### Required fields
+
+Put `!` after a field's kind, or after its id when it has one, to make it required. The overlay will not send the removal, or request a second opinion, while a required field in a selected reason is unfilled. It names the reason and outlines each unfilled field. Required fields carry a rule along their leading edge so the moderator can see them before sending.
+
+```
+Your title needs {input!: what is missing from the title}.
+
+Which rule?
+
+{choice#rule!}
+-
+- Rule 1: No spam
+- Rule 2: Be civil
+
+{multi!}
+- [ ] contains spoilers without a tag
+- [ ] is a repost
+```
+
+What counts as filled depends on the field:
+
+| Field                            | Filled when                                                              |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| `{input!: …}`, `{textarea!: …}`  | It holds non-blank text                                                  |
+| `{choice!}`, `{choice!: a \| b}` | The picked option is not blank, so a blank first option means "pick one" |
+| `{multi!}`, `{highlight!}`       | At least one item is ticked                                              |
+| `{check!: …}`, `{highlight!: …}` | The box is ticked                                                        |
+
+`!` has no effect on a `{note}`.
+
 ### Stable IDs
 
 Any interactive token may carry an optional stable id using the `#id` syntax:
@@ -92,9 +160,15 @@ Flight number: {input#flightnum: e.g. UA123}
 - Rule 2
 
 This is a {choice#kind: repost | duplicate}.
+
+{highlight#imagerules}
+- [ ] be original content
+- [ ] include the source
 ```
 
-The id is used to persist the entered or chosen value between overlay opens: if a mod closes and reopens the overlay without sending, the field shows what they last entered or picked. A choice without an id still keeps its pick, keyed on its position in the reason, so the pick is lost if the reason's choices are reordered.
+The id is used to persist the entered or chosen value between overlay opens: if a mod closes and reopens the overlay without sending, the field shows what they last entered or picked. A choice or tick-box field without an id still keeps its value, keyed on its position among the reason's choice and tick-box fields, so the value is lost if those fields are reordered. A tick-box field remembers which items were ticked by position, so reordering its items moves the ticks with the positions, not with the text.
+
+The required mark goes after the id: `{input#flightnum!: e.g. UA123}`, `{choice#rule!}`.
 
 IDs must be word characters and hyphens (`[\w-]+`). They are optional; an `{input}` or `{textarea}` without an id still works, it just won't preserve entered text across opens.
 
@@ -123,9 +197,23 @@ Brace tokens are distinct from **substitution tokens** — things like `{author}
 | `{uri_body}`  | URL-encoded body, for use inside markdown links  |
 | `{uri_title}` | URL-encoded title, for use inside markdown links |
 
+Two link tokens build links for the subreddit the message is sent from. A reason written with them keeps working when it is copied to another subreddit:
+
+| Token                 | Replaced with                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `{modmail}`           | `https://www.reddit.com/message/compose?to=/r/<subreddit>`, for messaging the mods                             |
+| `{wiki: page}`        | `https://www.reddit.com/r/<subreddit>/wiki/page`                                                               |
+| `{wiki: page#anchor}` | The same, linking to a section. Copy the anchor from the wiki page's URL (Reddit's anchors start with `wiki_`) |
+
+```
+Please read [the rules for image posts]({wiki: rules#wiki_image_posts}), and [message the mods]({modmail}) if you think this was a mistake.
+```
+
+The link tokens work everywhere substitution tokens do: reason text, header, footer, mod macros, and ban macros. A page with a space in it is not a token and is sent as written.
+
 ### Unknown brace content
 
-Any `{…}` content that doesn't match a known interactive token or substitution token is left in the text untouched. In particular, a `{choice}` marker that has no option list, or shares its line with other text, is treated as literal text and is never substituted. This means a half-typed field fails visibly rather than silently dropping content, and the reason editor and removal overlay both warn about it before anything is sent.
+Any `{…}` content that doesn't match a known interactive token or substitution token is left in the text untouched. The same goes for a `{note:}` with no text and a `{wiki: …}` whose page has a space in it. In particular, a `{choice}`, `{multi}`, or `{highlight}` marker that has no list of its own style below it, or shares its line with other text, is treated as literal text and is never substituted. This means a half-typed field fails visibly rather than silently dropping content, and the reason editor and removal overlay both warn about it before anything is sent.
 
 ### Migration from v1 HTML
 
@@ -142,6 +230,34 @@ During the v1 → v2 up-convert, legacy HTML form elements are translated automa
 A `<select>` counts as being on its own when nothing but whitespace, `<br>`, or other `<select>` elements shares its line; anything else, such as words of a sentence or the brackets of a link around it, keeps it inline so the picked option stays in its sentence. A slug-safe `id` attribute is kept as the choice's id; one that is missing or not slug-safe gives a choice without an id. An option's `value` attribute, when present, is used instead of its text, because that is what 6.x inserted. Backslash escapes that 6.x needed around link syntax in options (`\[`, `\]`, `\(`, `\)`) are removed, so links in options work as normal markdown.
 
 The v2 → v1 down-convert reverses this: inline tokens become HTML form elements, and each choice, in either form, becomes a `<select>` in the same place, with link syntax in its options escaped again for 6.x.
+
+#### Notes, required fields, and link tokens on the v1 mirror
+
+6.x has none of these, so each is written in a form 6.x handles and NXG reads back exactly:
+
+| v2             | v1                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `{note: text}` | `<input id="tbx-note" placeholder="text">`. 6.x shows an empty box with the note as its hint, which sends nothing if left empty |
+| `!` on a field | A `required="required"` attribute on its `<input>`, `<textarea>`, or `<select>`. 6.x ignores it but keeps it                    |
+| `{modmail}`    | `https://www.reddit.com/message/compose?to=/r/{subreddit}`, which 6.x completes                                                 |
+| `{wiki: page}` | `https://www.reddit.com/r/{subreddit}/wiki/page`, which 6.x completes                                                           |
+
+On normalize, those URLs become link tokens again, including in mod macros and ban macros. So does a hand-written link of exactly that shape, which sends the identical link. A compose link carrying a subject or other parameters is left alone. A `{multi!}` or `{highlight!}` block loses its required mark on the mirror, because a mark on each per-item `<select>` would require something else.
+
+#### Tick boxes on the v1 mirror
+
+6.x has no tick box, so each tick-box item down-converts to a `<select>` offering its two possible outputs, the starting one first:
+
+| v2 token                        | v1 HTML                                                     |
+| ------------------------------- | ----------------------------------------------------------- |
+| `{highlight: a}`                | `<select><option>a</option><option>**a**</option></select>` |
+| `{highlight: [x] a}`            | `<select><option>**a**</option><option>a</option></select>` |
+| `{check: a}`                    | `<select><option></option><option>a</option></select>`      |
+| `{multi}` / `{highlight}` block | one `- <select>…</select>` line per item, as above          |
+
+A 6.x moderator can therefore still pick plain or bold, or include or leave out, one item at a time. A block's id names the whole block and is not written to the per-item selects.
+
+The up-convert reads that pattern back. Any inline choice whose two options are one text and the same text in bold (`a | **a**`), or one text and nothing (`| a`), becomes the tick-box token for it, with `[x]` when the bold or included option came first. This also converts 6.x configs that used one plain/bold `<select>` per line to highlight the rule a post broke. Because the items come back as inline boxes, a `{multi}` or `{highlight}` block edited in 6.x and adopted from the mirror returns as a `-` list of `{check: …}` or `{highlight: …}` lines, which sends the same message. A block `{choice}` with those options is left alone, since it sends a paragraph rather than a list item.
 
 #### Choices split by earlier NXG versions
 

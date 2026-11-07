@@ -129,13 +129,19 @@ Domain tags and usernote type colors were previously stored here as `domainTags:
 
 v2 reason text embeds fill-in fields as brace tokens (v1 used limited HTML; see [Schema Changes](../migration/schema-changes.md#brace-tokens) for the full syntax and conversion rules):
 
-| Token                                  | Field                                                                                    |
-| -------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `{input: placeholder}`                 | Single-line text field, inline                                                           |
-| `{textarea: placeholder}`              | Multi-line text field, inline                                                            |
-| `{choice}` + a `-` list below it       | Pick-one field as a block: the marker on its own line, each list item an option          |
-| `{choice: option 1 \| option 2}`       | Pick-one field inside a line (mid-sentence or as a link's text); `\|` for a literal pipe |
-| `#id` after the kind (`{choice#rule}`) | Optional slug-safe id (`[\w-]+`) that keeps the entered or chosen value between opens    |
+| Token                                                      | Field                                                                                        |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `{input: placeholder}`                                     | Single-line text field, inline                                                               |
+| `{textarea: placeholder}`                                  | Multi-line text field, inline                                                                |
+| `{choice}` + a `-` list below it                           | Pick-one field as a block: the marker on its own line, each list item an option              |
+| `{choice: option 1 \| option 2}`                           | Pick-one field inside a line (mid-sentence or as a link's text); `\|` for a literal pipe     |
+| `{multi}` + a `- [ ]` list below it                        | Tick-box field as a block: sends only the ticked items, as a `-` list                        |
+| `{highlight}` + a `- [ ]` list below it                    | Tick-box field as a block: sends every item as a `-` list, ticked ones in bold               |
+| `{check: text}` / `{highlight: text}`                      | One tick box inside a line: `check` sends the text if ticked, `highlight` bolds it if ticked |
+| `[x]` instead of `[ ]`                                     | Starts a tick box ticked (`- [x] item`, `{check: [x] text}`)                                 |
+| `{note: text}`                                             | Guidance shown to the moderator in the overlay; never sent                                   |
+| `!` after the kind or id (`{input!: …}`, `{choice#rule!}`) | Required field: the overlay won't send until it is filled, picked, or ticked                 |
+| `#id` after the kind (`{choice#rule}`)                     | Optional slug-safe id (`[\w-]+`) that keeps the entered or chosen value between opens        |
 
 Older v2 pages stored pick-one fields as a `selects` array on the reason, referenced from the text as `{select:name}`. Normalization folds each definition into the text as a `{choice}` block and drops the field; it is never written.
 
@@ -252,24 +258,26 @@ Ban form defaults stored in `banMacros`. The field is `null` when not configured
 
 Removal reason text, headers, footers, log titles, and macro text support substitution tokens. These are bare `{word}` tokens with no colon — distinct from the interactive brace tokens described in [v2 vs v1](#v2-vs-v1).
 
-| Token         | Replaced with                                                          |
-| ------------- | ---------------------------------------------------------------------- |
-| `{author}`    | Username of the post or comment author                                 |
-| `{subreddit}` | Name of the subreddit                                                  |
-| `{kind}`      | `"submission"` or `"comment"`                                          |
-| `{title}`     | Title of the post                                                      |
-| `{url}`       | Permalink to the removed post or comment                               |
-| `{domain}`    | Domain the post links to                                               |
-| `{mod}`       | Username of the moderator sending the removal                          |
-| `{body}`      | Body of the removed item, quoted as markdown (lines prefixed with `>`) |
-| `{fullname}`  | Reddit fullname of the removed item (e.g. `t3_abc123`)                 |
-| `{id}`        | Short base-36 id of the removed item                                   |
-| `{link}`      | URL the post links to                                                  |
-| `{raw_body}`  | Body without markdown quoting                                          |
-| `{uri_body}`  | URL-encoded body, for use inside markdown links                        |
-| `{uri_title}` | URL-encoded title, for use inside markdown links                       |
+| Token          | Replaced with                                                                  |
+| -------------- | ------------------------------------------------------------------------------ |
+| `{author}`     | Username of the post or comment author                                         |
+| `{subreddit}`  | Name of the subreddit                                                          |
+| `{kind}`       | `"submission"` or `"comment"`                                                  |
+| `{title}`      | Title of the post                                                              |
+| `{url}`        | Permalink to the removed post or comment                                       |
+| `{domain}`     | Domain the post links to                                                       |
+| `{mod}`        | Username of the moderator sending the removal                                  |
+| `{body}`       | Body of the removed item, quoted as markdown (lines prefixed with `>`)         |
+| `{fullname}`   | Reddit fullname of the removed item (e.g. `t3_abc123`)                         |
+| `{id}`         | Short base-36 id of the removed item                                           |
+| `{link}`       | URL the post links to                                                          |
+| `{raw_body}`   | Body without markdown quoting                                                  |
+| `{uri_body}`   | URL-encoded body, for use inside markdown links                                |
+| `{uri_title}`  | URL-encoded title, for use inside markdown links                               |
+| `{modmail}`    | `https://www.reddit.com/message/compose?to=/r/<subreddit>`                     |
+| `{wiki: page}` | `https://www.reddit.com/r/<subreddit>/wiki/page` (`page#anchor` for a section) |
 
-Unknown `{…}` content (no colon, no match) is left in the text untouched.
+`{modmail}` and `{wiki: page}` are expanded from the subreddit by the substitution step itself (`replaceTokens`), so they work in every context above, and they're the one substitution token that takes an argument. Unknown `{…}` content (no colon, no match) is left in the text untouched.
 
 ## v2 vs v1
 
@@ -286,9 +294,17 @@ Unknown `{…}` content (no colon, no match) is left in the text untouched.
 - Your post breaks rule 2
 
 This is a [{choice: repost | duplicate}](https://example.com/wiki/reposts).
+
+{highlight#imagerules}
+- [ ] be original content you created
+- [x] include the source in the title
+
+It was also {check: missing a source}.
 ```
 
 A pick-one `{choice}` field comes in two forms, and its options always live in the reason text. The **block** form puts the marker on its own line with a markdown list of options below it; a `|` in a block option is plain text. The **inline** form, `{choice: a | b}`, sits inside a line (mid-sentence, or as a link's text) and separates its options with `|`, with `\|` for a literal pipe. Either way the picked option replaces the field exactly where it sits.
+
+The tick-box fields `{multi}` and `{highlight}` have no v1 counterpart. They take the block form with a GFM task list (`- [ ] item`, or `- [x] item` to start ticked) and are sent as a `-` list: `{multi}` sends only the ticked items, `{highlight}` sends every item and bolds the ticked ones. Inline, `{check: text}` sends its text only when ticked and `{highlight: text}` bolds its text when ticked. A marker followed by the other style of list (plain items under a tick-box marker, task items under `{choice}`) is not a field and is sent as written.
 
 Each token may carry an optional stable id used to persist the entered or chosen value between overlay opens: `{input#flightnum: Flight number}`, `{choice#rule}`, `{choice#kind: a | b}`. A choice's id maps to the HTML `id` attribute of its `<select>` on the v1 mirror. Token content cannot contain braces (the serializer substitutes parens), and option line breaks collapse to spaces because legacy options are single-line.
 
@@ -298,6 +314,9 @@ The codec for both directions lives in `extension/data/util/wiki/schemas/shared/
 - A `<select>` on a line of its own becomes a `{choice}` block; one that shares its line with other text becomes an inline `{choice: ...}` in the same place. Both down-convert to a `<select>` where they stand.
 - A legacy `<option value="x">label</option>` keeps `x` (the value is what 6.x inserted into the removal message); the label is dropped.
 - The older v2 `selects` array (referenced as `{select:name}`) is folded into the text as `{choice}` blocks on normalize and never written.
+- A `{note: text}` down-converts to `<input id="tbx-note" placeholder="text">` and reads back as a note; a required `!` becomes a `required="required"` attribute and reads back from one (with or without a value).
+- `{modmail}` and `{wiki: page}` down-convert to their URLs with `{subreddit}` left in for 6.x to fill (in reasons, header, footer, mod macros, and ban macros), and normalize turns those URLs back into tokens.
+- Each tick-box item down-converts to a `<select>` of its two outputs (`a` / `**a**` for `highlight`, empty / `a` for `check` and `multi`), the starting one first; a block becomes one `- <select>` line per item. On normalize, any inline choice with that two-option shape becomes the tick-box token, which also converts 6.x configs that faked highlighting with one plain/bold `<select>` per line.
 
 **Stable entry ids.** Every removal reason, mod macro, and suggested-reason mapping carries an `id` (eight base-36 characters, unique across all three lists). Ids are assigned by the editing UI on create and backfilled by `ensureStableIds` during normalization; they are stripped from the v1 mirror (6.x rebuilds entries wholesale on save, so they wouldn't survive there anyway — they're re-backfilled on the next normalize). They exist so reordering and cross-references don't have to rely on array indexes.
 

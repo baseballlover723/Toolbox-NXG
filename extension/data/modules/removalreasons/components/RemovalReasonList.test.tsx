@@ -390,7 +390,7 @@ describe('RemovalReasonList message preview toggle', () => {
 
 		// Marker on its own line now, but the list is gone with it: the other shape, other advice.
 		await typeText('Pick one:\n\n{choice#rule}\n\nThanks.',)
-		expect(container.textContent,).toContain('has no "- " option list under it',)
+		expect(container.textContent,).toContain('has no option list below it',)
 
 		await typeText(reasonText,)
 		expect(container.textContent,).not.toContain('will be sent as text',)

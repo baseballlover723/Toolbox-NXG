@@ -8,6 +8,7 @@ import type {
 } from '../../../../modules/removalreasons/schema'
 import {tbDecode,} from '../../../data/encoding'
 import createLogger from '../../../infra/logging'
+import {legacyToLinkTokens,} from '../../../reddit/linkTokens'
 import {PROPOSED_ACTION_KINDS,} from '../proposals/schema'
 import {
 	canonicalizeChoiceBlocks,
@@ -16,6 +17,7 @@ import {
 	htmlSimpleFieldsToTokens,
 	inlineSelectDefinitions,
 	type LegacySelectDefinition,
+	promoteLegacyToggles,
 } from '../shared/tokens'
 
 const log = createLogger('TBConfig',)
@@ -330,7 +332,9 @@ function coerceNativeSync (config: ToolboxConfig,): void {
  * Each legacy `<select>` in reason text becomes an inline `{choice}` block.
  * Reasons carrying the older v2 shape (a `selects` array referenced from the
  * text as `{select:name}`) are migrated to the inline form too, after which the
- * field is dropped. Every reason's text is then run through
+ * field is dropped. An inline `{choice}` that fakes a tick box (`a | **a**`, the
+ * shape 6.x configs used and the shape tick boxes down-convert to) becomes the
+ * tick-box token ({@link promoteLegacyToggles}). Every reason's text is then run through
  * {@link canonicalizeChoiceBlocks} so the NXG text and the down-converted legacy
  * mirror normalize to the same string (config reconcile compares them).
  * Idempotent on already-inline text.
@@ -352,7 +356,7 @@ function upconvertReasonHtml (config: ToolboxConfig,): void {
 			if (Array.isArray(legacySelects,) && legacySelects.length > 0) {
 				text = inlineSelectDefinitions(text, legacySelects as LegacySelectDefinition[],)
 			}
-			reason.text = canonicalizeChoiceBlocks(text,)
+			reason.text = canonicalizeChoiceBlocks(promoteLegacyToggles(text,),)
 		}
 		// The separate definitions are folded into the text above; the field is
 		// an NXG-only legacy shape and never kept past normalize.
@@ -517,7 +521,36 @@ export function normalizeConfig (configInput: unknown,): asserts configInput is 
 
 	migrateConfig(config as ToolboxConfig,)
 	upconvertReasonHtml(config as ToolboxConfig,)
+	upconvertLinkTokens(config as ToolboxConfig,)
 	ensureStableIds(config as ToolboxConfig,)
+}
+
+/**
+ * Reads the link tokens (`{modmail}`, `{wiki: page}`) back out of the URLs the v1 mirror
+ * stores them as (see `linkTokensToLegacy`), in every text that can carry them: reason
+ * text, header, footer, mod macros, and the ban macro note and message. Like
+ * {@link upconvertReasonHtml} it runs on every normalize, so a hand-written link of the
+ * same shape becomes the token too - which sends the identical link.
+ * @param config The config to update in-place.
+ */
+function upconvertLinkTokens (config: ToolboxConfig,): void {
+	const removal = config.removalReasons
+	for (const reason of removal.reasons) {
+		if (reason && typeof reason.text === 'string') { reason.text = legacyToLinkTokens(reason.text,) }
+	}
+	if (typeof removal.header === 'string') { removal.header = legacyToLinkTokens(removal.header,) }
+	if (typeof removal.footer === 'string') { removal.footer = legacyToLinkTokens(removal.footer,) }
+	for (const macro of config.modMacros) {
+		if (macro && typeof macro.text === 'string') { macro.text = legacyToLinkTokens(macro.text,) }
+	}
+	if (config.banMacros) {
+		if (typeof config.banMacros.banNote === 'string') {
+			config.banMacros.banNote = legacyToLinkTokens(config.banMacros.banNote,)
+		}
+		if (typeof config.banMacros.banMessage === 'string') {
+			config.banMacros.banMessage = legacyToLinkTokens(config.banMacros.banMessage,)
+		}
+	}
 }
 
 /** Mutable state shared between the config overlay and all tab components for a single open session. */

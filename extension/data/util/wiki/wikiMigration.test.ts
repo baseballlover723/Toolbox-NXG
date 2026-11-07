@@ -788,6 +788,19 @@ describe('recoverLegacyUsernoteColors', () => {
 			)
 		})
 
+		it('restores a split fake highlight as tick boxes', async () => {
+			mockRevisions([
+				legacyPage(
+					'- Image posts must:\n\n- <select><option>be original</option><option>**be original**</option></select>',
+				),
+			],)
+			// What a build before the inline form made of the select sharing its line with "- ".
+			const split = '- Image posts must:\n\n-\n\n{choice}\n- be original\n- **be original**'
+
+			expect(await recoverSplitChoiceTexts('sub', [split,],),)
+				.toEqual(new Map([[0, '- Image posts must:\n\n- {highlight: be original}',],],),)
+		})
+
 		it('leaves a block that matches no historical inline select alone', async () => {
 			mockRevisions([legacyPage(linkSelect,),],)
 

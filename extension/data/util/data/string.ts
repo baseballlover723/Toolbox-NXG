@@ -1,5 +1,7 @@
 /** String manipulation utilities: HTML escaping, templating, regex helpers, and URL path manipulation. */
 
+import {expandLinkTokens,} from '../reddit/linkTokens'
+
 /** Escapes `&`, `<`, `>`, `"`, `'`, and `/` as HTML entities. */
 export function escapeHTML (html: string,): string {
 	const entityMap: Record<string, string> = {
@@ -41,9 +43,13 @@ export function removeLastDirectoryPartOf (url: string,): string {
 }
 
 /**
- * Replaces {tokens} for the respective value in given content.
+ * Replaces {tokens} for the respective value in given content. The subreddit link tokens
+ * (`{modmail}`, `{wiki: page}`) are expanded too, from `info.subreddit`, so they work in
+ * every context that substitutes tokens. They are expanded first, so a `{modmail}` that
+ * arrives inside a substituted value (a post title, say) is left as written.
  */
 export function replaceTokens (info: Record<string, string>, content: string,): string {
+	content = expandLinkTokens(content, info.subreddit ?? '',)
 	for (const i of Object.keys(info,)) {
 		const pattern = new RegExp(`{${i}}`, 'mig',)
 		// Use a replacer function, not a raw replacement string: the values are

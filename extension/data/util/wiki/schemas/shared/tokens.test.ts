@@ -4,12 +4,20 @@ import {describe, expect, it,} from 'vitest'
 import {
 	canonicalizeChoiceBlocks,
 	decodeHtmlAngleBrackets,
-	findLiteralChoiceMarker,
+	decodeTicks,
+	demoteToggles,
+	emphasize,
+	encodeTicks,
+	findLiteralFieldMarker,
+	findUnfilledRequired,
 	htmlFieldsToTokens,
 	htmlSimpleFieldsToTokens,
 	inlineSelectDefinitions,
+	type InteractiveToken,
 	type LegacySelectDefinition,
 	parseReasonSegments,
+	promoteLegacyToggles,
+	renderToggleValue,
 	serializeToken,
 	substituteTokenValues,
 	tokensToHtmlFields,
@@ -209,39 +217,39 @@ describe('canonicalizeChoiceBlocks', () => {
 	})
 })
 
-describe('findLiteralChoiceMarker', () => {
+describe('findLiteralFieldMarker', () => {
 	it('is null for a block that parses, tight or with a blank line before the list', () => {
-		expect(findLiteralChoiceMarker('{choice#r}\n- a\n- b',),).toBeNull()
-		expect(findLiteralChoiceMarker('Pick:\n\n{choice}\n\n- a\n- b\n',),).toBeNull()
+		expect(findLiteralFieldMarker('{choice#r}\n- a\n- b',),).toBeNull()
+		expect(findLiteralFieldMarker('Pick:\n\n{choice}\n\n- a\n- b\n',),).toBeNull()
 	})
 
 	it('is null for text with no choice marker at all', () => {
-		expect(findLiteralChoiceMarker('Hi {author}, see {input: why}',),).toBeNull()
+		expect(findLiteralFieldMarker('Hi {author}, see {input: why}',),).toBeNull()
 	})
 
 	it('reports a marker with no option list under it as no-options', () => {
-		expect(findLiteralChoiceMarker('{choice#rule}\n\nJust some text',),).toBe('no-options',)
-		expect(findLiteralChoiceMarker('{choice}',),).toBe('no-options',)
+		expect(findLiteralFieldMarker('{choice#rule}\n\nJust some text',)?.problem,).toBe('no-options',)
+		expect(findLiteralFieldMarker('{choice}',)?.problem,).toBe('no-options',)
 	})
 
 	it('reports a marker written inline in a sentence as inline', () => {
-		expect(findLiteralChoiceMarker('Pick {choice#rule} now\n- a\n- b',),).toBe('inline',)
+		expect(findLiteralFieldMarker('Pick {choice#rule} now\n- a\n- b',)?.problem,).toBe('inline',)
 	})
 
 	it('reports the problem when only one of two markers parsed', () => {
-		expect(findLiteralChoiceMarker('{choice#a}\n- a\n\n{choice#b}\n\nnot a list',),).toBe('no-options',)
+		expect(findLiteralFieldMarker('{choice#a}\n- a\n\n{choice#b}\n\nnot a list',)?.problem,).toBe('no-options',)
 		// The parsed block must not make the later inline marker look like an own-line one.
-		expect(findLiteralChoiceMarker('{choice#a}\n- a\n\nPick {choice#b} now',),).toBe('inline',)
+		expect(findLiteralFieldMarker('{choice#a}\n- a\n\nPick {choice#b} now',)?.problem,).toBe('inline',)
 	})
 
 	it('does not read an option that mentions {choice} as a second marker', () => {
-		expect(findLiteralChoiceMarker('{choice}\n- fill in the {choice} field\n- b',),).toBeNull()
+		expect(findLiteralFieldMarker('{choice}\n- fill in the {choice} field\n- b',),).toBeNull()
 	})
 
 	it('classifies off the whole line, not the segment an inline token splits', () => {
 		// `{input}` sits on the marker's line, so the marker never starts a block: the fix is
 		// moving it to its own line, not adding a list.
-		expect(findLiteralChoiceMarker('{input: why} {choice}\n- a\n- b',),).toBe('inline',)
+		expect(findLiteralFieldMarker('{input: why} {choice}\n- a\n- b',)?.problem,).toBe('inline',)
 	})
 })
 
@@ -494,6 +502,297 @@ describe('inline choice tokens', () => {
 	})
 
 	it('is not reported as a literal choice marker', () => {
-		expect(findLiteralChoiceMarker('a {choice: one | two} b',),).toBeNull()
+		expect(findLiteralFieldMarker('a {choice: one | two} b',),).toBeNull()
+	})
+})
+
+describe('tick-box fields', () => {
+	const imageRule = [
+		'Image posts must:',
+		'',
+		'{highlight#imagerules}',
+		'- [ ] be original content you created',
+		'- [x] include the source in the title',
+		'',
+		'See the rules.',
+	].join('\n',)
+
+	/** The token of the segment at `index`, failing the test when it is text. */
+	const tokenAt = (text: string, index: number,): InteractiveToken => {
+		const segment = parseReasonSegments(text,)[index]
+		if (segment?.type !== 'token') { throw new Error(`no token at ${index}`,) }
+		return segment.token
+	}
+
+	it('parses a {highlight} block with its starting ticks', () => {
+		expect(tokenAt(imageRule, 1,),).toEqual({
+			kind: 'highlight',
+			id: 'imagerules',
+			placeholder: '',
+			options: ['be original content you created', 'include the source in the title',],
+			checked: [false, true,],
+		},)
+	})
+
+	it('parses a {multi} block, accepting any bullet and an upper-case X', () => {
+		expect(parseReasonSegments('{multi}\n* [X] a\n+ [ ] b\n1. [ ] c',),).toEqual([{
+			type: 'token',
+			token: {kind: 'multi', placeholder: '', options: ['a', 'b', 'c',], checked: [true, false, false,],},
+		},],)
+	})
+
+	it('ends a tick-box block at the first plain item, and a choice block at the first task item', () => {
+		expect(parseReasonSegments('{multi}\n- [ ] a\n- b',).map((segment,) => segment.type),).toEqual([
+			'token',
+			'text',
+		],)
+		expect(tokenAt('{choice}\n- a\n- [ ] b', 0,),).toMatchObject({kind: 'choice', options: ['a',],},)
+	})
+
+	it('leaves a marker whose list is the other style literal', () => {
+		expect(parseReasonSegments('{multi}\n- a\n- b',),).toEqual([{type: 'text', text: '{multi}\n- a\n- b',},],)
+		expect(parseReasonSegments('{choice}\n- [ ] a',),).toEqual([{type: 'text', text: '{choice}\n- [ ] a',},],)
+	})
+
+	it('parses inline {check} and {highlight} boxes, with an optional leading [x]', () => {
+		expect(parseReasonSegments('a {check: [x] spam} b {highlight#h: rule 1} c',),).toEqual([
+			{type: 'text', text: 'a ',},
+			{
+				type: 'token',
+				token: {kind: 'multi', placeholder: '', options: ['spam',], checked: [true,], inline: true,},
+			},
+			{type: 'text', text: ' b ',},
+			{
+				type: 'token',
+				token: {
+					kind: 'highlight',
+					id: 'h',
+					placeholder: '',
+					options: ['rule 1',],
+					checked: [false,],
+					inline: true,
+				},
+			},
+			{type: 'text', text: ' c',},
+		],)
+	})
+
+	it('does not read a link written as the text as a tick box', () => {
+		expect(tokenAt('a {check: [x](https://example.com) b} c', 1,),)
+			.toMatchObject({options: ['[x](https://example.com) b',], checked: [false,],},)
+	})
+
+	it('leaves an inline box with no text literal', () => {
+		expect(parseReasonSegments('a {check: [x] } b',),).toEqual([{type: 'text', text: 'a {check: [x] } b',},],)
+	})
+
+	it('round-trips blocks and inline boxes through serialization', () => {
+		const text = '{multi#m}\n- [x] a\n- [ ] b'
+		expect(canonicalizeChoiceBlocks(text,),).toBe(text,)
+		expect(canonicalizeChoiceBlocks('x {highlight: [ ] a} y {check: [X] b}',),)
+			.toBe('x {highlight: a} y {check: [x] b}',)
+	})
+
+	it('keeps the [ ] on an unticked inline box whose text would otherwise re-parse as ticked', () => {
+		const token: InteractiveToken = {
+			kind: 'multi',
+			placeholder: '',
+			options: ['[x] a',],
+			checked: [false,],
+			inline: true,
+		}
+		expect(serializeToken(token,),).toBe('{check: [ ] [x] a}',)
+	})
+
+	it('canonicalizes a loose block to the tight form', () => {
+		expect(canonicalizeChoiceBlocks('Intro\n{highlight}\n\n*  [X] a\n- [ ] b\nOutro',),)
+			.toBe('Intro\n\n{highlight}\n- [x] a\n- [ ] b\n\nOutro',)
+	})
+
+	it('encodes and decodes tick state, ignoring stale values', () => {
+		expect(encodeTicks([true, false, true,],),).toBe('0,2',)
+		expect(encodeTicks([false,],),).toBe('',)
+		expect(decodeTicks('0,2', 3,),).toEqual([true, false, true,],)
+		expect(decodeTicks('be between 10 seconds', 2,),).toEqual([false, false,],)
+		expect(decodeTicks('1,7', 2,),).toEqual([false, true,],)
+	})
+
+	it('bolds with ** unless the text already holds **', () => {
+		expect(emphasize('a',),).toBe('**a**',)
+		expect(emphasize('a **b** c',),).toBe('__a **b** c__',)
+	})
+
+	it('renders each kind for a tick state', () => {
+		expect(renderToggleValue(tokenAt(imageRule, 1,), [true, false,],),)
+			.toBe('- **be original content you created**\n- include the source in the title',)
+
+		const multi = tokenAt('{multi}\n- [ ] a\n- [ ] b\n- [ ] c', 0,)
+		expect(renderToggleValue(multi, [true, false, true,],),).toBe('- a\n- c',)
+		expect(renderToggleValue(multi, [],),).toBe('',)
+	})
+
+	it('substitutes tick state, falling back to the template ticks when no value was collected', () => {
+		const text = 'Pick:\n\n{multi}\n- [x] a\n- [ ] b\n\nand {highlight: c} and {check: d}.'
+		expect(substituteTokenValues(text, ['1', '0', '',],),).toBe('Pick:\n\n- b\n\nand **c** and .',)
+		expect(substituteTokenValues(text, [],),).toBe('Pick:\n\n- a\n\nand c and .',)
+	})
+
+	it('reports markers that will be sent as text', () => {
+		expect(findLiteralFieldMarker('{multi}\n- [ ] a',),).toBeNull()
+		expect(findLiteralFieldMarker('Pick {highlight} now\n- [ ] a',),).toEqual({
+			kind: 'highlight',
+			problem: 'inline',
+		},)
+		expect(findLiteralFieldMarker('{multi}\n\nno list',),).toEqual({kind: 'multi', problem: 'no-options',},)
+		expect(findLiteralFieldMarker('{multi}\n- a',),).toEqual({kind: 'multi', problem: 'wrong-list',},)
+		expect(findLiteralFieldMarker('{choice}\n- [ ] a',),).toEqual({kind: 'choice', problem: 'wrong-list',},)
+		expect(findLiteralFieldMarker('a {highlight: b} c',),).toBeNull()
+	})
+
+	it('down-converts each item to a <select> of its two outputs, ticked output first', () => {
+		expect(tokensToHtmlFields('{highlight#r}\n- [ ] a\n- [x] b',),).toBe(
+			'- <select><option>a</option><option>**a**</option></select>\n'
+				+ '- <select><option>**b**</option><option>b</option></select>',
+		)
+		expect(tokensToHtmlFields('x {check#c: y} z',),).toBe(
+			'x <select id="c"><option></option><option>y</option></select> z',
+		)
+	})
+
+	it('comes back from the v1 mirror as the same boxes, in the inline form', () => {
+		const text = 'Image posts must:\n\n{highlight}\n- [ ] a\n- [x] b\n\n{multi}\n- [ ] c'
+		const roundTripped = canonicalizeChoiceBlocks(
+			promoteLegacyToggles(htmlFieldsToTokens(tokensToHtmlFields(text,),),),
+		)
+		expect(roundTripped,).toBe('Image posts must:\n\n- {highlight: a}\n- {highlight: [x] b}\n\n- {check: c}',)
+		// The same message goes out either way.
+		expect(substituteTokenValues(roundTripped, ['0', '', '0',],),)
+			.toBe(substituteTokenValues(text, ['0', '0',],),)
+	})
+
+	it('promotes a hand-written fake highlight from 6.x, keeping the rest of the text as written', () => {
+		const legacy = [
+			'- Image posts must meet the following rules',
+			'',
+			'- {choice: be original | **be original**}',
+			'',
+			'- {choice#t: **cite the source** | cite the source}. Wait a week.',
+			'',
+			'- {choice: | posted too often}',
+			'',
+			'- {choice: a | b}',
+		].join('\n',)
+		expect(promoteLegacyToggles(legacy,),).toBe([
+			'- Image posts must meet the following rules',
+			'',
+			'- {highlight: be original}',
+			'',
+			'- {highlight#t: [x] cite the source}. Wait a week.',
+			'',
+			'- {check: posted too often}',
+			'',
+			'- {choice: a | b}',
+		].join('\n',),)
+		// A block choice picks a paragraph, not a list item, so it is left alone.
+		expect(promoteLegacyToggles('{choice}\n- a\n- **a**',),).toBe('{choice}\n- a\n- **a**',)
+	})
+
+	it('demotes boxes back to the inline choices they stand for', () => {
+		expect(demoteToggles('- {highlight#t: [x] a}. b',),).toBe('- {choice#t: **a** | a}. b',)
+		expect(demoteToggles('x\n\n{multi}\n- [ ] a\n- [x] b\n\ny',),)
+			.toBe('x\n\n- {choice:  | a}\n- {choice: b | }\n\ny',)
+		expect(promoteLegacyToggles(demoteToggles('- {highlight: a}\n- {check: [x] b}',),),)
+			.toBe('- {highlight: a}\n- {check: [x] b}',)
+	})
+})
+
+describe('{note} tokens', () => {
+	it('parses an inline note as moderator text', () => {
+		expect(parseReasonSegments('Rule 5 {note: only for image posts} applies.',),).toEqual([
+			{type: 'text', text: 'Rule 5 ',},
+			{type: 'token', token: {kind: 'note', placeholder: 'only for image posts', options: [],},},
+			{type: 'text', text: ' applies.',},
+		],)
+	})
+
+	it('leaves an empty note literal and ignores a required mark on one', () => {
+		expect(parseReasonSegments('a {note:} b',),).toEqual([{type: 'text', text: 'a {note:} b',},],)
+		expect(parseReasonSegments('{note!: x}',)[0],).toEqual({
+			type: 'token',
+			token: {kind: 'note', placeholder: 'x', options: [],},
+		},)
+	})
+
+	it('sends nothing and takes no value slot', () => {
+		expect(substituteTokenValues('{note: check flair} Why: {input: why}', ['because',],),).toBe(' Why: because',)
+	})
+
+	it('round-trips through the v1 mirror as a reserved-id input', () => {
+		const text = 'Rule 5 {note: say "only images"} applies.'
+		const legacy = tokensToHtmlFields(text,)
+		expect(legacy,).toBe('Rule 5 <input id="tbx-note" placeholder="say &quot;only images&quot;"> applies.',)
+		expect(htmlFieldsToTokens(legacy,),).toBe(text,)
+	})
+})
+
+describe('required fields', () => {
+	it('parses ! on inline tokens and block markers, after any id', () => {
+		const segments = parseReasonSegments(
+			'{input#why!: why} {check!: spam}\n\n{choice#r!}\n- a\n\n{multi!}\n- [ ] b',
+		)
+		const tokens = segments.flatMap((segment,) => segment.type === 'token' ? [segment.token,] : [])
+		expect(tokens.map((token,) => [token.kind, token.id, token.required,]),).toEqual([
+			['input', 'why', true,],
+			['multi', undefined, true,],
+			['choice', 'r', true,],
+			['multi', undefined, true,],
+		],)
+	})
+
+	it('serializes the mark back in place', () => {
+		const text = '{input#why!: why} {check!: [x] spam}\n\n{choice#r!}\n- a\n\n{highlight!}\n- [ ] b'
+		expect(canonicalizeChoiceBlocks(text,),).toBe(text,)
+	})
+
+	it('flags a required marker that will be sent as text', () => {
+		expect(findLiteralFieldMarker('Pick {choice!} now\n- a',),).toEqual({kind: 'choice', problem: 'inline',},)
+		expect(findLiteralFieldMarker('{multi!}\n- a',),).toEqual({kind: 'multi', problem: 'wrong-list',},)
+	})
+
+	it('finds unfilled required fields by control position', () => {
+		const text = [
+			'{note: not a control}',
+			'{input!: why}',
+			'{input: optional}',
+			'',
+			'{choice!}',
+			'- ',
+			'- Rule 1',
+			'',
+			'{multi!}',
+			'- [ ] a',
+			'- [ ] b',
+		].join('\n',)
+		// Blank text, the blank "nothing picked" option, and no ticks are all unfilled.
+		expect(findUnfilledRequired(text, ['  ', '', '', '',],),).toEqual([0, 2, 3,],)
+		expect(findUnfilledRequired(text, ['x', '', 'Rule 1', '1',],),).toEqual([],)
+		// No collected values: the template's starting state decides.
+		expect(findUnfilledRequired('{check!: [x] a} {choice!: b | c}', [],),).toEqual([],)
+	})
+
+	it('round-trips through the v1 mirror as a required attribute', () => {
+		const text = 'Why: {input#why!: why}. Pick {choice!: a | b}. {highlight!: c}'
+		const legacy = tokensToHtmlFields(text,)
+		expect(legacy,).toContain('<input id="why" required="required" placeholder="why">',)
+		expect(legacy,).toContain('<select required="required"><option>a</option>',)
+		expect(promoteLegacyToggles(htmlFieldsToTokens(legacy,),),).toBe(text,)
+		// A bare 6.x-style attribute reads the same.
+		expect(htmlFieldsToTokens('<input required placeholder="x">',),).toBe('{input!: x}',)
+	})
+
+	it('drops the required mark of a block tick box from its per-item mirror selects', () => {
+		expect(tokensToHtmlFields('{multi!}\n- [ ] a',),).toBe(
+			'- <select><option></option><option>a</option></select>',
+		)
 	})
 })

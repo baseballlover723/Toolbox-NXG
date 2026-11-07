@@ -77,8 +77,14 @@ Removal reason text now uses brace tokens for interactive fill-in fields instead
 - `{textarea: placeholder}` — multi-line text field
 - `{choice}` on its own line, followed by a `-` list of options — a pick-one field shown as radio buttons
 - `{choice: option 1 | option 2}` — the same pick-one field inside a sentence or a link's text
+- `{multi}` or `{highlight}` on its own line, followed by a `- [ ]` checklist — tick boxes, new in NXG: `{multi}` sends only the ticked items, `{highlight}` sends every item with the ticked ones in bold
+- `{check: text}` / `{highlight: text}` — a single tick box inside a sentence
+- `{note: text}` — guidance for moderators, shown in the dialog but never sent
+- `!` after a field's kind (`{input!: why}`, `{choice!}`) — a required field; the dialog won't send until it is filled in
 
-Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format when NXG reads the config, and stored that way on the `toolbox-nxg` page; the original `toolbox` page keeps the HTML form for original Toolbox. A `<select>` written mid-sentence stays in its sentence.
+Two new substitution tokens build links for the subreddit the message is sent from: `{modmail}` (message the mods) and `{wiki: page#anchor}` (a page or section of the subreddit's wiki). Original Toolbox sees them as ordinary links.
+
+Existing reasons using the old `<input>` / `<textarea>` / `<select>` HTML tags are automatically converted to the new format when NXG reads the config, and stored that way on the `toolbox-nxg` page; the original `toolbox` page keeps the HTML form for original Toolbox. A `<select>` written mid-sentence stays in its sentence, and the old trick of one `<select>` per line offering a rule in plain and in bold becomes a `{highlight: …}` tick box.
 
 ## New wiki layout and compatibility
 

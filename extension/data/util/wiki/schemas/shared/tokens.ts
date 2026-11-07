@@ -39,12 +39,42 @@
  * `[\w-]+`) persists the chosen value between overlay opens and round-trips as
  * the `id` attribute of the legacy `<select>`. A marker whose next non-blank
  * line isn't a list item isn't a choice and renders literally, so a half-typed
- * field fails visibly; {@link findLiteralChoiceMarker} finds those so the
+ * field fails visibly; {@link findLiteralFieldMarker} finds those so the
  * moderator is told rather than the marker reaching the removed user.
  *
+ * Tick-box fields have no 6.x counterpart. They use the same block shape with a
+ * GFM task list for options, and render as checkboxes (pick any number):
+ *
+ * - `{multi}` / `{multi#id}` followed by `- [ ] item` lines - only the ticked
+ *   items are sent, as a `- ` list
+ * - `{highlight}` / `{highlight#id}` followed by `- [ ] item` lines - every
+ *   item is sent as a `- ` list, the ticked ones in bold
+ * - `{check: text}` / `{highlight: text}` - one tick box inside a line: `check`
+ *   sends the text only when ticked, `highlight` always sends it, bolded when
+ *   ticked
+ *
+ * `[x]` instead of `[ ]` (`{check: [x] text}` inline) starts the box ticked. A
+ * tick-box marker takes only task-list items and a `{choice}` marker only plain
+ * ones, so a list of the wrong style leaves the marker literal (and flagged)
+ * rather than turning into the other kind of control. Both down-convert to one
+ * 6.x `<select>` per item, offering the item's two possible outputs, and
+ * {@link promoteLegacyToggles} turns that two-option pattern (or the same
+ * pattern hand-written as a `{choice}`) back into the tick-box token.
+ *
+ * Two more pieces of syntax apply across the kinds:
+ *
+ * - `{note: text}` - guidance for the moderator, shown in the overlay and never sent.
+ *   It renders no control, so it takes no value slot.
+ * - `!` after the kind or id (`{input!: ...}`, `{choice#rule!}`, `{multi!}`) marks a
+ *   field required: the overlay won't send until it is filled, picked (a non-blank
+ *   option), or ticked ({@link findUnfilledRequired}).
+ *
+ * On the v1 mirror a note becomes an empty `<input>` with a reserved id and the note
+ * as its placeholder, and `!` becomes a `required` attribute; both read back exactly.
+ *
  * Substitution tokens are always a bare `{word}` with no colon, so neither the
- * `kind:` prefix nor `{choice}` can collide with them; unknown brace content is
- * left untouched by both systems.
+ * `kind:` prefix nor the bare block markers can collide with them; unknown brace
+ * content is left untouched by both systems.
  *
  * This module is the only code that knows both representations: it parses token
  * text into segments for rendering, and converts between tokens and the legacy
@@ -100,6 +130,8 @@ export const substitutionTokens: SubstitutionTokenInfo[] = [
 	{token: '{raw_body}', description: 'Body of the removed item without markdown quoting',},
 	{token: '{uri_body}', description: 'URL-encoded body, for use inside markdown links',},
 	{token: '{uri_title}', description: 'URL-encoded title, for use inside markdown links',},
+	{token: '{modmail}', description: 'Link for sending modmail to the subreddit\'s moderators',},
+	{token: '{wiki: page}', description: 'Link to a page on the subreddit\'s wiki; add #anchor for a section',},
 ]
 
 /**
@@ -113,7 +145,21 @@ export function pickSubstitutionTokens (tokens: string[],): SubstitutionTokenInf
 }
 
 /** The kinds of interactive fill-in fields supported in reason text. */
-export type InteractiveTokenKind = 'input' | 'textarea' | 'choice'
+export type InteractiveTokenKind = 'input' | 'textarea' | 'choice' | 'multi' | 'highlight' | 'note'
+
+/** The field kinds that have a block form: a marker line with a list below it. */
+export type BlockFieldKind = 'choice' | 'multi' | 'highlight'
+
+/**
+ * The tick-box kinds. `multi` sends only the ticked items; `highlight` sends every
+ * item and bolds the ticked ones. Inline, `multi` is written `{check: ...}`.
+ */
+export type ToggleKind = 'multi' | 'highlight'
+
+/** Whether a token kind is one of the tick-box kinds. */
+export function isToggleKind (kind: InteractiveTokenKind,): kind is ToggleKind {
+	return kind === 'multi' || kind === 'highlight'
+}
 
 /** A parsed interactive token from removal reason text. */
 export interface InteractiveToken {
@@ -122,16 +168,34 @@ export interface InteractiveToken {
 	 * Optional stable id, used to persist the entered/chosen value between
 	 * overlay opens and preserved as the HTML `id` attribute on the classic
 	 * mirror. Written as `{input#someid: ...}` for inputs/textareas and
-	 * `{choice#someid}` for choices.
+	 * `{choice#someid}` / `{multi#someid}` for the block kinds.
 	 */
 	id?: string
-	/** Placeholder text for `input`/`textarea` tokens; always '' for `choice`. */
+	/**
+	 * Placeholder text for `input`/`textarea` tokens, or the moderator-facing text of a
+	 * `note`; always '' for the other kinds.
+	 */
 	placeholder: string
-	/** The option texts for `choice` tokens; empty for the other kinds. */
+	/**
+	 * The option texts for `choice` tokens, or the item texts for tick-box tokens
+	 * (exactly one when inline); empty for the other kinds.
+	 */
 	options: string[]
 	/**
-	 * Set on a `choice` written in the inline `{choice: a | b}` form. The chosen value is
-	 * substituted in place in its line rather than as a paragraph of its own.
+	 * Per-item starting state for tick-box tokens (`[x]` in the text), parallel to
+	 * `options`; absent for the other kinds.
+	 */
+	checked?: boolean[]
+	/**
+	 * Set when the field is marked required (`!` after the kind or id: `{input!: ...}`,
+	 * `{choice#rule!}`). The overlay refuses to send until it is filled, picked, or ticked.
+	 * Never set on a `note`.
+	 */
+	required?: true
+	/**
+	 * Set on a `choice` or tick box written in its inline form (`{choice: a | b}`,
+	 * `{check: text}`, `{highlight: text}`). The value is substituted in place in its
+	 * line rather than as a block of its own.
 	 */
 	inline?: true
 }
@@ -142,12 +206,25 @@ export type ReasonSegment =
 	| {type: 'token'; token: InteractiveToken}
 
 /**
- * Matches an inline interactive token (`{input...}` / `{textarea...}` / `{choice...: ...}`).
- * Groups: 1 is the kind, 2 the optional id, 3 the content (placeholder, or the
- * `|`-separated options of a choice). Content cannot contain `}` - serialization
- * sanitizes braces out of user-facing text so every serialized token re-parses.
+ * Matches an inline interactive token (`{input...}` / `{textarea...}` / `{choice...: ...}` /
+ * `{check...: ...}` / `{highlight...: ...}` / `{note: ...}`). Groups: 1 is the keyword, 2 the
+ * optional id, 3 the optional required `!`, 4 the content (placeholder, the `|`-separated
+ * options of a choice, a tick box's text, or a note's text).
+ * Content cannot contain `}` - serialization sanitizes braces out of user-facing text so
+ * every serialized token re-parses.
  */
-const INLINE_TOKEN_RE = /\{(input|textarea|choice)(?:#([\w-]+))?\s*:([^}]*)\}/gi
+const INLINE_TOKEN_RE = /\{(input|textarea|choice|check|highlight|note)(?:#([\w-]+))?(!)?\s*:([^}]*)\}/gi
+
+/**
+ * Matches the optional leading tick box of inline tick-box content (`[x] text`); group 1
+ * is the box's mark. A link written as the text (`[x](url)`) has no space after the `]`,
+ * so it is not mistaken for one; a box with nothing after it still counts, so a
+ * half-typed `{check: [x]}` stays literal rather than becoming a box labelled "[x]".
+ */
+const INLINE_TICK_RE = /^\[([ xX])\](?:[^\S\r\n]+|$)/
+
+/** Cheap pre-check: whether text could hold any choice or tick-box field at all. */
+const FIELD_HINT_RE = /\{(?:choice|multi|highlight|check)/i
 
 /** Splits on a `|` that is not backslash-escaped. */
 const OPTION_SEPARATOR_RE = /(?<!\\)\|/
@@ -170,11 +247,12 @@ function escapeInlineOption (option: string,): string {
 }
 
 /**
- * Matches a choice marker line (`{choice}` or `{choice#id}`) on its own line; group 1 is the id.
- * The whitespace class is every horizontal space rather than just space/tab, so a non-breaking
- * space pasted in from a rich-text editor doesn't quietly stop the line being a marker.
+ * Matches a block marker line (`{choice}`, `{multi#id}`, `{highlight}`, ...) on its own
+ * line; group 1 is the kind, group 2 the id, group 3 the required `!`. The whitespace class is every horizontal
+ * space rather than just space/tab, so a non-breaking space pasted in from a rich-text
+ * editor doesn't quietly stop the line being a marker.
  */
-const CHOICE_MARKER_RE = /^[^\S\r\n]*\{choice(?:#([\w-]+))?\}[^\S\r\n]*\r?$/
+const BLOCK_MARKER_RE = /^[^\S\r\n]*\{(choice|multi|highlight)(?:#([\w-]+))?(!)?\}[^\S\r\n]*\r?$/
 
 /**
  * Matches a markdown list item line; group 1 is the option text (trailing whitespace
@@ -186,11 +264,28 @@ const CHOICE_MARKER_RE = /^[^\S\r\n]*\{choice(?:#([\w-]+))?\}[^\S\r\n]*\r?$/
  */
 const CHOICE_OPTION_RE = /^[^\S\r\n]*(?:[-*+]|\d+[.)])(?:[^\S\r\n]+(.+?))?[^\S\r\n]*\r?$/
 
+/**
+ * Matches a GFM task-list item line (`- [ ] text`, `- [x] text`); group 1 is the box's
+ * mark, group 2 the item text. Unlike a choice option the text is required: an empty
+ * tick box would send nothing either way.
+ */
+const TASK_ITEM_RE = /^[^\S\r\n]*(?:[-*+]|\d+[.)])[^\S\r\n]+\[([ xX])\][^\S\r\n]+(.+?)[^\S\r\n]*\r?$/
+
 /** Matches a line with nothing on it but horizontal whitespace. */
 const BLANK_LINE_RE = /^[^\S\r\n]*\r?$/
 
-/** Matches a `{choice}` marker anywhere in a line, for spotting one that did not become a token. */
-const CHOICE_MARKER_ANYWHERE_RE = /\{choice(?:#[\w-]+)?\}/
+/** Matches a block marker anywhere in a line, for spotting one that did not become a token. */
+const BLOCK_MARKER_ANYWHERE_RE = /\{(choice|multi|highlight)(?:#[\w-]+)?!?\}/
+
+/**
+ * Whether a line is a list item of the style the given block kind takes: task-list
+ * items for the tick-box kinds, plain items for `{choice}`. A task item ends a choice's
+ * list rather than becoming an option with `[ ]` in its text.
+ */
+function isBlockItem (kind: BlockFieldKind, line: string,): boolean {
+	if (kind === 'choice') { return CHOICE_OPTION_RE.test(line,) && !TASK_ITEM_RE.test(line,) }
+	return TASK_ITEM_RE.test(line,)
+}
 
 /** Matches a whole slug-safe id/name. */
 const SLUG_RE = /^[\w-]+$/
@@ -215,46 +310,106 @@ function sanitizeSingleLine (text: string,): string {
 }
 
 /**
- * Builds a `{choice}` block: the marker line followed by one `- option` line per
- * option (each collapsed to a single line). No surrounding blank lines - callers
- * that splice it into running text add those.
+ * Builds a block field: the marker line followed by one list line per option (each
+ * collapsed to a single line) - `- option` for a choice, `- [ ] item` / `- [x] item`
+ * for a tick-box kind. No surrounding blank lines - callers that splice it into
+ * running text add those.
  */
-function choiceBlock (id: string | undefined, options: string[],): string {
-	const marker = id ? `{choice#${id}}` : '{choice}'
-	const lines = options.map((option,) => `- ${collapseToLine(option,)}`)
+function fieldBlock (
+	kind: BlockFieldKind,
+	id: string | undefined,
+	options: string[],
+	checked?: boolean[],
+	required?: boolean,
+): string {
+	const marker = `{${kind}${id ? `#${id}` : ''}${required ? '!' : ''}}`
+	const lines = options.map((option, index,) => {
+		const box = kind === 'choice' ? '' : `${checked?.[index] ? '[x]' : '[ ]'} `
+		return `- ${box}${collapseToLine(option,)}`
+	},)
 	return [marker, ...lines,].join('\n',)
 }
 
+/** Builds a `{choice}` block from its id and options. */
+function choiceBlock (id: string | undefined, options: string[],): string {
+	return fieldBlock('choice', id, options,)
+}
+
 /**
- * Serializes an interactive token back to its text form. A choice serializes to
- * its block (marker + option list); inputs/textareas to their inline token.
+ * Serializes an inline tick box. The `[ ]` of an unticked box is left out, as it
+ * usually is when written by hand, unless the text itself starts with something
+ * that would re-parse as a box.
+ */
+function inlineToggleText (token: InteractiveToken, idPart: string,): string {
+	const keyword = token.kind === 'multi' ? 'check' : 'highlight'
+	const text = sanitizeSingleLine(token.options[0] ?? '',)
+	const box = token.checked?.[0] ? '[x] ' : INLINE_TICK_RE.test(text,) ? '[ ] ' : ''
+	return `{${keyword}${idPart}: ${box}${text}}`
+}
+
+/**
+ * Serializes an interactive token back to its text form. A choice or tick-box block
+ * serializes to its block (marker + list); everything else to its inline token.
  * @param token The token to serialize.
  */
 export function serializeToken (token: InteractiveToken,): string {
-	const idPart = token.id ? `#${token.id}` : ''
+	// The id and the required mark sit together between the kind and the colon.
+	const idPart = `${token.id ? `#${token.id}` : ''}${token.required ? '!' : ''}`
 	if (token.kind === 'choice') {
 		if (token.inline) {
 			return `{choice${idPart}: ${token.options.map(escapeInlineOption,).join(' | ',)}}`
 		}
-		return choiceBlock(token.id, token.options,)
+		return fieldBlock('choice', token.id, token.options, undefined, token.required,)
+	}
+	if (isToggleKind(token.kind,)) {
+		if (token.inline) { return inlineToggleText(token, idPart,) }
+		return fieldBlock(token.kind, token.id, token.options, token.checked, token.required,)
 	}
 	return `{${token.kind}${idPart}: ${sanitizeSingleLine(token.placeholder,)}}`
 }
 
 /**
+ * Parses the content of an inline tick box (`[x] text`, or just `text`) into a token,
+ * or `null` when there is no text - a half-typed `{check:}` stays literal.
+ */
+function parseInlineToggle (kind: ToggleKind, content: string,): InteractiveToken | null {
+	const collapsed = collapseToLine(content,)
+	const tick = INLINE_TICK_RE.exec(collapsed,)
+	const text = tick ? collapsed.slice(tick[0].length,).trim() : collapsed
+	if (!text) { return null }
+	return {kind, placeholder: '', options: [text,], checked: [tick !== null && tick[1] !== ' ',], inline: true,}
+}
+
+/** A parsed segment together with the exact source text it was parsed from. */
+interface SourcedSegment {
+	segment: ReasonSegment
+	source: string
+}
+
+/**
  * Splits reason text into literal-text and interactive-token segments, in
- * document order. Inline `{input}`/`{textarea}`/`{choice: ...}` tokens are matched anywhere; a
- * `{choice}` marker is recognized only on its own line and consumes the
- * consecutive markdown list lines below it as its options, skipping any blank
- * lines between the two and stopping at the first non-list line. A marker whose
- * next non-blank line is not a list item is left as literal text, like any
- * other unknown brace content.
+ * document order. Inline `{input}`/`{textarea}`/`{choice: ...}`/`{check: ...}`/
+ * `{highlight: ...}` tokens are matched anywhere; a block marker (`{choice}`,
+ * `{multi}`, `{highlight}`) is recognized only on its own line and consumes the
+ * consecutive markdown list lines of its style below it as its options, skipping
+ * any blank lines between the two and stopping at the first line that is not
+ * such an item. A marker whose next non-blank line is not an item of its style is
+ * left as literal text, like any other unknown brace content.
  * @param text The reason text to parse.
  */
 export function parseReasonSegments (text: string,): ReasonSegment[] {
-	const segments: ReasonSegment[] = []
+	return parseSourcedSegments(text,).map(({segment,},) => segment)
+}
+
+/**
+ * {@link parseReasonSegments}, keeping each segment's source text so a caller can
+ * rewrite some tokens and leave the rest of the text byte-for-byte as written.
+ */
+function parseSourcedSegments (text: string,): SourcedSegment[] {
+	const segments: SourcedSegment[] = []
+	const pushText = (chunk: string,) => segments.push({segment: {type: 'text', text: chunk,}, source: chunk,},)
 	let buffer = ''
-	// Flush accumulated plain text, splitting out any inline input/textarea tokens.
+	// Flush accumulated plain text, splitting out any inline tokens.
 	const flush = () => {
 		if (!buffer) { return }
 		let lastIndex = 0
@@ -262,27 +417,34 @@ export function parseReasonSegments (text: string,): ReasonSegment[] {
 		let match: RegExpExecArray | null
 
 		while ((match = INLINE_TOKEN_RE.exec(buffer,)) !== null) {
-			const [, kind, id, content,] = match
-			const lowerKind = kind!.toLowerCase() as InteractiveTokenKind
-			let token: InteractiveToken
-			if (lowerKind === 'choice') {
+			const [, keyword, id, bang, content,] = match
+			const lowerKeyword = keyword!.toLowerCase()
+			let token: InteractiveToken | null
+			if (lowerKeyword === 'choice') {
 				const options = splitInlineOptions(content!,)
-				// No options: leave it in the surrounding text, where it is sent literally.
-				if (options.length === 0) { continue }
-				token = {kind: 'choice', placeholder: '', options, inline: true,}
+				token = options.length > 0 ? {kind: 'choice', placeholder: '', options, inline: true,} : null
+			} else if (lowerKeyword === 'check' || lowerKeyword === 'highlight') {
+				token = parseInlineToggle(lowerKeyword === 'check' ? 'multi' : 'highlight', content!,)
+			} else if (lowerKeyword === 'note') {
+				const text = collapseToLine(content!,)
+				token = text ? {kind: 'note', placeholder: text, options: [],} : null
 			} else {
-				token = {kind: lowerKind, placeholder: collapseToLine(content!,), options: [],}
+				token = {
+					kind: lowerKeyword as InteractiveTokenKind,
+					placeholder: collapseToLine(content!,),
+					options: [],
+				}
 			}
-			if (match.index > lastIndex) {
-				segments.push({type: 'text', text: buffer.slice(lastIndex, match.index,),},)
-			}
+			// Nothing to offer: leave it in the surrounding text, where it is sent literally.
+			if (!token) { continue }
+			if (match.index > lastIndex) { pushText(buffer.slice(lastIndex, match.index,),) }
 			if (id) { token.id = id }
-			segments.push({type: 'token', token,},)
+			// A note is never filled in, so there is nothing for "required" to require.
+			if (bang && token.kind !== 'note') { token.required = true }
+			segments.push({segment: {type: 'token', token,}, source: match[0],},)
 			lastIndex = match.index + match[0].length
 		}
-		if (lastIndex < buffer.length) {
-			segments.push({type: 'text', text: buffer.slice(lastIndex,),},)
-		}
+		if (lastIndex < buffer.length) { pushText(buffer.slice(lastIndex,),) }
 		buffer = ''
 	}
 
@@ -292,9 +454,11 @@ export function parseReasonSegments (text: string,): ReasonSegment[] {
 		const nl = text.indexOf('\n', i,)
 		const lineEnd = nl === -1 ? n : nl
 		const nextLineStart = nl === -1 ? n : nl + 1
-		const marker = CHOICE_MARKER_RE.exec(text.slice(i, lineEnd,),)
+		const marker = BLOCK_MARKER_RE.exec(text.slice(i, lineEnd,),)
 		if (marker) {
+			const kind = marker[1] as BlockFieldKind
 			const options: string[] = []
+			const checked: boolean[] = []
 			let scan = nextLineStart
 			let optionsEnd = -1
 			// Step over any blank lines between the marker and its list: that is how markdown
@@ -313,19 +477,28 @@ export function parseReasonSegments (text: string,): ReasonSegment[] {
 			while (scan < n) {
 				const nl2 = text.indexOf('\n', scan,)
 				const le2 = nl2 === -1 ? n : nl2
-				const optionMatch = CHOICE_OPTION_RE.exec(text.slice(scan, le2,),)
-				if (!optionMatch) { break }
-				options.push(optionMatch[1] ?? '',)
+				const line = text.slice(scan, le2,)
+				if (!isBlockItem(kind, line,)) { break }
+				if (kind === 'choice') {
+					options.push(CHOICE_OPTION_RE.exec(line,)![1] ?? '',)
+				} else {
+					const item = TASK_ITEM_RE.exec(line,)!
+					checked.push(item[1] !== ' ',)
+					options.push(item[2]!,)
+				}
 				optionsEnd = le2
 				scan = nl2 === -1 ? n : nl2 + 1
 			}
 			if (options.length > 0) {
 				flush()
-				const token: InteractiveToken = {kind: 'choice', placeholder: '', options,}
-				if (marker[1]) { token.id = marker[1] }
-				segments.push({type: 'token', token,},)
+				const token: InteractiveToken = kind === 'choice'
+					? {kind, placeholder: '', options,}
+					: {kind, placeholder: '', options, checked,}
+				if (marker[2]) { token.id = marker[2] }
+				if (marker[3]) { token.required = true }
 				// Exclude the last option line's trailing newline so it stays with the
 				// following text segment - this keeps down-convert / up-convert exact.
+				segments.push({segment: {type: 'token', token,}, source: text.slice(i, optionsEnd,),},)
 				i = optionsEnd
 				continue
 			}
@@ -338,74 +511,94 @@ export function parseReasonSegments (text: string,): ReasonSegment[] {
 }
 
 /**
- * Why a `{choice}` marker will be sent as text instead of becoming a control. The two
- * shapes need different fixes, so callers can word their warning for the one at hand.
+ * Why a block marker will be sent as text instead of becoming a control. The shapes
+ * need different fixes, so callers can word their warning for the one at hand.
  */
-export type LiteralChoiceProblem =
+export type LiteralFieldProblem =
 	/** The marker shares its line with other text, so it never starts a block at all. */
 	| 'inline'
-	/** The marker has a line to itself, but no option list follows it. */
+	/** The marker has a line to itself, but no list follows it. */
 	| 'no-options'
+	/**
+	 * The marker is followed by a list of the other style: plain `- ` items under a
+	 * tick-box marker, or `- [ ]` task items under `{choice}`.
+	 */
+	| 'wrong-list'
+
+/** A block marker no control will be rendered for: which kind it is, and why. */
+export interface LiteralField {
+	kind: BlockFieldKind
+	problem: LiteralFieldProblem
+}
 
 /**
- * Finds the first `{choice}` marker in the text that no control will be rendered for -
- * a half-typed field, or one written inline in a sentence - and reports which of the two
- * it is. Returns `null` when every marker in the text becomes a control.
+ * Finds the first block marker (`{choice}`, `{multi}`, `{highlight}`) in the text that
+ * no control will be rendered for - a half-typed field, one written inline in a
+ * sentence, or one given the wrong style of list - and reports which. Returns `null`
+ * when every marker in the text becomes a control.
  *
- * Such a marker is not substituted, so the marker text and the option list below it
- * both reach the removed user as written. That is the right default for unknown brace
- * content, but a pick-one field failing this way is a mistake every time, so callers
- * surface it to the moderator instead of leaving it to be discovered in a sent message.
+ * Such a marker is not substituted, so the marker text and the list below it both
+ * reach the removed user as written. That is the right default for unknown brace
+ * content, but a field failing this way is a mistake every time, so callers surface it
+ * to the moderator instead of leaving it to be discovered in a sent message.
  * @param text The reason text to check, already normalized to token form.
  */
-export function findLiteralChoiceMarker (text: string,): LiteralChoiceProblem | null {
-	if (!text.includes('{choice',)) { return null }
+export function findLiteralFieldMarker (text: string,): LiteralField | null {
+	if (!FIELD_HINT_RE.test(text,)) { return null }
 	// Applies the same marker/blank/list rule as parseReasonSegments (and off the same
 	// regexes), but line-by-line rather than over segments: a segment boundary can fall
 	// mid-line where an inline token sits next to a marker, and the line is what decides
-	// which of the two problems this is.
+	// which problem this is.
 	const lines = text.split('\n',)
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i]!
-		if (!CHOICE_MARKER_ANYWHERE_RE.test(line,)) { continue }
+		const anywhere = BLOCK_MARKER_ANYWHERE_RE.exec(line,)
+		if (!anywhere) { continue }
+		const kind = anywhere[1] as BlockFieldKind
 		// A marker with other text on its line never starts a block, whatever follows it,
-		// so it has to move to a line of its own before an option list can help.
-		if (!CHOICE_MARKER_RE.test(line,)) { return 'inline' }
+		// so it has to move to a line of its own before a list can help.
+		if (!BLOCK_MARKER_RE.test(line,)) { return {kind, problem: 'inline',} }
 		let scan = i + 1
 		while (scan < lines.length && BLANK_LINE_RE.test(lines[scan]!,)) { scan++ }
-		if (scan >= lines.length || !CHOICE_OPTION_RE.test(lines[scan]!,)) { return 'no-options' }
-		// A real block: step over its option list, so an option whose own text mentions
-		// `{choice}` isn't read as a second, broken marker.
-		while (scan < lines.length && CHOICE_OPTION_RE.test(lines[scan]!,)) { scan++ }
+		const first = lines[scan]
+		if (first === undefined) { return {kind, problem: 'no-options',} }
+		if (!isBlockItem(kind, first,)) {
+			const otherStyle = kind === 'choice' ? TASK_ITEM_RE.test(first,) : CHOICE_OPTION_RE.test(first,)
+			return {kind, problem: otherStyle ? 'wrong-list' : 'no-options',}
+		}
+		// A real block: step over its list, so an item whose own text mentions a marker
+		// isn't read as a second, broken one.
+		while (scan < lines.length && isBlockItem(kind, lines[scan]!,)) { scan++ }
 		i = scan - 1
 	}
 	return null
 }
 
 /**
- * Rewrites every `{choice}` block in the text to its canonical form: each block
- * separated from surrounding content by exactly one blank line, options on
- * single `- ` lines. Inline `{choice: ...}` tokens stay where they are, with
- * their options re-serialized to `a | b` spacing. Idempotent, so normalizing the NXG text and the
- * up-converted legacy mirror both land on the same string and config reconcile
- * sees no spurious difference. Text with no choice block is returned unchanged.
+ * Rewrites every block field (`{choice}`, `{multi}`, `{highlight}`) in the text to its
+ * canonical form: each block separated from surrounding content by exactly one blank
+ * line, items on single `- ` (or `- [ ] `) lines. Inline tokens stay where they are,
+ * re-serialized (`a | b` option spacing, `[x]` only on a ticked box). Idempotent, so
+ * normalizing the NXG text and the up-converted legacy mirror both land on the same
+ * string and config reconcile sees no spurious difference. Text with no such field
+ * is returned unchanged.
  * @param text The reason text to canonicalize.
  */
 export function canonicalizeChoiceBlocks (text: string,): string {
-	if (!text.includes('{choice',)) { return text }
+	if (!FIELD_HINT_RE.test(text,)) { return text }
 	const segments = parseReasonSegments(text,)
-	if (!segments.some((segment,) => segment.type === 'token' && segment.token.kind === 'choice')) {
+	if (!segments.some((segment,) => segment.type === 'token' && segment.token.options.length > 0)) {
 		return text
 	}
 	let out = ''
 	for (const segment of segments) {
 		if (segment.type === 'text') {
 			out += segment.text
-		} else if (segment.token.kind === 'choice' && !segment.token.inline) {
+		} else if (segment.token.options.length > 0 && !segment.token.inline) {
 			out += `\n\n${serializeToken(segment.token,)}\n\n`
 		} else {
-			// Inline tokens (including inline choices) re-serialize in place, which also
-			// normalizes an inline choice's option spacing and escaping.
+			// Inline tokens (including inline choices and tick boxes) re-serialize in place,
+			// which also normalizes an inline choice's option spacing and escaping.
 			out += serializeToken(segment.token,)
 		}
 	}
@@ -428,11 +621,12 @@ export function canonicalizeChoiceBlocks (text: string,): string {
  */
 export function splitInlineChoices (text: string,): string {
 	const segments = parseReasonSegments(text,)
-	if (!segments.some((segment,) => segment.type === 'token' && segment.token.inline)) { return text }
+	const isInlineChoice = (token: InteractiveToken,) => token.kind === 'choice' && token.inline
+	if (!segments.some((segment,) => segment.type === 'token' && isInlineChoice(segment.token,))) { return text }
 	return canonicalizeChoiceBlocks(
 		segments.map((segment,) => {
 			if (segment.type === 'text') { return segment.text }
-			if (!segment.token.inline) { return serializeToken(segment.token,) }
+			if (!isInlineChoice(segment.token,)) { return serializeToken(segment.token,) }
 			const {inline: _inline, ...block} = segment.token
 			return `\n\n${serializeToken(block,)}\n\n`
 		},).join('',),
@@ -452,18 +646,197 @@ export function hasChoiceBlock (text: string,): boolean {
 }
 
 /**
+ * Bolds text for a ticked `highlight` item. Text that already holds `**` is wrapped in
+ * `__` instead, so the new emphasis can't pair up with the existing markers.
+ */
+export function emphasize (text: string,): string {
+	return text.includes('**',) ? `__${text}__` : `**${text}**`
+}
+
+/**
+ * Encodes a tick-box control's state as the value its overlay control carries: the
+ * indices of the ticked items, comma-separated ('' when none is ticked).
+ */
+export function encodeTicks (ticks: readonly boolean[],): string {
+	return ticks.flatMap((ticked, index,) => ticked ? [String(index,),] : []).join(',',)
+}
+
+/**
+ * Decodes a value written by {@link encodeTicks} into one flag per item. Anything that
+ * isn't an in-range index is ignored, so a stale value (say a cached `{choice}` pick
+ * from before the field became a tick box) reads as nothing ticked.
+ */
+export function decodeTicks (value: string, count: number,): boolean[] {
+	const ticked = new Set(
+		value.split(',',).map((part,) => part.trim()).filter((part,) => /^\d+$/.test(part,)).map(Number,),
+	)
+	return Array.from({length: count,}, (_, index,) => ticked.has(index,),)
+}
+
+/**
+ * Renders the markdown a tick-box token sends for the given tick state. A block sends
+ * a `- ` list (`multi`: the ticked items only; `highlight`: every item, ticked ones in
+ * bold); an inline box sends its text (`multi`: only when ticked; `highlight`: always,
+ * bolded when ticked). A `multi` block with nothing ticked sends nothing.
+ * @param token A `multi` or `highlight` token.
+ * @param ticks One flag per item; missing flags count as unticked.
+ */
+export function renderToggleValue (token: InteractiveToken, ticks: readonly boolean[],): string {
+	const pieces = token.options.flatMap((option, index,) => {
+		const ticked = ticks[index] ?? false
+		if (token.kind === 'highlight') { return [ticked ? emphasize(option,) : option,] }
+		return ticked ? [option,] : []
+	},)
+	if (token.inline) { return pieces[0] ?? '' }
+	return pieces.map((piece,) => `- ${piece}`).join('\n',)
+}
+
+/**
  * Replaces each interactive token in reason text with the corresponding
  * user-entered value, in document order. Used when composing the final removal
  * message; values map 1:1 to the rendered controls because the overlay renders
- * them in the same order.
+ * them in the same order. A tick-box token's value is its {@link encodeTicks}
+ * state, which is rendered to markdown here. A `{note}` is dropped and takes no value,
+ * since the overlay renders no control for it.
  * @param text The token-form reason text.
- * @param values The entered values, in token order. Missing values become ''.
+ * @param values The entered values, in token order. A missing value becomes '', or
+ *   the template's starting ticks for a tick-box token.
  */
 export function substituteTokenValues (text: string, values: string[],): string {
 	let index = 0
 	return parseReasonSegments(text,)
-		.map((segment,) => segment.type === 'text' ? segment.text : values[index++] ?? '')
+		.map((segment,) => {
+			if (segment.type === 'text') { return segment.text }
+			// A note is for the moderator only: it renders no control and sends nothing.
+			if (segment.token.kind === 'note') { return '' }
+			const value = values[index++]
+			const {token,} = segment
+			if (!isToggleKind(token.kind,)) { return value ?? '' }
+			const ticks = value === undefined ? token.checked ?? [] : decodeTicks(value, token.options.length,)
+			return renderToggleValue(token, ticks,)
+		},)
 		.join('',)
+}
+
+/**
+ * Finds the required fields left unfilled, given the values collected from their
+ * controls (in the same order {@link substituteTokenValues} takes them). An input or
+ * textarea needs non-blank text, a choice a non-blank pick (so a blank first option
+ * works as "nothing picked yet"), and a tick-box field at least one tick.
+ * @param text The token-form reason text.
+ * @param values The entered values, in control order. A missing value counts as the
+ *   template's starting state.
+ * @returns The value indices (control positions) of the unfilled required fields.
+ */
+export function findUnfilledRequired (text: string, values: string[],): number[] {
+	const unfilled: number[] = []
+	let index = 0
+	for (const segment of parseReasonSegments(text,)) {
+		if (segment.type === 'text' || segment.token.kind === 'note') { continue }
+		const {token,} = segment
+		const position = index++
+		if (!token.required) { continue }
+		const value = values[position]
+		let filled: boolean
+		if (isToggleKind(token.kind,)) {
+			const ticks = value === undefined ? token.checked ?? [] : decodeTicks(value, token.options.length,)
+			filled = ticks.some(Boolean,)
+		} else if (token.kind === 'choice') {
+			filled = (value ?? token.options[0] ?? '').trim() !== ''
+		} else {
+			filled = (value ?? '').trim() !== ''
+		}
+		if (!filled) { unfilled.push(position,) }
+	}
+	return unfilled
+}
+
+/**
+ * The two options of the 6.x `<select>` (or inline `{choice}`) equivalent to one
+ * tick-box item: the unticked output and the ticked one, with whichever the box starts
+ * as listed first, since the first option is what 6.x and the overlay start on.
+ */
+function toggleChoiceOptions (kind: ToggleKind, text: string, ticked: boolean,): [string, string,] {
+	const off = kind === 'highlight' ? text : ''
+	const on = kind === 'highlight' ? emphasize(text,) : text
+	return ticked ? [on, off,] : [off, on,]
+}
+
+/**
+ * Recognizes an inline choice that is really a tick box - two options where one is
+ * the other in bold (`a | **a**`) or one is empty (` | a`) - and returns the tick-box
+ * token it stands for, or `null`. The option listed first decides the starting tick.
+ */
+function toggleFromChoice (token: InteractiveToken,): InteractiveToken | null {
+	if (token.kind !== 'choice' || !token.inline || token.options.length !== 2) { return null }
+	const [first, second,] = token.options.map((option,) => option.trim()) as [string, string,]
+	let toggle: InteractiveToken | null = null
+	const make = (kind: ToggleKind, text: string, ticked: boolean,): InteractiveToken => ({
+		kind,
+		placeholder: '',
+		options: [text,],
+		checked: [ticked,],
+		inline: true,
+	})
+	if (first && second === emphasize(first,)) { toggle = make('highlight', first, false,) }
+	else if (second && first === emphasize(second,)) { toggle = make('highlight', second, true,) }
+	else if (!first && second) { toggle = make('multi', second, false,) }
+	else if (first && !second) { toggle = make('multi', first, true,) }
+	if (toggle && token.id) { toggle.id = token.id }
+	if (toggle && token.required) { toggle.required = true }
+	return toggle
+}
+
+/**
+ * Rewrites every inline `{choice}` that is really a tick box (see `toggleFromChoice`)
+ * as the tick-box token: `{choice: a | **a**}` becomes `{highlight: a}` and
+ * `{choice: | a}` becomes `{check: a}`, with `[x]` when the ticked output was listed
+ * first. This is the pattern 6.x configs used to fake highlighting with one `<select>`
+ * per line, and the shape tick boxes down-convert to on the v1 mirror, so it both
+ * migrates those configs and brings a mirror round trip back to tick boxes. Only the
+ * matching tokens change; every other byte of the text is kept as written.
+ * @param text Token-form reason text.
+ */
+export function promoteLegacyToggles (text: string,): string {
+	if (!/\{choice/i.test(text,)) { return text }
+	let changed = false
+	const out = parseSourcedSegments(text,).map(({segment, source,},) => {
+		if (segment.type === 'text') { return source }
+		const toggle = toggleFromChoice(segment.token,)
+		if (!toggle) { return source }
+		changed = true
+		return serializeToken(toggle,)
+	},)
+	return changed ? out.join('',) : text
+}
+
+/**
+ * The reverse of {@link promoteLegacyToggles}: rewrites every tick-box token as the
+ * inline `{choice}` (or, for a block, one `- {choice: ...}` line per item) it would
+ * have been before promotion, keeping every other byte of the text as written. Used
+ * to recognise historical text that an earlier build split apart (see
+ * `recoverSplitChoiceTexts` in `wikiMigration.ts`), since that build saw the choices.
+ * @param text Token-form reason text.
+ */
+export function demoteToggles (text: string,): string {
+	if (!FIELD_HINT_RE.test(text,)) { return text }
+	return parseSourcedSegments(text,).map(({segment, source,},) => {
+		if (segment.type === 'text' || !isToggleKind(segment.token.kind,)) { return source }
+		const {token,} = segment
+		const kind = token.kind as ToggleKind
+		const choices = token.options.map((option, index,) => {
+			const choice: InteractiveToken = {
+				kind: 'choice',
+				placeholder: '',
+				options: toggleChoiceOptions(kind, collapseToLine(option,), token.checked?.[index] ?? false,),
+				inline: true,
+			}
+			if (token.inline && token.id) { choice.id = token.id }
+			if (token.inline && token.required) { choice.required = true }
+			return serializeToken(choice,)
+		},)
+		return token.inline ? choices[0] ?? '' : choices.map((choice,) => `- ${choice}`).join('\n',)
+	},).join('',)
 }
 
 /**
@@ -564,6 +937,7 @@ function parseLegacySelect (selectHtml: string,): ParsedLegacySelect {
 	}
 	const token: InteractiveToken = {kind: 'choice', placeholder: '', options,}
 	if (id) { token.id = id }
+	if (hasBooleanAttr(openTag, 'required',)) { token.required = true }
 	const prompt = getAttr(openTag, 'label',)
 	return prompt ? {token, prompt,} : {token,}
 }
@@ -605,11 +979,25 @@ function selectHtmlToTokenText (selectHtml: string, inline: boolean,): string {
 	return `\n\n${prompt ? `${prompt}\n\n${block}` : block}\n\n`
 }
 
-/** Converts one legacy `<input>` or `<textarea>` tag to the equivalent token. */
+/**
+ * The `id` a `{note}` is written out with on the v1 mirror. 6.x has no notes, so a note
+ * becomes an empty `<input>` whose placeholder is the note: 6.x moderators see it and,
+ * left empty as intended, it sends nothing there either. The id is how the up-convert
+ * tells it apart from a real fill-in field.
+ */
+const legacyNoteId = 'tbx-note'
+
+/**
+ * Converts one legacy `<input>` or `<textarea>` tag to the equivalent token. An `<input>`
+ * carrying the {@link legacyNoteId} is a `{note}` written out for the mirror.
+ */
 function fieldHtmlToToken (html: string,): InteractiveToken {
 	const kind: InteractiveTokenKind = /^<textarea/i.test(html,) ? 'textarea' : 'input'
 	const openTag = html.match(/^<\w+\b[^>]*>/i,)?.[0] ?? html
 	const id = getAttr(openTag, 'id',)
+	if (kind === 'input' && id === legacyNoteId) {
+		return {kind: 'note', placeholder: getAttr(openTag, 'placeholder',) ?? '', options: [],}
+	}
 	// Placeholder comes from the attribute; legacy textareas occasionally
 	// carried their hint as inner text instead.
 	let placeholder = getAttr(openTag, 'placeholder',) ?? ''
@@ -618,6 +1006,7 @@ function fieldHtmlToToken (html: string,): InteractiveToken {
 	}
 	const token: InteractiveToken = {kind, placeholder, options: [],}
 	if (id) { token.id = id }
+	if (hasBooleanAttr(openTag, 'required',)) { token.required = true }
 	return token
 }
 
@@ -658,6 +1047,11 @@ export function htmlSimpleFieldsToTokens (text: string,): string {
 	},)
 }
 
+/** Whether an HTML open tag carries the given boolean attribute (`required`, `required=""`, ...). */
+function hasBooleanAttr (tag: string, name: string,): boolean {
+	return new RegExp(`\\s${name}(?=[\\s=/>])`, 'i',).test(tag,)
+}
+
 /** Escapes a string for use inside a double-quoted HTML attribute. */
 function escapeAttr (value: string,): string {
 	return value.replace(/&/g, '&amp;',).replace(/"/g, '&quot;',)
@@ -688,13 +1082,32 @@ function escapeOptionMarkdown (text: string,): string {
  * the token, so no `label` attribute is written.
  */
 export function tokenToLegacyHtml (token: InteractiveToken,): string {
-	const idAttr = token.id ? ` id="${escapeAttr(token.id,)}"` : ''
+	// 6.x ignores `required`, but the attribute survives its rewrites, so a required field
+	// comes back required. It is written with a value because SnuOwnd, which renders the
+	// overlay's inline fields, drops valueless attributes.
+	const idAttr = (token.id ? ` id="${escapeAttr(token.id,)}"` : '') + (token.required ? ' required="required"' : '')
+	const selectHtml = (attr: string, options: readonly string[],) =>
+		`<select${attr}>${
+			options.map((option,) => `<option>${escapeOptionMarkdown(collapseToLine(option,),)}</option>`).join('',)
+		}</select>`
 	switch (token.kind) {
-		case 'choice': {
-			const options = token.options
-				.map((option,) => `<option>${escapeOptionMarkdown(collapseToLine(option,),)}</option>`)
-				.join('',)
-			return `<select${idAttr}>${options}</select>`
+		case 'choice':
+			return selectHtml(idAttr, token.options,)
+		case 'multi':
+		case 'highlight': {
+			// 6.x has no tick box, so each item becomes a `<select>` offering its two
+			// possible outputs - the pattern promoteLegacyToggles reads back. A block's
+			// items are `- ` list lines, as the overlay sends them; its id names the whole
+			// block, so (like 6.x itself, with no way to share one) the selects go without -
+			// and without its required mark, which per item would demand the wrong thing.
+			const kind = token.kind
+			const selects = token.options.map((option, index,) =>
+				selectHtml(
+					token.inline ? idAttr : '',
+					toggleChoiceOptions(kind, collapseToLine(option,), token.checked?.[index] ?? false,),
+				)
+			)
+			return token.inline ? selects[0] ?? '' : selects.map((select,) => `- ${select}`).join('\n',)
 		}
 		case 'textarea': {
 			const placeholder = token.placeholder ? ` placeholder="${escapeAttr(token.placeholder,)}"` : ''
@@ -704,6 +1117,8 @@ export function tokenToLegacyHtml (token: InteractiveToken,): string {
 			const placeholder = token.placeholder ? ` placeholder="${escapeAttr(token.placeholder,)}"` : ''
 			return `<input${idAttr}${placeholder}>`
 		}
+		case 'note':
+			return `<input id="${legacyNoteId}" placeholder="${escapeAttr(token.placeholder,)}">`
 	}
 }
 

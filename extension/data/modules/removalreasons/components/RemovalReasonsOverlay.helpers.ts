@@ -1,6 +1,6 @@
 /**
  * Pure helpers for the removal-reasons overlay: wiki-text-to-UI rendering
- * (including the `{choice}` block -> radio-group pipeline), reason-text
+ * (including the `{choice}` -> radio-group and tick-box -> checkbox-group pipelines), reason-text
  * composition, and small mapping utilities.
  *
  * Reason text is the schema v2 token form (`{input: ...}`, `{textarea: ...}`,
@@ -13,8 +13,13 @@
  */
 
 import {
+	decodeTicks,
+	encodeTicks,
+	findUnfilledRequired,
 	htmlFieldsToTokens,
 	type InteractiveToken,
+	isToggleKind,
+	type LiteralField,
 	parseReasonSegments,
 	substituteTokenValues,
 	tokenToLegacyHtml,
@@ -62,6 +67,20 @@ export const nativeNoteError = 'failed to save Reddit mod note'
 export const banError = 'failed to issue ban'
 export const nativeReasonError = 'failed to register native removal reason'
 
+/** Class marking a required field the moderator left unfilled on a send attempt. */
+export const missingFieldClass = 'toolbox-field-missing'
+
+/**
+ * The status message for a send blocked by unfilled required fields.
+ * @param titles The titles of the reasons holding them (undefined for an untitled reason).
+ */
+export function requiredFieldsError (titles: Array<string | undefined>,): string {
+	const named = titles.filter((title,): title is string => !!title)
+	return named.length > 0
+		? `fill in the required fields in: ${named.join(', ',)}`
+		: 'fill in the required fields in the selected reason'
+}
+
 /**
  * Renders a `{choice}` token as a radio button group.
  * Each option string is both the inserted value and the visible label; labels
@@ -91,7 +110,11 @@ export function choiceTokenToRadioGroup (
 	const groupName = `toolbox-rg-${selectId}-${radioGroupCounter++}`
 
 	const wrapper = doc.createElement(token.inline ? 'span' : 'div',)
-	wrapper.className = token.inline ? 'toolbox-radio-group toolbox-radio-group-inline' : 'toolbox-radio-group'
+	wrapper.className = [
+		'toolbox-radio-group',
+		...token.inline ? ['toolbox-radio-group-inline',] : [],
+		...token.required ? ['toolbox-field-required',] : [],
+	].join(' ',)
 
 	token.options.forEach((option, optionIdx,) => {
 		const label = doc.createElement('label',)
@@ -107,13 +130,7 @@ export function choiceTokenToRadioGroup (
 
 		const span = doc.createElement('span',)
 		span.className = 'toolbox-radio-text'
-		// Render option text as markdown; strip single outer block wrapper so content
-		// sits inline with the radio button.
-		let labelHtml = parser.render(option,).trim()
-		labelHtml = labelHtml
-			.replace(/^<(?:ul|ol)>\s*<li>([\s\S]+)<\/li>\s*<\/(?:ul|ol)>$/, '$1',)
-			.replace(/^<p>([\s\S]+)<\/p>$/, '$1',)
-		span.innerHTML = labelHtml || option
+		span.innerHTML = renderLabelMarkdown(parser, option,)
 
 		label.appendChild(radio,)
 		label.appendChild(span,)
@@ -129,6 +146,93 @@ export function choiceTokenToRadioGroup (
 	wrapper.appendChild(hiddenInput,)
 
 	return wrapper.outerHTML
+}
+
+/**
+ * Renders a tick-box token (`{multi}` / `{highlight}` block, or an inline `{check: ...}` /
+ * `{highlight: ...}`) as a group of checkboxes, one per item, starting from the template's
+ * `[x]` ticks. It reuses the radio group's classes so it shares that layout and the card's
+ * click guard; `toolbox-check-group` marks it as tick boxes, and `toolbox-check-highlight`
+ * lets CSS preview a ticked highlight item in bold.
+ * A `<input type="hidden">` inside the wrapper carries the tick state (`encodeTicks`) for
+ * the save logic and the persisted value; `substituteTokenValues` turns it into markdown.
+ * @param parser SnuOwnd parser instance for rendering item markdown labels.
+ * @param token The parsed tick-box token.
+ * @param anonId Stable id to use when the token has no explicit `#id` (see
+ *   {@link choiceTokenToRadioGroup}).
+ * @returns HTML string containing a `.toolbox-check-group` element with a hidden input inside.
+ */
+export function toggleTokenToCheckboxGroup (
+	parser: ReturnType<typeof getRemovalReasonParser>,
+	token: InteractiveToken,
+	anonId: string,
+): string {
+	const doc = new DOMParser().parseFromString('', 'text/html',)
+	const groupId = token.id || anonId
+
+	const wrapper = doc.createElement(token.inline ? 'span' : 'div',)
+	wrapper.className = [
+		'toolbox-radio-group',
+		'toolbox-check-group',
+		...token.inline ? ['toolbox-radio-group-inline',] : [],
+		...token.kind === 'highlight' ? ['toolbox-check-highlight',] : [],
+		...token.required ? ['toolbox-field-required',] : [],
+	].join(' ',)
+
+	token.options.forEach((option, optionIdx,) => {
+		const label = doc.createElement('label',)
+		label.className = 'toolbox-radio-label'
+
+		const box = doc.createElement('input',)
+		box.type = 'checkbox'
+		box.className = 'toolbox-radio-input'
+		box.value = String(optionIdx,)
+		box.dataset.syncChecks = groupId
+		if (token.checked?.[optionIdx]) { box.setAttribute('checked', '',) }
+
+		const span = doc.createElement('span',)
+		span.className = 'toolbox-radio-text'
+		span.innerHTML = renderLabelMarkdown(parser, option,)
+
+		label.appendChild(box,)
+		label.appendChild(span,)
+		wrapper.appendChild(label,)
+	},)
+
+	const hiddenInput = doc.createElement('input',)
+	hiddenInput.type = 'hidden'
+	hiddenInput.id = groupId
+	hiddenInput.value = encodeTicks(token.checked ?? [],)
+	wrapper.appendChild(hiddenInput,)
+
+	return wrapper.outerHTML
+}
+
+/**
+ * Renders an option or item label as markdown, stripping the single outer block wrapper
+ * so the content sits inline with its radio button or checkbox.
+ */
+function renderLabelMarkdown (parser: ReturnType<typeof getRemovalReasonParser>, option: string,): string {
+	const labelHtml = parser.render(option,).trim()
+		.replace(/^<(?:ul|ol)>\s*<li>([\s\S]+)<\/li>\s*<\/(?:ul|ol)>$/, '$1',)
+		.replace(/^<p>([\s\S]+)<\/p>$/, '$1',)
+	return labelHtml || option
+}
+
+/**
+ * Renders a `{note}` as moderator-only guidance: a muted inline span, with its text as
+ * inline markdown so it can carry a link. It holds no form control, so it takes no value
+ * slot, matching `substituteTokenValues`, which sends nothing for it.
+ * @param parser SnuOwnd parser instance for rendering the note's markdown.
+ * @param token The parsed note token.
+ */
+export function noteTokenToHtml (parser: ReturnType<typeof getRemovalReasonParser>, token: InteractiveToken,): string {
+	const doc = new DOMParser().parseFromString('', 'text/html',)
+	const span = doc.createElement('span',)
+	span.className = 'toolbox-reason-note'
+	span.title = 'Note for moderators - not sent'
+	span.innerHTML = renderLabelMarkdown(parser, token.placeholder,)
+	return span.outerHTML
 }
 
 /**
@@ -213,21 +317,31 @@ export function renderReasonHtml (
 		parts.push(html,)
 	}
 
+	// The control for a choice or tick-box token, with the next stable fallback id.
+	const renderControl = (token: InteractiveToken,) => {
+		const anonId = `${idPrefix}-${anonChoiceIndex++}`
+		return isToggleKind(token.kind,)
+			? toggleTokenToCheckboxGroup(parser, token, anonId,)
+			: choiceTokenToRadioGroup(parser, token, anonId,)
+	}
+
 	for (const segment of parseReasonSegments(healed,)) {
 		if (segment.type === 'text') {
 			pending += segment.text
-		} else if (segment.token.kind === 'choice' && segment.token.inline) {
-			// SnuOwnd would escape the radio group's HTML, so a plain-word placeholder rides
+		} else if (segment.token.kind === 'note') {
+			// Rides through the markdown render like an inline choice, so it stays in its line.
+			pending += `${inlineChoicePlaceholder}${inlineChoices.length}Q`
+			inlineChoices.push(noteTokenToHtml(parser, segment.token,),)
+		} else if (segment.token.options.length > 0 && segment.token.inline) {
+			// SnuOwnd would escape the control's HTML, so a plain-word placeholder rides
 			// through the markdown render in its place and is swapped for the group after.
 			pending += `${inlineChoicePlaceholder}${inlineChoices.length}Q`
-			inlineChoices.push(
-				choiceTokenToRadioGroup(parser, segment.token, `${idPrefix}-${anonChoiceIndex++}`,),
-			)
-		} else if (segment.token.kind === 'choice') {
-			// SnuOwnd HTML-escapes <select> even when whitelisted, so choices are
-			// spliced in as pre-rendered radio groups between markdown chunks.
+			inlineChoices.push(renderControl(segment.token,),)
+		} else if (segment.token.options.length > 0) {
+			// SnuOwnd HTML-escapes <select> even when whitelisted, so choices and tick
+			// boxes are spliced in as pre-rendered groups between markdown chunks.
 			flush()
-			parts.push(choiceTokenToRadioGroup(parser, segment.token, `${idPrefix}-${anonChoiceIndex++}`,),)
+			parts.push(renderControl(segment.token,),)
 		} else {
 			pending += tokenToLegacyHtml(segment.token,)
 		}
@@ -248,6 +362,85 @@ export function syncRadiosToHiddenInput (input: HTMLInputElement,) {
 	wrapper.querySelectorAll<HTMLInputElement>('input[type="radio"]',).forEach((radio,) => {
 		radio.checked = radio.value === input.value
 	},)
+}
+
+/**
+ * Syncs the checkboxes inside a `.toolbox-check-group` to the tick state held by its
+ * hidden input (an `encodeTicks` value), e.g. after restoring it from the cache.
+ * @param input The `<input type="hidden">` inside the checkbox group wrapper.
+ */
+export function syncChecksToHiddenInput (input: HTMLInputElement,) {
+	const wrapper = input.closest('.toolbox-check-group',)
+	if (!wrapper) { return }
+	const boxes = wrapper.querySelectorAll<HTMLInputElement>('input[type="checkbox"]',)
+	const ticks = decodeTicks(input.value, boxes.length,)
+	boxes.forEach((box, index,) => {
+		box.checked = ticks[index] ?? false
+	},)
+}
+
+/**
+ * Reads the checkboxes inside a `.toolbox-check-group` back into the `encodeTicks` value
+ * its hidden input carries.
+ * @param input The `<input type="hidden">` inside the checkbox group wrapper.
+ */
+export function ticksFromCheckboxes (input: HTMLInputElement,): string {
+	const wrapper = input.closest('.toolbox-check-group',)
+	if (!wrapper) { return input.value }
+	return encodeTicks(
+		Array.from(wrapper.querySelectorAll<HTMLInputElement>('input[type="checkbox"]',), (box,) => box.checked,),
+	)
+}
+
+/** The wording pieces for a block marker that will be sent as text (see `describeLiteralField`). */
+export interface LiteralFieldDescription {
+	/** What the field is, e.g. `pick-one {choice}`. */
+	name: string
+	/** Why it won't become a control, phrased to follow "A <name> field ...". */
+	cause: string
+	/** The fix, as an imperative with no trailing period, so callers can say where to make it. */
+	fix: string
+}
+
+/**
+ * Words the warning for a block marker no control will be rendered for. Each problem
+ * gets its own wording: naming the wrong mistake is worse than saying nothing, since it
+ * sends the moderator looking at the part of the reason that is already correct.
+ * @param field The marker and problem `findLiteralFieldMarker` reported.
+ */
+export function describeLiteralField (field: LiteralField,): LiteralFieldDescription {
+	const marker = `{${field.kind}}`
+	const isChoice = field.kind === 'choice'
+	const name = `${isChoice ? 'pick-one' : 'tick-box'} ${marker}`
+	const list = isChoice ? 'option list' : '"- [ ]" checklist'
+	switch (field.problem) {
+		case 'inline':
+			return {
+				name,
+				cause: 'shares its line with other text, so it will be sent as text - marker, list and all -',
+				fix: `Put the ${marker} marker on a line of its own, with the ${list} directly below it`,
+			}
+		case 'no-options':
+			return {
+				name,
+				cause: `has no ${list} below it, so it will be sent as text - marker and all -`,
+				fix: `Put the ${list} directly below the ${marker} line`,
+			}
+		case 'wrong-list':
+			return isChoice
+				? {
+					name,
+					cause: 'is followed by "- [ ]" checklist items, which only {multi} and {highlight} take, so '
+						+ 'it will be sent as text - marker and all -',
+					fix: 'Drop the "[ ]" boxes for a pick-one list, or use {multi} or {highlight} for tick boxes',
+				}
+				: {
+					name,
+					cause: 'is followed by plain "- " items instead of "- [ ]" checklist items, so it will be '
+						+ 'sent as text - marker and all -',
+					fix: 'Start each item with "- [ ] " (or "- [x] " to start it ticked)',
+				}
+	}
 }
 
 /** Maps a reasonType setting's stored string value to the overlay's delivery type. */
@@ -294,6 +487,22 @@ export interface ComposedReason {
 	flairTemplateID: string
 	/** Per-reason resolved bodies in display order, for re-seeding the overlay later. */
 	pieces: ComposedReasonPiece[]
+	/**
+	 * The selected reasons with required fields left unfilled, in display order; empty when
+	 * the message may be sent. `positions` are control positions within the reason, in the
+	 * order `getInputValues` returns the controls' values.
+	 */
+	unfilled: UnfilledReason[]
+}
+
+/** A selected reason with required fields left unfilled (see {@link ComposedReason}). */
+export interface UnfilledReason {
+	/** The rendered reason's positional id (the key of its content element). */
+	id: string
+	/** The reason's display title, if any. */
+	title?: string
+	/** Control positions of the unfilled required fields. */
+	positions: number[]
 }
 
 /**
@@ -317,6 +526,7 @@ export function composeReasonText (
 	let flairCSS = ''
 	let flairTemplateID = ''
 	const pieces: ComposedReasonPiece[] = []
+	const unfilled: UnfilledReason[] = []
 
 	checkedOrdered.forEach((r,) => {
 		const override = getOverride(r.id,)
@@ -325,15 +535,21 @@ export function composeReasonText (
 		// markdown already carries a trailing `\n\n` (healed at render time), so the
 		// concatenation spacing below is preserved exactly as before.
 		let body: string
+		const values = getInputValues(r.id,)
+		const text = override !== undefined ? htmlFieldsToTokens(override,) : r.markdown
+		const positions = findUnfilledRequired(text, values,)
+		if (positions.length > 0) {
+			unfilled.push({id: r.id, positions, ...(r.reason.title ? {title: r.reason.title,} : {}),},)
+		}
 		if (override !== undefined) {
 			// An edited reason still renders its interactive controls, so its values are
 			// substituted just like the non-override path. The draft is healed first because
 			// the editor may have typed raw legacy HTML, which the overrideHtml render also
 			// heals - both must parse the same text for tokens and controls to line up 1:1.
-			body = substituteTokenValues(htmlFieldsToTokens(override,), getInputValues(r.id,),)
+			body = substituteTokenValues(text, values,)
 			reason += `${body}\n\n`
 		} else {
-			body = substituteTokenValues(r.markdown, getInputValues(r.id,),)
+			body = substituteTokenValues(text, values,)
 			reason += body
 		}
 		// Capture the resolved body keyed by the persistent reason id, so Edit & Accept
@@ -348,5 +564,5 @@ export function composeReasonText (
 		if (r.reason.flairTemplateID) { flairTemplateID = r.reason.flairTemplateID }
 	},)
 
-	return {reason, flairText, flairCSS, flairTemplateID, pieces,}
+	return {reason, flairText, flairCSS, flairTemplateID, pieces, unfilled,}
 }

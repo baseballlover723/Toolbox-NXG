@@ -250,6 +250,35 @@ describe('RemovalReasonsOverlay', () => {
 		expect(onClose,).toHaveBeenCalledOnce()
 	})
 
+	it('blocks send until a required field is filled, then sends without the note', async () => {
+		const requiredReason: RemovalReason = {
+			...reason,
+			text: 'Why: {input#why!: why} {note: mods only} [ask us]({modmail})',
+		}
+		renderOverlay({reasons: [requiredReason,],}, 'Popup', [requiredReason,],)
+
+		await act(async () => {
+			container.querySelector<HTMLInputElement>('input[aria-label="Select removal reason 1"]',)!.click()
+			getButton('Send',).click()
+		},)
+
+		expect(removeThing,).not.toHaveBeenCalled()
+		expect(container.textContent,).toContain('fill in the required fields',)
+		const field = container.querySelector<HTMLInputElement>('input[placeholder="why"]',)!
+		expect(field.classList.contains('toolbox-field-missing',),).toBe(true,)
+
+		field.value = 'spam'
+		await act(async () => {
+			getButton('Send',).click()
+		},)
+
+		expect(removeThing,).toHaveBeenCalledWith('t3_post', false,)
+		const sent = String(postComment.mock.calls[0]?.[1],)
+		expect(sent,).toContain('Why: spam',)
+		expect(sent,).toContain('[ask us](https://www.reddit.com/message/compose?to=/r/testsub)',)
+		expect(sent,).not.toContain('mods only',)
+	})
+
 	it('keeps the overlay open when send cannot remove the item', async () => {
 		removeThing.mockRejectedValueOnce(new Error('nope',),)
 		renderOverlay()

@@ -4,9 +4,11 @@ import {describe, expect, it,} from 'vitest'
 import {getRemovalReasonParser,} from '../../shared/removalReasons/parser'
 import {
 	composeReasonText,
+	describeLiteralField,
 	getDomainLink,
 	type RenderedReason,
 	renderReasonHtml,
+	requiredFieldsError,
 	settingToReasonType,
 } from './RemovalReasonsOverlay.helpers'
 
@@ -50,6 +52,42 @@ describe('renderReasonHtml', () => {
 		expect(html,).toContain('id="pick"',)
 		// First option is pre-selected and seeds the hidden input value.
 		expect(html,).toContain('value="first"',)
+	})
+
+	it('converts a {highlight} block to a checkbox group seeded from its [x] ticks', () => {
+		const html = renderReasonHtml(parser, '{highlight#rules}\n- [ ] first\n- [x] second',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		const group = doc.querySelector('.toolbox-check-group',)!
+		expect(group.classList.contains('toolbox-check-highlight',),).toBe(true,)
+		const boxes = Array.from(group.querySelectorAll<HTMLInputElement>('input[type="checkbox"]',),)
+		expect(boxes.map((box,) => box.checked),).toEqual([false, true,],)
+		expect(boxes.every((box,) => box.dataset.syncChecks === 'rules'),).toBe(true,)
+		const hidden = group.querySelector<HTMLInputElement>('input[type="hidden"]',)!
+		expect(hidden.id,).toBe('rules',)
+		expect(hidden.value,).toBe('1',)
+	})
+
+	it('renders an inline {check} box inside its paragraph', () => {
+		const html = renderReasonHtml(parser, 'It was {check: [x] spam} and more.',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		const group = doc.querySelector('p > span.toolbox-check-group.toolbox-radio-group-inline',)!
+		expect(group.querySelector<HTMLInputElement>('input[type="checkbox"]',)!.checked,).toBe(true,)
+		expect(group.classList.contains('toolbox-check-highlight',),).toBe(false,)
+	})
+
+	it('renders a {note} as a muted span in its paragraph, with no form control', () => {
+		const html = renderReasonHtml(parser, 'Rule 5 {note: see [the wiki](https://example.com)} applies.',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		const note = doc.querySelector('p > span.toolbox-reason-note',)!
+		expect(note.querySelector('a',)?.getAttribute('href',),).toBe('https://example.com',)
+		expect(doc.querySelector('input, select, textarea',),).toBeNull()
+	})
+
+	it('marks required inputs and groups', () => {
+		const html = renderReasonHtml(parser, 'Why: {input!: why}\n\n{choice!}\n- a\n- b',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		expect(doc.querySelector('input[placeholder="why"]',)?.hasAttribute('required',),).toBe(true,)
+		expect(doc.querySelector('.toolbox-radio-group',)?.classList.contains('toolbox-field-required',),).toBe(true,)
 	})
 
 	it('converts legacy HTML select elements the same way', () => {
@@ -163,6 +201,33 @@ describe('composeReasonText', () => {
 		}
 	}
 
+	it('turns tick-box values into the markdown they send', () => {
+		const result = composeReasonText(
+			[rendered(
+				'a',
+				'Image posts must:\n\n{highlight}\n- [ ] be original\n- [ ] name it\n\nAlso {check: spam}.\n\n',
+			),],
+			() => undefined,
+			() => ['1', '0',],
+		)
+		expect(result.reason,).toBe('Image posts must:\n\n- be original\n- **name it**\n\nAlso spam.\n\n',)
+	})
+
+	it('reports reasons with unfilled required fields, by title', () => {
+		const result = composeReasonText(
+			[
+				rendered('a', 'Why: {input!: why}\n\n', {title: 'Spam',},),
+				rendered('b', 'Fine: {input!: ok}\n\n',),
+			],
+			() => undefined,
+			(id,) => id === 'a' ? [' ',] : ['filled',],
+		)
+		expect(result.unfilled,).toEqual([{id: 'a', title: 'Spam', positions: [0,],},],)
+		expect(requiredFieldsError(result.unfilled.map(({title,},) => title),),)
+			.toBe('fill in the required fields in: Spam',)
+		expect(requiredFieldsError([undefined,],),).toBe('fill in the required fields in the selected reason',)
+	})
+
 	it('uses the override text when present', () => {
 		const result = composeReasonText(
 			[rendered('a', 'original',),],
@@ -234,5 +299,20 @@ describe('composeReasonText', () => {
 	it('falls back to the positional id in a piece when a reason has no persistent id', () => {
 		const result = composeReasonText([rendered('reason-0', 'body',),], () => undefined, () => [],)
 		expect(result.pieces[0]!.id,).toBe('reason-0',)
+	})
+})
+
+describe('describeLiteralField', () => {
+	it('names the field and the list style it takes', () => {
+		expect(describeLiteralField({kind: 'choice', problem: 'no-options',},).cause,).toContain('option list',)
+		expect(describeLiteralField({kind: 'multi', problem: 'no-options',},).cause,).toContain('"- [ ]" checklist',)
+		expect(describeLiteralField({kind: 'highlight', problem: 'inline',},).name,).toBe('tick-box {highlight}',)
+	})
+
+	it('points a wrong-style list at the right fix for each side', () => {
+		expect(describeLiteralField({kind: 'choice', problem: 'wrong-list',},).fix,).toContain(
+			'{multi} or {highlight}',
+		)
+		expect(describeLiteralField({kind: 'multi', problem: 'wrong-list',},).fix,).toContain('"- [ ] "',)
 	})
 })

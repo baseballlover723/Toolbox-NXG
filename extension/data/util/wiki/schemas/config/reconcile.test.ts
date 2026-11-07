@@ -78,6 +78,26 @@ describe('normalizeConfig', () => {
 
 		expect(config.removalReasons.reasons[0]!.text,).toBe('Which rule?\n\n{choice#rule}\n- Rule 1\n- Rule 2',)
 	})
+
+	it('turns a 6.x fake highlight (one bold/plain select per line) into tick boxes', () => {
+		const config = makeConfig({
+			ver: 1,
+			removalReasons: {
+				reasons: [{
+					title: 'Images',
+					text: escape(
+						'- Image posts must:\n\n'
+							+ '- <select><option>be original</option><option>**be original**</option></select>\n\n'
+							+ '- <select><option>not be a repost</option><option>**not be a repost**</option></select>. '
+							+ 'Wait a week.',
+					),
+				},],
+			},
+		},)
+
+		expect(config.removalReasons.reasons[0]!.text,)
+			.toBe('- Image posts must:\n\n- {highlight: be original}\n\n- {highlight: not be a repost}. Wait a week.',)
+	})
 })
 
 describe('legacyOwnedFieldsEqual', () => {
@@ -621,6 +641,39 @@ const fixedPointCases: Array<[string, Record<string, unknown>,]> = [
 			reasons: [{title: 'Rule a%2Fb', text: 'see the wiki', flairText: 'a%2Fb', flairCSS: 'x%20y',},],
 		},
 		banMacros: {note: 'n%2Fa', message: 'https://example.com/?q=a%20b', duration: 3, reason: 'r%20s',},
+	},],
+	['notes, required fields, and link tokens', {
+		removalReasons: {
+			header: 'Hi {author}, [message us]({modmail}) with questions.',
+			footer: 'Rules: {wiki: rules#wiki_image_posts}.',
+			reasons: [
+				{title: 'Images', text: 'Why: {input#why!: why} {note: only for images}\n\n{choice!}\n- \n- Rule 1',},
+				{title: 'Spam', text: 'It was:\n\n{multi!}\n- [ ] spam\n\nand {check!: low effort}.',},
+			],
+		},
+		modMacros: [{title: 'Appeal', text: 'Appeal via [modmail]({modmail}).',},],
+		banMacros: {
+			banNote: 'see {wiki: banlog}',
+			banMessage: 'Appeal at {modmail}',
+			defaultBanPermanent: false,
+			defaultBanDuration: 3,
+			banDurationPresets: [],
+		},
+	},],
+	['tick-box blocks and inline boxes', {
+		removalReasons: {
+			reasons: [
+				{
+					title: 'Images',
+					text:
+						'Image posts must:\n\n{highlight#images}\n- [ ] be original\n- [x] cite the source\n\nThanks.',
+				},
+				{
+					title: 'Spam',
+					text: 'It was:\n\n{multi}\n- [x] spam\n- [ ] off topic\n\nand {check: [x] low effort}.',
+				},
+			],
+		},
 	},],
 	['choice blocks with and without an id', {
 		removalReasons: {

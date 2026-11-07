@@ -30,7 +30,14 @@ describe('removal reason parser', () => {
 			context: {html_element_whitelist: string[]; html_attr_whitelist: string[]}
 		}
 		expect(renderer.context.html_element_whitelist,).toEqual(['a', 'select', 'option', 'textarea', 'input',],)
-		expect(renderer.context.html_attr_whitelist,).toEqual(['href', 'id', 'placeholder', 'label', 'value',],)
+		expect(renderer.context.html_attr_whitelist,).toEqual([
+			'href',
+			'id',
+			'placeholder',
+			'label',
+			'value',
+			'required',
+		],)
 	})
 
 	it('does not mutate the global default whitelists', () => {

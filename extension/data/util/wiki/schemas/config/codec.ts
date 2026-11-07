@@ -9,6 +9,8 @@
  *   6.x reads them with an unconditional `unescape()`. Same for macro text.
  * - Interactive fill-in fields are the limited-HTML form (`<input>`,
  *   `<textarea>`, `<select>`), which 6.x renders directly.
+ * - The link tokens `{modmail}` and `{wiki: page}` are written as their URLs with
+ *   `{subreddit}` left in, which 6.x substitutes; normalize reads them back.
  * - Stable `id` fields and the NXG layout metadata keys are stripped; 6.x
  *   rebuilds entries wholesale on save and would just drop them anyway.
  * - Domain tags and usernote colors, which NXG keeps on their own pages, are
@@ -22,6 +24,7 @@
 import type {WikiPageCodec,} from '../../../../api/resources/wikiVersioned'
 import {legacyEscape, unescapeJSON,} from '../../../data/encoding'
 import {purifyObject,} from '../../../data/purify'
+import {linkTokensToLegacy,} from '../../../reddit/linkTokens'
 import {stripLayoutMetadata,} from '../../wikiConstants'
 import type {DomainTag,} from '../domaintags/schema'
 import {tokensToHtmlFields,} from '../shared/tokens'
@@ -30,10 +33,10 @@ import {configSchema, type LegacyConfig, normalizeConfig, type ToolboxConfig,} f
 
 /**
  * Down-converts one reason/header/footer text: tokens -> legacy HTML (each
- * `{choice}` block becomes a `<select>`), then escape()-encoded.
+ * `{choice}` block becomes a `<select>`), link tokens -> URLs, then escape()-encoded.
  */
 function encodeClassicText (text: string,): string {
-	return legacyEscape(tokensToHtmlFields(text,),)
+	return legacyEscape(linkTokensToLegacy(tokensToHtmlFields(text,),),)
 }
 
 /**
@@ -112,8 +115,17 @@ export function encodeClassicConfig (
 
 	if (Array.isArray(classic.modMacros,)) {
 		for (const macro of classic.modMacros) {
-			if (typeof macro.text === 'string') { macro.text = legacyEscape(macro.text,) }
+			if (typeof macro.text === 'string') { macro.text = legacyEscape(linkTokensToLegacy(macro.text,),) }
 			delete macro.id
+		}
+	}
+
+	// Ban macro text is stored unescaped on both pages; only the link tokens need translating.
+	if (classic.banMacros && typeof classic.banMacros === 'object') {
+		const banMacros = classic.banMacros as {banNote?: unknown; banMessage?: unknown}
+		if (typeof banMacros.banNote === 'string') { banMacros.banNote = linkTokensToLegacy(banMacros.banNote,) }
+		if (typeof banMacros.banMessage === 'string') {
+			banMacros.banMessage = linkTokensToLegacy(banMacros.banMessage,)
 		}
 	}
 

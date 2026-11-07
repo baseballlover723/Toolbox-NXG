@@ -1,5 +1,6 @@
 /** Translation of Reddit's native removal-reason macros onto values Toolbox already resolves. */
 
+import {linkTokenNames,} from '../../util/reddit/linkTokens'
 import type {RemovalReasonsData,} from './schema'
 
 /**
@@ -60,14 +61,16 @@ export function nativeMacroTokens (data: RemovalReasonsData,): Record<string, st
  *
  * A legacy `<select>` whose `id` is missing or not slug-safe down-converts to a bare
  * `{choice}` (see `tokens.ts`), which is by far the common shape - so without this, an
- * ordinary subreddit with a pick-one field gets told its reason cannot be filled in.
+ * ordinary subreddit with a pick-one field gets told its reason cannot be filled in. The
+ * tick-box markers `{multi}` and `{highlight}` are bare in the same way, and so is the
+ * `{modmail}` link token, which substitution expands from the subreddit.
  * Case-sensitive, matching the parser: `{Choice}` is not a token to it either.
  *
  * This suppresses the warning for a working pick-one field, not for a broken one:
- * `findLiteralChoiceMarker` in `tokens.ts` covers a `{choice}` that no control was
+ * `findLiteralFieldMarker` in `tokens.ts` covers a block marker that no control was
  * rendered for, and the overlay warns about that separately.
  */
-const toolboxBareTokens = new Set(['choice',],)
+const toolboxBareTokens = new Set<string>(['choice', 'multi', 'highlight', ...linkTokenNames,],)
 
 /**
  * Finds `{macro}` references in reason text that nothing will substitute, so the overlay can

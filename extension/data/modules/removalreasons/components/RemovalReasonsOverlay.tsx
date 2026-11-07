@@ -34,9 +34,9 @@ import type {
 } from '../../../util/wiki/schemas/proposals/schema'
 import {
 	decodeHtmlAngleBrackets,
-	findLiteralChoiceMarker,
+	findLiteralFieldMarker,
 	htmlFieldsToTokens,
-	type LiteralChoiceProblem,
+	type LiteralField,
 } from '../../../util/wiki/schemas/shared/tokens'
 import {type UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
 import {requestCounterRefresh,} from '../../notifier/store'
@@ -66,15 +66,20 @@ import {
 } from '../schema'
 import {
 	composeReasonText,
+	describeLiteralField,
 	getDomainLink,
+	missingFieldClass,
 	noReasonError,
 	type ReasonType,
 	removeError,
 	type RenderedReason,
 	renderReasonHtml,
+	requiredFieldsError,
 	settingToReasonType,
 	statusDefaultText,
+	syncChecksToHiddenInput,
 	syncRadiosToHiddenInput,
+	ticksFromCheckboxes,
 } from './RemovalReasonsOverlay.helpers'
 import css from './RemovalReasonsOverlay.module.css'
 import {SortableReasonCard,} from './SortableReasonCard'
@@ -414,51 +419,40 @@ export function RemovalReasonsOverlay ({
 	const [editingId, setEditingId,] = useState<string | null>(null,)
 	const [editDraft, setEditDraft,] = useState('',)
 
-	// A `{choice}` marker that never became a radio group is sent as written, taking its whole
-	// option list with it - the moderator ends up publishing every option instead of the one
-	// they meant to pick. Same reasoning as the macro notice above, so it is scoped to the
-	// checked reasons too. Read off healed token text, never `reason.text`, so a legacy
-	// `<select>` config (up-converted at render time) is not reported as broken.
-	const literalChoiceProblem = useMemo<LiteralChoiceProblem | null>(() => {
-		let found: LiteralChoiceProblem | null = null
+	// A block marker that never became a control is sent as written, taking its whole list
+	// with it - the moderator ends up publishing every option instead of the ones they meant
+	// to pick. Same reasoning as the macro notice above, so it is scoped to the checked
+	// reasons too. Read off healed token text, never `reason.text`, so a legacy `<select>`
+	// config (up-converted at render time) is not reported as broken.
+	const literalField = useMemo<LiteralField | null>(() => {
+		let found: LiteralField | null = null
 		for (const r of renderedReasons) {
 			if (!selected.has(r.id,)) { continue }
 			// The text that will actually go out, picked exactly as composeParams picks it: the
 			// in-progress edit, else a saved override, else the config markdown. Reading the config
-			// instead would stay silent when an inline edit breaks a choice - the very failure this
+			// instead would stay silent when an inline edit breaks a field - the very failure this
 			// warns about - and keep warning about one the moderator has just fixed.
 			const override = editingId === r.id ? editDraft : reasonOverrides.get(r.id,)
-			const problem = findLiteralChoiceMarker(
+			const field = findLiteralFieldMarker(
 				override === undefined ? r.markdown : htmlFieldsToTokens(override,),
 			)
 			// 'inline' wins a tie: its advice (own line, list below it) also fixes a marker that
-			// only lacks its list, so a mix of both shapes still gets one sentence that covers it.
-			if (problem === 'inline') { return problem }
-			if (problem) { found = problem }
+			// only lacks its list, so a mix of shapes still gets one sentence that covers it.
+			if (field?.problem === 'inline') { return field }
+			if (field && !found) { found = field }
 		}
 		return found
 	}, [renderedReasons, selected, editingId, editDraft, reasonOverrides,],)
 
-	// Each shape gets its own wording: naming the wrong mistake is worse than saying nothing,
-	// since it sends the moderator looking at the part of the reason that is already correct.
 	const literalChoiceNotice = useMemo(() => {
-		if (!literalChoiceProblem) { return null }
-		const inline = literalChoiceProblem === 'inline'
-		const cause = inline
-			? 'shares its line with other text, so the marker and its option list are sent exactly as written'
-			: 'has no option list below it, so the marker is sent exactly as written'
-		let fix: string
+		if (!literalField) { return null }
+		const {name, cause, fix,} = describeLiteralField(literalField,)
 		// Native reason text is read-only here, so that fix always lives on Reddit's side.
-		if (nativeMode) { fix = 'Change it in Reddit\'s mod tools.' }
-		else if (inline) {
-			fix = 'Put the {choice} marker on a line of its own, with the option list directly below it, '
-				+ 'in this subreddit\'s removal reason settings.'
-		} else {
-			fix = 'Put the option list directly below the {choice} line in this subreddit\'s '
-				+ 'removal reason settings.'
-		}
-		return `A pick-one {choice} field in this reason ${cause} instead of becoming a control. ${fix}`
-	}, [literalChoiceProblem, nativeMode,],)
+		const where = nativeMode
+			? 'Change it in Reddit\'s mod tools.'
+			: `${fix} in this subreddit's removal reason settings.`
+		return `A ${name} field in this reason ${cause} instead of becoming a control. ${where}`
+	}, [literalField, nativeMode,],)
 
 	const [leaveUsernote, setLeaveUsernote,] = useState(!!seededFromIntent?.usernote,)
 	const [usernoteText, setUsernoteText,] = useState(seededFromIntent?.usernote?.text ?? '',)
@@ -549,19 +543,24 @@ export function RemovalReasonsOverlay ({
 				if (!baseId) { return }
 				const cacheKey = `reason-input-${data.subreddit}-${baseId}`
 				input.id = cacheKey
-				const isRadioGroupInput = (input as HTMLInputElement).type === 'hidden'
-					&& !!input.closest('.toolbox-radio-group',)
+				const isHidden = (input as HTMLInputElement).type === 'hidden'
+				// Tick-box groups reuse the radio group's classes, so they are told apart first.
+				const isCheckGroupInput = isHidden && !!input.closest('.toolbox-check-group',)
+				const isRadioGroupInput = isHidden && !isCheckGroupInput && !!input.closest('.toolbox-radio-group',)
 				getCache(removalReasons, cacheKey, input.value,).then((value,) => {
 					if (value != null) {
 						input.value = value as string
-						// Sync radio checked state after restoring from cache.
+						// Sync radio/checkbox checked state after restoring from cache.
 						if (isRadioGroupInput) {
 							syncRadiosToHiddenInput(input as HTMLInputElement,)
+						} else if (isCheckGroupInput) {
+							syncChecksToHiddenInput(input as HTMLInputElement,)
 						}
 					}
 				},).catch((error: unknown,) => log.error(error,))
 				const onChange = () => {
-					void setCache(removalReasons, cacheKey, input.value,)
+					void setCache(removalReasons, cacheKey, input.value,) // Filling in a field flagged on a blocked send clears its outline right away.
+					;(input.closest('.toolbox-radio-group',) ?? input).classList.remove(missingFieldClass,)
 				}
 				input.addEventListener('change', onChange,)
 				cleanups.push(() => input.removeEventListener('change', onChange,))
@@ -579,6 +578,20 @@ export function RemovalReasonsOverlay ({
 						}
 						radio.addEventListener('change', onRadioChange,)
 						cleanups.push(() => radio.removeEventListener('change', onRadioChange,))
+					},)
+				}
+
+				// Wire checkboxes in a tick-box group to re-encode the whole group's ticks.
+				if (isCheckGroupInput) {
+					element.querySelectorAll<HTMLInputElement>(
+						`input[type="checkbox"][data-sync-checks="${baseId}"]`,
+					).forEach((box,) => {
+						const onBoxChange = () => {
+							;(input as HTMLInputElement).value = ticksFromCheckboxes(input as HTMLInputElement,)
+							input.dispatchEvent(new Event('change',),)
+						}
+						box.addEventListener('change', onBoxChange,)
+						cleanups.push(() => box.removeEventListener('change', onBoxChange,))
 					},)
 				}
 			},)
@@ -830,25 +843,43 @@ export function RemovalReasonsOverlay ({
 			return null
 		}
 
+		// Each reason's value-carrying controls, in document order. Radio and checkbox inputs
+		// are excluded: each choice or tick-box group is represented by a hidden
+		// <input type="hidden"> whose value reflects the group's state, so the individual
+		// radios and boxes aren't double-counted.
+		const valueControls = (id: string,) =>
+			Array.from(
+				reasonContentRefs.current.get(id,)?.querySelectorAll<
+					HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+				>('select, input:not([type="radio"]):not([type="checkbox"]), textarea',) ?? [],
+			)
+
 		const composed = composeReasonText(
 			checkedOrdered,
 			(id,) => (editingId === id ? editDraft : reasonOverrides.get(id,)),
-			(id,) => {
-				const contentEl = reasonContentRefs.current.get(id,)
-				const inputValues: string[] = []
-				if (contentEl) {
-					// Exclude radio inputs: each select is represented by a hidden <input type="hidden">
-					// inside .toolbox-radio-group whose value reflects the currently-checked radio,
-					// so we don't double-count the individual radio inputs.
-					contentEl.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-						'select, input:not([type="radio"]), textarea',
-					).forEach((input,) => {
-						inputValues.push(input.value || '',)
-					},)
-				}
-				return inputValues
-			},
+			(id,) => valueControls(id,).map((input,) => input.value || ''),
 		)
+
+		// Required fields left empty block the send; outline each one so the moderator can
+		// find it. Marks from an earlier attempt are cleared first, so a field filled in
+		// since loses its outline.
+		reasonContentRefs.current.forEach((element,) => {
+			element.querySelectorAll(`.${missingFieldClass}`,).forEach((marked,) =>
+				marked.classList.remove(missingFieldClass,)
+			)
+		},)
+		if (composed.unfilled.length > 0) {
+			for (const {id, positions,} of composed.unfilled) {
+				const controls = valueControls(id,)
+				for (const position of positions) {
+					const control = controls[position]
+					;(control?.closest('.toolbox-radio-group',) ?? control)?.classList.add(missingFieldClass,)
+				}
+			}
+			setError('reasonTable',)
+			setStatus(requiredFieldsError(composed.unfilled.map(({title,},) => title),),)
+			return null
+		}
 
 		let reason = composed.reason
 		if (includeHeader && data.header) { reason = `${data.header}\n\n${reason}` }

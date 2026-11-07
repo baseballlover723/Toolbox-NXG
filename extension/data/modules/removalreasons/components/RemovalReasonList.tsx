@@ -33,7 +33,7 @@ import {type TriggerRef, useTriggerRef,} from '../../../util/ui/hooks'
 import {type ConfigState, generateConfigId, type ToolboxConfig,} from '../../../util/wiki/schemas/config/schema'
 import {
 	decodeHtmlAngleBrackets,
-	findLiteralChoiceMarker,
+	findLiteralFieldMarker,
 	htmlFieldsToTokens,
 	substitutionTokens,
 } from '../../../util/wiki/schemas/shared/tokens'
@@ -52,7 +52,7 @@ import {findSplitChoiceRepairs, markChoiceRepairChecked,} from '../moduleapi'
 import {stripNativeReasons,} from '../nativeSync'
 import type {RemovalReason,} from '../schema'
 import css from './RemovalReasonList.module.css'
-import {renderReasonHtml,} from './RemovalReasonsOverlay.helpers'
+import {describeLiteralField, renderReasonHtml,} from './RemovalReasonsOverlay.helpers'
 
 /**
  * The reason fields this editor's form owns: it writes every one of them on save,
@@ -202,10 +202,12 @@ function ReasonForm ({
 	// A marker no control gets rendered for is sent verbatim, option list and all, so it is
 	// flagged here as well as in the overlay - this is where it can actually be fixed. Healed
 	// the same way the overlay heals it, so a legacy `<select>` isn't reported as broken.
-	const literalChoiceProblem = useMemo(
-		() => findLiteralChoiceMarker(htmlFieldsToTokens(decodeHtmlAngleBrackets(text,),),),
-		[text,],
-	)
+	const literalFieldWarning = useMemo(() => {
+		const field = findLiteralFieldMarker(htmlFieldsToTokens(decodeHtmlAngleBrackets(text,),),)
+		if (!field) { return null }
+		const {name, cause, fix,} = describeLiteralField(field,)
+		return `A ${name} here ${cause} instead of becoming a control. ${fix}.`
+	}, [text,],)
 	const [removePosts, setRemovePosts,] = useState(initialValues.removePosts !== false,)
 	const [removeComments, setRemoveComments,] = useState(!!initialValues.removeComments,)
 	const [flairText, setFlairText,] = useState(initialValues.flairText ?? '',)
@@ -357,22 +359,16 @@ function ReasonForm ({
 								<span>
 									A {'{choice}'} on its own line, followed by a {'- '}{' '}
 									list, becomes a pick-one control. Inside a sentence, write{' '}
-									{'{choice: option 1 | option 2}'} instead.
+									{'{choice: option 1 | option 2}'} instead. For tick boxes, put {'{multi}'}{' '}
+									(sends the ticked items) or {'{highlight}'}{' '}
+									(sends every item, ticked ones in bold) above a {'- [ ] '} list. Add {'!'}{' '}
+									to make a field required ({'{input!: why}'}, {'{choice!}'}), and use{' '}
+									{'{note: text}'} for guidance that only moderators see.
 								</span>
 							</div>
-							{literalChoiceProblem && (
+							{literalFieldWarning && (
 								<div className={css.fieldWarning}>
-									{
-										/* Named per shape: pointing at a missing option list that is in fact
-									    right there sends the moderator hunting through correct text. */
-									}
-									{literalChoiceProblem === 'inline'
-										? 'A {choice} here shares its line with other text, so it will be sent as '
-											+ 'text - marker, option list and all - instead of becoming a pick-one '
-											+ 'control. Put it on a line of its own, with the list directly below, '
-											+ 'or keep it in the sentence as {choice: option 1 | option 2}.'
-										: 'A {choice} here has no "- " option list under it, so it will be sent as '
-											+ 'text - marker and all - instead of becoming a pick-one control.'}
+									{literalFieldWarning}
 								</div>
 							)}
 						</>

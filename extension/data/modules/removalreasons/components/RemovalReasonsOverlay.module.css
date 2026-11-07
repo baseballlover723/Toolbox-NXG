@@ -636,4 +636,36 @@
 	align-items: baseline;
 	gap: var(--toolbox-sp-3);
 }
+
+/* A ticked {highlight} item is sent in bold, so it is previewed in bold. */
+.reasonContent :global(.toolbox-check-highlight .toolbox-radio-input:checked + .toolbox-radio-text),
+.reasonPreview :global(.toolbox-check-highlight .toolbox-radio-input:checked + .toolbox-radio-text) {
+	font-weight: bold;
+}
+
+/* {note: ...} is guidance for the moderator and is never sent, so it reads as an aside. */
+.reasonContent :global(.toolbox-reason-note),
+.reasonPreview :global(.toolbox-reason-note) {
+	color: var(--toolbox-text-muted);
+	font-style: italic;
+}
+
+/* Required fields ({input!: ...}, {choice!}, ...) carry a rule on their leading edge so the
+   moderator can see what must be filled before sending. */
+.reasonContent :global(.toolbox-field-required),
+.reasonPreview :global(.toolbox-field-required),
+.reasonContent :global(input[required]),
+.reasonPreview :global(input[required]),
+.reasonContent :global(textarea[required]),
+.reasonPreview :global(textarea[required]) {
+	border-left: 2px solid var(--toolbox-error-border);
+	padding-left: var(--toolbox-sp-3);
+}
+
+/* A required field left unfilled on a blocked send. */
+.reasonContent :global(.toolbox-field-missing),
+.reasonPreview :global(.toolbox-field-missing) {
+	outline: 1px solid var(--toolbox-error-border);
+	outline-offset: var(--toolbox-sp-2);
+}
 /* stylelint-enable selector-class-pattern */
