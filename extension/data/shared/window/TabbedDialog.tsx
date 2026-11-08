@@ -14,6 +14,7 @@ import {isSection, type WindowTab, type WindowTabItem, WindowTabs,} from './Wind
  * @param width Maximum dialog width in pixels.
  * @param onClose Called when the user closes the dialog.
  * @param onTabChange Called with the new active tab index when the user switches tabs.
+ * @param resizable When true, the user can drag the dialog wider or narrower.
  */
 export const TabbedDialog = ({
 	title,
@@ -27,6 +28,7 @@ export const TabbedDialog = ({
 	hideTabButtons = false,
 	hiddenTabIndices,
 	contentOverride,
+	resizable = false,
 }: {
 	title: ReactNode
 	tabs: WindowTabItem[]
@@ -44,6 +46,8 @@ export const TabbedDialog = ({
 	hiddenTabIndices?: Set<number> | undefined
 	/** When set, shown in the content pane instead of the active tab's content */
 	contentOverride?: ReactNode | undefined
+	/** Let the user drag the dialog wider or narrower */
+	resizable?: boolean
 },) => {
 	const [activeTabIndex, setActiveTabIndex,] = useState(defaultTabIndex,)
 
@@ -56,7 +60,7 @@ export const TabbedDialog = ({
 	const activeFooter = selectableTabs[activeTabIndex]?.footer ?? footer
 
 	return (
-		<FullPageDialog title={title} {...(onClose && {onClose,})} width={width}>
+		<FullPageDialog title={title} {...(onClose && {onClose,})} width={width} resizable={resizable}>
 			<WindowTabs
 				vertical
 				className={css.tabsContainer}

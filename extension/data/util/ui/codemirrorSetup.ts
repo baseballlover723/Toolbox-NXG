@@ -139,6 +139,25 @@ export interface EditorLintDiagnostic {
 	message: string
 }
 
+/**
+ * Lets the user drag the editor's bottom-right corner to resize it. CM6 re-measures on resize,
+ * and once a height is set the content scrolls inside. Fullscreen (F11) drops any dragged size
+ * so it still fills the viewport.
+ */
+const resizableEditor = EditorView.theme({
+	'&': {
+		resize: 'both',
+		overflow: 'hidden',
+		minHeight: '4em',
+		maxWidth: 'calc(100vw - 20px)',
+	},
+	'&.toolbox-cm-fullscreen': {
+		resize: 'none',
+		width: 'auto !important',
+		maxWidth: 'none',
+	},
+},)
+
 /** Handle returned by createEditor so callers don't need to import CM6 types. */
 export interface EditorHandle {
 	getValue(): string
@@ -239,7 +258,7 @@ export function createEditor (options: CreateEditorOptions,): EditorHandle {
 		indentWithTab,
 	],)
 
-	baseExtensions.push(customKeymap,)
+	baseExtensions.push(customKeymap, resizableEditor,)
 
 	const view = new EditorView({
 		state: EditorState.create({

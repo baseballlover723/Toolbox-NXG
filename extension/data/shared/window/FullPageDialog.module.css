@@ -1,0 +1,13 @@
+/* Opt-in horizontal resizing for wide-content dialogs (e.g. long AutoModerator regexes). */
+.resizable {
+	resize: horizontal;
+	overflow: hidden;
+	min-width: 480px;
+	max-width: calc(100vw - 20px - var(--toolbox-drawer-left-offset, 0px));
+}
+
+/* Lift the Window's own `max-width: 1000px` (Window.module.css `.window`) so the window can follow
+   the wrapper past it. The child combinator outranks that single-class rule. */
+.resizable > div {
+	max-width: none;
+}

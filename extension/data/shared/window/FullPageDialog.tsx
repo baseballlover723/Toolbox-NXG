@@ -2,6 +2,7 @@
 
 import {type ReactNode,} from 'react'
 import {Backdrop,} from './Backdrop'
+import css from './FullPageDialog.module.css'
 import {Window,} from './Window'
 
 /**
@@ -18,6 +19,7 @@ import {Window,} from './Window'
  * @param className Optional CSS class applied to the inner window element.
  * @param backdropClassName Optional CSS class applied to the outer backdrop element.
  * @param width Constrains the window to `min(${width}px, 100vw - 20px)`. Omit to let CSS drive sizing.
+ * @param resizable When true, the user can drag the window wider (up to the viewport) or narrower.
  */
 export const FullPageDialog = ({
 	title,
@@ -28,6 +30,7 @@ export const FullPageDialog = ({
 	className,
 	backdropClassName,
 	width,
+	resizable = false,
 	children,
 }: {
 	title: ReactNode
@@ -38,13 +41,17 @@ export const FullPageDialog = ({
 	className?: string | undefined
 	backdropClassName?: string | undefined
 	width?: number
+	resizable?: boolean
 	children: ReactNode
 },) => (
 	<Backdrop
 		{...(onClose && {onClickOutside: onClose,})}
 		{...(backdropClassName !== undefined && {className: backdropClassName,})}
 	>
-		<div style={width !== undefined ? {width: `min(${width}px, calc(100vw - 20px))`,} : undefined}>
+		<div
+			className={resizable ? css.resizable : undefined}
+			style={width !== undefined ? {width: `min(${width}px, calc(100vw - 20px))`,} : undefined}
+		>
 			<Window
 				title={title}
 				{...(onClose && {onClose,})}

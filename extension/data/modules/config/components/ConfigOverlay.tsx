@@ -123,6 +123,8 @@ function ConfigOverlay ({
 			defaultTabIndex={0}
 			onClose={onCloseHandler}
 			onTabChange={setActiveIndex}
+			// Wiki pages like AutoModerator often have long lines (regexes); let mods widen the window.
+			resizable
 		/>
 	)
 }
