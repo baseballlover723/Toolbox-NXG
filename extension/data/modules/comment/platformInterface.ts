@@ -21,6 +21,8 @@ import {
 export interface CommentModuleAdapter {
 	/** CSS selector matching old-collapsed comment things; used for lifecycle delegation. */
 	oldExpandSelector: string
+	/** CSS selector matching the per-comment "hide" control on a revealed seen comment. */
+	rehideOldSelector: string
 
 	// --- spamToggle ---
 
@@ -91,6 +93,17 @@ export interface CommentModuleAdapter {
 	expandOldThing(thing: Element,): void
 	/** Resets all comment visibility state, undoing any hide-old-comments operation. */
 	resetAllCommentVisibility(): void
+	/**
+	 * Returns the comment thing an element belongs to directly (its nearest thing), so a click
+	 * inside a reply is not attributed to the reply's ancestors.
+	 * @param element Any element inside a comment.
+	 */
+	getOwningThing(element: Element,): Element | null
+	/**
+	 * Adds a "hide" control to a revealed seen comment's tagline (once), so it can be hidden again.
+	 * @param thing The comment thing element that was just expanded.
+	 */
+	addRehideOldControl(thing: Element,): void
 
 	// --- hideModComments ---
 
@@ -112,6 +125,7 @@ export interface CommentModuleAdapter {
 export function createOldRedditCommentAdapter (): CommentModuleAdapter {
 	return {
 		oldExpandSelector: '.old-expand',
+		rehideOldSelector: '.toolbox-rehide-old',
 
 		getSpammedCommentEntries () {
 			return getSpammedCommentEntries()
@@ -195,6 +209,21 @@ export function createOldRedditCommentAdapter (): CommentModuleAdapter {
 			document.querySelectorAll('.old-expand',).forEach((el,) => {
 				el.classList.remove('old-expand',)
 			},)
+			document.querySelectorAll('.toolbox-rehide-old',).forEach((el,) => el.remove())
+		},
+
+		getOwningThing (element,) {
+			return getThingFromDescendant(element,)
+		},
+
+		addRehideOldControl (thing,) {
+			const tagline = getEntry(thing,)?.querySelector('.tagline',)
+			if (!tagline || tagline.querySelector(':scope > .toolbox-rehide-old',)) { return }
+			const link = document.createElement('a',)
+			link.className = 'toolbox-rehide-old'
+			link.title = 'Hide this seen comment again (its replies stay visible)'
+			link.textContent = 'hide'
+			tagline.append(' ', link,)
 		},
 
 		getModeratorActionElements () {

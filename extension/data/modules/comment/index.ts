@@ -62,6 +62,7 @@ export default new Module<CommentsSettings>({
 			lifecycle.mount(hideOldComments.cleanup,)
 			lifecycle.delegate(document.body, 'click', '.toolbox-hide-old', hideOldComments.handleHideOldClick,)
 			lifecycle.delegate(document.body, 'click', adapter.oldExpandSelector, hideOldComments.handleOldExpandClick,)
+			lifecycle.delegate(document.body, 'click', adapter.rehideOldSelector, hideOldComments.handleRehideOldClick,)
 		}
 	}
 

@@ -78,22 +78,32 @@ export function createHideOldCommentsSetup (): (() => void) | null {
 		platform: RedditPlatform.Old,
 		kind: 'commentThread',
 		rawDetail: {commentvisits: getCommentVisits(),},
-	}, {shadow: false,},)
+		// Inline host so the buttons sit beside the title text rather than on a new line: the
+		// box fills in after page load, and a block host would push every comment down.
+	}, {shadow: false, hostTag: 'span',},)
 }
 
 /**
  * Creates handlers for the hide-old-comments button in the `commentThreadControls` UI location.
  * Call `lifecycle.mount(handlers.cleanup)` in `index.ts`.
  * @param adapter The platform adapter used to find, collapse, and expand old comment things.
- * @returns Handlers for the hide-old toggle click and the old-expand click, plus a cleanup function.
+ * @returns Handlers for the hide-old toggle, old-expand, and re-hide clicks, plus a cleanup function.
  */
 export function createHideOldCommentsHandlers (adapter: CommentModuleAdapter,): {
 	handleHideOldClick(): void
-	handleOldExpandClick(element: Element,): void
+	handleOldExpandClick(element: Element, event: Event,): void
+	handleRehideOldClick(element: Element,): void
 	cleanup(): void
 } {
 	const commentvisits = getCommentVisits()
 	let setHidden: ((hidden: boolean,) => void) | null = null
+
+	/** Hides a seen comment's own entry; its replies stay visible. */
+	function collapse (thing: Element,) {
+		adapter.markThingOldCollapsed(thing, true,)
+		const entry = adapter.getCommentEntry(thing,)
+		if (entry) { adapter.setElementVisible(entry, false,) }
+	}
 
 	const cleanup = renderAtLocation('commentThreadControls', {id: 'comment.hideOld',}, ({context,},) => {
 		const cv = (context.rawDetail as {commentvisits: HTMLSelectElement | null} | undefined)?.commentvisits ?? null
@@ -126,16 +136,23 @@ export function createHideOldCommentsHandlers (adapter: CommentModuleAdapter,): 
 				setHidden?.(false,)
 			} else {
 				log.debug('hiding seen comments',)
-				oldThings.forEach((thing,) => {
-					adapter.markThingOldCollapsed(thing, true,)
-					const entry = adapter.getCommentEntry(thing,)
-					if (entry) { adapter.setElementVisible(entry, false,) }
-				},)
+				oldThings.forEach(collapse,)
 				setHidden?.(true,)
 			}
 		},
-		handleOldExpandClick (element: Element,) {
+		handleOldExpandClick (element: Element, event: Event,) {
+			const target = event.target instanceof Element ? event.target : null
+			// An old-reddit comment contains its whole reply tree, so a click on a (new) reply
+			// would otherwise bubble up and reveal the hidden parent too. Only the comment's own
+			// area counts. The re-hide link is excluded so the click that hides it isn't undone.
+			if (!target || adapter.getOwningThing(target,) !== element) { return }
+			if (target.closest(adapter.rehideOldSelector,)) { return }
 			adapter.expandOldThing(element,)
+			adapter.addRehideOldControl(element,)
+		},
+		handleRehideOldClick (element: Element,) {
+			const thing = adapter.getOwningThing(element,)
+			if (thing) { collapse(thing,) }
 		},
 	}
 }

@@ -22,7 +22,7 @@ Comments improves the experience of reading and moderating comment threads. Most
 
 **Remove (not spam) on spam-removed comments** _(old Reddit)_ — shows a "remove" button on spam-removed comments, letting you convert the classification to a regular remove.
 
-**Hide seen comments button** _(old Reddit)_ — adds a "hide seen" / "show seen" button that collapses the comments you have already read, based on Reddit's new-comment highlighting, helping focus on recent activity.
+**Hide seen comments button** _(old Reddit)_ — adds a "hide seen" / "show seen" button that collapses the comments you have already read, based on Reddit's new-comment highlighting, helping focus on recent activity. Only a seen comment's own text is hidden, so replies stay readable. Click a hidden comment to reveal it; a revealed comment gets a **hide** link in its tagline to hide it again.
 
 **Hide mod actions button** _(old Reddit)_ — adds a "hide mod actions" / "show mod actions" button to the comment thread controls that hides moderator-action comments on the page.
 

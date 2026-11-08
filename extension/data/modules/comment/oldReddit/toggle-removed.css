@@ -10,3 +10,9 @@
 .toolbox-scope .toolbox-bottombar #toolbox-toggle-removed:hover {
 	opacity: 1;
 }
+
+/* Per-comment "hide" link on a revealed seen comment. It has no href, so old Reddit would
+   otherwise show a text caret on hover. */
+.toolbox-scope .toolbox-rehide-old {
+	cursor: pointer;
+}
