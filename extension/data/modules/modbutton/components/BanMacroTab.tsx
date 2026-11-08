@@ -1,4 +1,4 @@
-/** Settings UI tab for configuring the default ban note, message, duration, and duration presets. */
+/** Settings UI tab for the default ban note, message, duration and presets, plus the named ban macro list. */
 
 import {useRef, useState,} from 'react'
 
@@ -10,14 +10,10 @@ import {TokenChips,} from '../../../shared/controls/TokenChips'
 import {negativeTextFeedback, positiveTextFeedback,} from '../../../store/feedback'
 import {type TriggerRef, useTriggerRef,} from '../../../util/ui/hooks'
 import type {ConfigState,} from '../../../util/wiki/schemas/config/schema'
-import {pickSubstitutionTokens,} from '../../../util/wiki/schemas/shared/tokens'
+import {SavedBanMacroList,} from '../../shared/banMacros/components/SavedBanMacroList'
+import {banMacroTokens, maxBanMacroMessage, maxBanMacroNote, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {type BanMacros, DEFAULT_BAN_PRESETS,} from '../schema'
 import css from './BanMacroTab.module.css'
-
-/** The substitution tokens supported in ban macro templates. */
-const banMacroTokens = pickSubstitutionTokens(
-	['{author}', '{subreddit}', '{kind}', '{title}', '{url}', '{mod}', '{body}',],
-)
 
 /** Props for the BanMacroTab component. */
 interface Props {
@@ -25,12 +21,14 @@ interface Props {
 	state: ConfigState
 	/** Optional ref wired up by the parent tab to trigger saving the ban macro config. */
 	saveRef?: TriggerRef
-	/** Called with the validated BanMacros data; the parent is responsible for persisting it. */
-	onSave: (banMacros: BanMacros,) => void
+	/**
+	 * Called with the validated defaults and named macro list; the parent is responsible for persisting both.
+	 */
+	onSave: (banMacros: BanMacros, savedBanMacros: SavedBanMacro[],) => void
 }
 
-const maxBanNoteLength = 300
-const maxBanMessageLength = 999
+const maxBanNoteLength = maxBanMacroNote
+const maxBanMessageLength = maxBanMacroMessage
 
 /** Renders the ban macro settings tab for configuring default ban templates and duration presets. */
 export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
@@ -48,9 +46,14 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 			? state.config.banMacros.banDurationPresets
 			: DEFAULT_BAN_PRESETS,
 	)
+	const [savedBanMacros, setSavedBanMacros,] = useState<SavedBanMacro[]>(state.config.savedBanMacros ?? [],)
 
 	function handleSave () {
 		if (!state.subreddit) { return }
+		if (savedBanMacros.some((macro,) => macro.title.trim() === '')) {
+			negativeTextFeedback('Every ban macro needs a title before saving.',)
+			return
+		}
 		const validPresets = banDurationPresets.filter((n,) => n >= 1 && n <= 999)
 		const invalidCount = banDurationPresets.length - validPresets.length
 		onSave({
@@ -59,11 +62,11 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 			defaultBanPermanent,
 			defaultBanDuration: defaultBanPermanent ? 0 : (parseInt(defaultBanDuration, 10,) || 0),
 			banDurationPresets: validPresets.length > 0 ? validPresets : DEFAULT_BAN_PRESETS,
-		},)
+		}, savedBanMacros,)
 		if (invalidCount > 0) {
 			negativeTextFeedback(`${invalidCount} preset(s) out of range (1–999) were removed before saving.`,)
 		} else {
-			positiveTextFeedback('Ban macro is saved.',)
+			positiveTextFeedback('Ban macros are saved.',)
 		}
 	}
 
@@ -173,6 +176,14 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 				<span className={css.fieldHint}>
 					Durations (days) to show as quick-select buttons in the ban form.
 				</span>
+			</div>
+			<div className={css.field}>
+				<div className={css.fieldLabel}>Named ban macros</div>
+				<span className={css.fieldHint}>
+					Offered as an &ldquo;Apply ban macro...&rdquo; picker in the mod button ban form, the removal
+					reasons ban section, and the usernote ban options. Toolbox NXG only - not visible to 6.x.
+				</span>
+				<SavedBanMacroList macros={savedBanMacros} onChange={setSavedBanMacros} />
 			</div>
 		</div>
 	)

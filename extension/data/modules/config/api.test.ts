@@ -330,6 +330,34 @@ describe('normalizeConfig', () => {
 		expect(configData.banMacros,).toEqual(banMacros,)
 	})
 
+	it('sanitizes savedBanMacros and assigns stable ids', () => {
+		const configData: unknown = {
+			savedBanMacros: [
+				{title: 'Spam', note: 'n', message: 'm', permanent: true, days: 3,},
+				{title: 'Temp', days: 5000,},
+				{title: '   ',},
+				'garbage',
+				{note: 'untitled',},
+			],
+		}
+
+		normalizeConfig(configData,)
+
+		const macros = configData.savedBanMacros!
+		expect(macros.map((m,) => m.title),).toEqual(['Spam', 'Temp',],)
+		expect(macros[0],).toMatchObject({note: 'n', message: 'm', permanent: true, days: 3,},)
+		expect(macros[1],).toMatchObject({note: '', message: '', permanent: false, days: 999,},)
+		expect(macros.every((m,) => typeof m.id === 'string' && m.id !== ''),).toBe(true,)
+	})
+
+	it('drops savedBanMacros when it is not a non-empty list', () => {
+		const configData: unknown = {savedBanMacros: 'nope',}
+
+		normalizeConfig(configData,)
+
+		expect('savedBanMacros' in configData,).toBe(false,)
+	})
+
 	it('leaves guardedActions absent (absent ⇒ all actions guarded)', () => {
 		const configData: unknown = {}
 

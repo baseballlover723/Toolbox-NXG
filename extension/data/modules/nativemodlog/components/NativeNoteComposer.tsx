@@ -6,6 +6,8 @@ import {createModNote,} from '../../../api/resources/modnotes'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {positiveTextFeedback,} from '../../../store/feedback'
 import createLogger from '../../../util/infra/logging'
+import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {labelColors, maxNativeNoteLength, selectableLabelNames,} from '../../shared/modnotes/schema'
 import {proposeOrBan,} from '../../shared/proposals/gateway'
 import css from './NativeNoteComposer.module.css'
@@ -22,6 +24,10 @@ export interface NativeNoteComposerProps {
 	defaultLabel?: string | undefined
 	/** When true, the ban options are suppressed since mods cannot be banned. */
 	targetIsMod?: boolean | undefined
+	/** The subreddit's named ban macros, offered as a picker when a ban is issued with the note. */
+	savedBanMacros?: SavedBanMacro[]
+	/** The acting moderator's username, for the `{mod}` token in ban macros. */
+	currentUser?: string | undefined
 	/** Called after the note (and any ban) has been saved. */
 	onSaved: () => void
 }
@@ -38,6 +44,8 @@ export function NativeNoteComposer ({
 	contextID,
 	defaultLabel,
 	targetIsMod = false,
+	savedBanMacros = [],
+	currentUser,
 	onSaved,
 }: NativeNoteComposerProps,) {
 	const inputRef = useRef<HTMLInputElement>(null,)
@@ -62,6 +70,8 @@ export function NativeNoteComposer ({
 	}, [selectedLabel,],)
 
 	const showBanFields = isBanLabel(selectedLabel,) && triggerBan && !targetIsMod
+	// Tokens a ban macro can resolve from this context (no thing is in scope here).
+	const banMacroTokenInfo: Record<string, string> = {author: user, subreddit, mod: currentUser ?? '',}
 
 	async function handleSave () {
 		const text = noteText.trim()
@@ -142,6 +152,20 @@ export function NativeNoteComposer ({
 					}
 				}}
 			/>
+			{showBanFields && (
+				<BanMacroSelect
+					macros={savedBanMacros}
+					disabled={saving}
+					onApply={(macro,) => {
+						const resolved = resolveBanMacro(macro, banMacroTokenInfo,)
+						setBanMessage(resolved.message,)
+						// A PERMA_BAN label is always permanent; only BAN takes a day count.
+						if (selectedLabel === 'BAN' && !resolved.permanent) {
+							setBanDays(resolved.days,)
+						}
+					}}
+				/>
+			)}
 			{showBanFields && (
 				<textarea
 					className={`${css.banMessageInput} toolbox-input`}

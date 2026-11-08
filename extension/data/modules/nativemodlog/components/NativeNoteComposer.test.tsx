@@ -123,6 +123,35 @@ describe('NativeNoteComposer', () => {
 		)
 	})
 
+	it('fills the ban message and days from a ban macro', async () => {
+		createModNote.mockResolvedValue(undefined,)
+		proposeOrBan.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({
+			defaultLabel: 'BAN',
+			currentUser: 'testmod',
+			savedBanMacros: [{
+				title: 'Spam',
+				note: 'n',
+				message: 'Bye {author} from {mod}',
+				permanent: false,
+				days: 30,
+			},],
+		},)
+
+		const select = host.querySelector<HTMLSelectElement>('select[aria-label="Apply ban macro"]',)!
+		act(() => {
+			select.value = '0'
+			select.dispatchEvent(new Event('change', {bubbles: true,},),)
+		},)
+		setNoteText(host, 'spammer',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(proposeOrBan,).toHaveBeenCalledWith(
+			expect.anything(),
+			{permanent: false, days: 30, note: 'spammer', message: 'Bye alice from testmod',},
+		)
+	})
+
 	it('never bans a moderator', async () => {
 		createModNote.mockResolvedValue(undefined,)
 		const {host,} = renderComposer({defaultLabel: 'PERMA_BAN', targetIsMod: true,},)

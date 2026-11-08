@@ -292,18 +292,23 @@ function buildConfigTabs (
 			),
 		},
 		{
-			title: 'Ban macro',
-			tooltip: 'Pre-fill the mod button ban note and message with text and tokens.',
+			title: 'Ban macros',
+			tooltip: 'Default ban note and message, plus named ban macros to pick from in every ban form.',
 			contentNode: <BanMacroTab
 				state={state}
 				saveRef={save.banMacro}
-				onSave={(banMacros,) => {
+				onSave={(banMacros, savedBanMacros,) => {
 					state.config.banMacros = banMacros
-					void saveToolboxConfig(state.subreddit!, state.config, 'updated ban macro',)
+					if (savedBanMacros.length) {
+						state.config.savedBanMacros = savedBanMacros
+					} else {
+						delete state.config.savedBanMacros
+					}
+					void saveToolboxConfig(state.subreddit!, state.config, 'updated ban macros',)
 				}}
 			/>,
 			footer: <ActionButton primary type="button" onClick={() => save.banMacro.current?.()}>
-				Save ban macro
+				Save ban macros
 			</ActionButton>,
 		},
 		{

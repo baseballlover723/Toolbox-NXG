@@ -1,5 +1,7 @@
 /** Domain types and service interfaces for the Mod Button module. */
 
+import type {SavedBanMacro,} from '../shared/banMacros/schema'
+
 /** Default ban-duration preset buttons shown in the ban form (days). */
 export const DEFAULT_BAN_PRESETS: number[] = [3, 7, 30,]
 
@@ -45,6 +47,8 @@ export interface ModButtonActions {
 	): Promise<void>
 	/** Loads ban macro defaults from the subreddit wiki config. */
 	getBanMacros(subreddit: string,): Promise<BanMacros | null>
+	/** Loads the subreddit's named ban macros offered in the ban form's picker. */
+	getSavedBanMacros(subreddit: string,): Promise<SavedBanMacro[]>
 	/** Returns the latest ban note from usernotes for a user in a subreddit, or null if none. */
 	suggestBanNote(subreddit: string, user: string,): Promise<string | null>
 	/** Refreshes notification counters after batch actions. */

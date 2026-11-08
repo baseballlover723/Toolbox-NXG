@@ -21,6 +21,7 @@ import {replaceTokens,} from '../../../util/data/string'
 import createLogger from '../../../util/infra/logging'
 import type {ThingInfo,} from '../../../util/reddit/thingInfo'
 import {useFetched,} from '../../../util/ui/hooks'
+import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 
 import {classes, mountPopup,} from '../../../util/ui/reactMount'
@@ -120,6 +121,7 @@ export function ModButtonPopup ({
 	const [showCustomDuration, setShowCustomDuration,] = useState(false,)
 	const [banDurationPresets, setBanDurationPresets,] = useState<number[]>(DEFAULT_BAN_PRESETS,)
 	const [removeAll, setRemoveAll,] = useState(false,)
+	const [savedBanMacros, setSavedBanMacros,] = useState<SavedBanMacro[]>([],)
 
 	// Mute duration (3, 7, or 28 days)
 	const [muteDuration, setMuteDuration,] = useState(3,)
@@ -233,6 +235,7 @@ export function ModButtonPopup ({
 		setBanPermanent(true,)
 		setRemoveAll(false,)
 		setBanDurationPresets(DEFAULT_BAN_PRESETS,)
+		setSavedBanMacros([],)
 		setFlairLoaded(false,)
 		setUserModlogLoaded(false,)
 		statusAutoApplied.current = false
@@ -258,6 +261,9 @@ export function ModButtonPopup ({
 			}
 		},).catch((error: unknown,) => {
 			log.error('Failed to load ban macros:', error,)
+		},)
+		void ctx.actions.getSavedBanMacros(activeSub,).then((list,) => {
+			if (!cancelled) { setSavedBanMacros(list,) }
 		},)
 		void (async () => {
 			setSubStatuses((prev,) => new Map(prev,).set(activeSub, loadingStatus,))
@@ -683,6 +689,23 @@ export function ModButtonPopup ({
 		}
 	}
 
+	/** Fills the ban form from a named macro, mapping its duration onto the preset/custom buttons. */
+	const applySavedBanMacro = (macro: SavedBanMacro,) => {
+		const resolved = resolveBanMacro(macro, info as Record<string, string>,)
+		setBanNote(resolved.note,)
+		setBanMessage(resolved.message,)
+		if (resolved.permanent) {
+			setBanPermanent(true,)
+			setShowCustomDuration(false,)
+			return
+		}
+		setBanPermanent(false,)
+		// Remove-all is only offered for permanent bans, so a temporary macro must clear it.
+		setRemoveAll(false,)
+		setBanDuration(String(resolved.days,),)
+		setShowCustomDuration(!banDurationPresets.includes(resolved.days,),)
+	}
+
 	const activeSubStatus = subStatuses.get(activeSub,)
 
 	const visibleActions = useMemo((): ActionKind[] => {
@@ -986,6 +1009,8 @@ export function ModButtonPopup ({
 								setRemoveAll(false,)
 							}}
 							onRemoveAllChange={setRemoveAll}
+							savedBanMacros={savedBanMacros}
+							onApplyBanMacro={applySavedBanMacro}
 						/>
 					)}
 

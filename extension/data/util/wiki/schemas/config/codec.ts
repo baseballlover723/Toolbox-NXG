@@ -77,6 +77,9 @@ export function encodeClassicConfig (
 	delete classic.guardedActions
 	delete classic.proposalRetentionDays
 
+	// NXG-only named ban macros; 6.x only knows the single `banMacros` template.
+	delete classic.savedBanMacros
+
 	// NXG-only report→reason mapping; 6.x has no concept of it, so keep it off the
 	// legacy mirror entirely.
 	delete classic.removalReasons?.suggestedReasons

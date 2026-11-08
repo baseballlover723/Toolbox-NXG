@@ -16,6 +16,7 @@ import {getApiThingInfo,} from '../../../util/reddit/thingInfo'
 import {drawPosition,} from '../../../util/ui/drawPosition'
 import {getConfig,} from '../../config/moduleapi'
 import {requestCounterRefresh,} from '../../notifier/store'
+import {getSavedBanMacros,} from '../../shared/banMacros/moduleapi'
 import {
 	isTrainingCaptureActive,
 	proposeOrBan,
@@ -150,6 +151,9 @@ function createActions (): ModButtonActions {
 			const config = await getConfig(subreddit,)
 			if (!config || typeof config.banMacros !== 'object' || !config.banMacros) { return null }
 			return config.banMacros as BanMacros
+		},
+		getSavedBanMacros (subreddit,) {
+			return getSavedBanMacros(subreddit,)
 		},
 		async suggestBanNote (subreddit, user,) {
 			const notesData = await getUserNotes(subreddit,)

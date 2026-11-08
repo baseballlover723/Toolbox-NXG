@@ -8,6 +8,8 @@ import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
 import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {Window,} from '../../../shared/window/Window'
+import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 
 import store from '../../../store'
 import {nowInSeconds,} from '../../../util/data/time'
@@ -99,6 +101,8 @@ export interface AddUserNotePopupProps {
 	 * type/text/link is required before saving; see `resolveUsernoteRequirements`.
 	 */
 	subRequire?: SubUsernoteRequire | undefined
+	/** The subreddit's named ban macros, offered as a picker wherever a ban message is entered. */
+	savedBanMacros?: SavedBanMacro[]
 }
 
 /** Renders a draggable popup for adding, editing, and viewing a user's Toolbox usernotes. */
@@ -122,6 +126,7 @@ export function AddUserNotePopup ({
 	onClose,
 	targetIsMod = false,
 	subRequire,
+	savedBanMacros = [],
 }: AddUserNotePopupProps,) {
 	const inputRef = useRef<HTMLInputElement>(null,)
 	const [noteText, setNoteText,] = useState('',)
@@ -169,6 +174,9 @@ export function AddUserNotePopup ({
 	// has nothing to save.
 	const nothingToSave = !usernoteDraft.hasText && !usernoteDraft.hasType
 	const saveDisabled = saving || requirementMessage !== null || nothingToSave
+
+	// Tokens a ban macro can resolve from this popup's context (no thing is in scope here).
+	const banMacroTokenInfo: Record<string, string> = {author: user, subreddit, mod: currentUser ?? '',}
 
 	// Using autoFocus would make the page jump; focus manually without scrolling instead.
 	useEffect(() => {
@@ -526,6 +534,14 @@ export function AddUserNotePopup ({
 						}
 					}}
 				/>
+				{editingNoteId === undefined && hasAutoBan && triggerBan && (
+					<BanMacroSelect
+						macros={savedBanMacros}
+						disabled={saving}
+						// The note type fixes this ban's duration, so only the message applies.
+						onApply={(macro,) => setBanMessage(resolveBanMacro(macro, banMacroTokenInfo,).message,)}
+					/>
+				)}
 				{editingNoteId === undefined && hasAutoBan && triggerBan && (
 					<textarea
 						className={`${css.banMessageInput} toolbox-input`}

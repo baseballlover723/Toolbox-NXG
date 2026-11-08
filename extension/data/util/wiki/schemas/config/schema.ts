@@ -6,6 +6,7 @@ import type {
 	RemovalReasonsConfig,
 	SuggestedReasonMapping,
 } from '../../../../modules/removalreasons/schema'
+import type {SavedBanMacro,} from '../../../../modules/shared/banMacros/schema'
 import {tbDecode,} from '../../../data/encoding'
 import createLogger from '../../../infra/logging'
 import {legacyToLinkTokens,} from '../../../reddit/linkTokens'
@@ -72,6 +73,14 @@ export interface ToolboxConfig {
 	 * `null` means the subreddit has not configured ban macros.
 	 */
 	banMacros: BanMacros | null
+	/**
+	 * Named ban templates offered as a picker on every ban surface (mod button,
+	 * removal reasons, usernotes). Absent when the subreddit has none. NXG-only:
+	 * stripped from the legacy v1 mirror in `encodeClassicConfig`, and kept outside
+	 * the legacy-owned `banMacros` so a 6.x save (which replaces that block
+	 * wholesale) cannot erase it.
+	 */
+	savedBanMacros?: SavedBanMacro[]
 	/**
 	 * When true, retired (tombstoned) usernote shard pages left behind by shard
 	 * splits are exposed as raw-editor tabs in the config overlay, alongside the
@@ -197,6 +206,44 @@ export function extractLegacyDomainTags (raw: Record<string, unknown>,): LegacyD
 	},)
 }
 
+/** Clamps a ban macro day count to Reddit's 1-999 range; garbage falls back to 7. */
+function clampBanMacroDays (days: unknown,): number {
+	if (typeof days !== 'number' || !Number.isFinite(days,)) { return 7 }
+	return Math.min(999, Math.max(1, Math.floor(days,),),)
+}
+
+/**
+ * Sanitizes the NXG-only `savedBanMacros` list in place so a hand-edited page
+ * can't crash a ban form: entries without a non-empty string `title` are dropped
+ * and every other field is forced to its declared type. A non-array or an empty
+ * result removes the field entirely.
+ */
+function coerceSavedBanMacros (config: Record<string, unknown>,): void {
+	const raw = config['savedBanMacros']
+	const result: SavedBanMacro[] = []
+	if (Array.isArray(raw,)) {
+		for (const entry of raw) {
+			if (!entry || typeof entry !== 'object' || Array.isArray(entry,)) { continue }
+			const {id, title, note, message, permanent, days,} = entry as Record<string, unknown>
+			if (typeof title !== 'string' || title.trim() === '') { continue }
+			const macro: SavedBanMacro = {
+				title,
+				note: typeof note === 'string' ? note : '',
+				message: typeof message === 'string' ? message : '',
+				permanent: permanent === true,
+				days: clampBanMacroDays(days,),
+			}
+			if (typeof id === 'string' && id !== '') { macro.id = id }
+			result.push(macro,)
+		}
+	}
+	if (result.length) {
+		config['savedBanMacros'] = result
+	} else {
+		delete config['savedBanMacros']
+	}
+}
+
 /** Returns the string decoder {@link normalizeConfig} would apply to a raw page (pre-v2 pages are encoded). */
 function legacyStringDecoder (raw: Record<string, unknown>,): (s: string,) => string {
 	const encoded = typeof raw['ver'] !== 'number' || raw['ver'] < 2
@@ -238,6 +285,7 @@ export function ensureStableIds (config: ToolboxConfig,): void {
 		config.removalReasons.reasons,
 		config.modMacros,
 		config.removalReasons.suggestedReasons ?? [],
+		config.savedBanMacros ?? [],
 	]
 	for (const list of lists) {
 		for (const entry of list) {
@@ -432,6 +480,7 @@ function decodeAllStrings (target: unknown,): void {
  * - Ensures `removalReasons` is an object with a `reasons` array
  * - Removes the `bantitle` field from `removalReasons` (written by 6.1.25, never used)
  * - Coerces `banMacros` to `null` when it is not a non-array object
+ * - Sanitizes the NXG-only `savedBanMacros` list (dropped when empty)
  * - Applies any pending schema migrations via {@link migrateConfig}
  * - Converts limited-HTML fill-in fields in reason text to brace tokens -
  *   for every config, not just v1, so corrupted v2 pages self-heal (see
@@ -481,6 +530,9 @@ export function normalizeConfig (configInput: unknown,): asserts configInput is 
 	if (!config.banMacros || typeof config.banMacros !== 'object' || Array.isArray(config.banMacros,)) {
 		config.banMacros = null
 	}
+
+	// savedBanMacros: NXG-only named ban templates; sanitize hand-edited shapes.
+	coerceSavedBanMacros(config,)
 
 	// showRetiredUsernoteShards: coerce to a strict boolean so a hand-edited or
 	// legacy value can only ever be true/false (absent/garbage -> false).

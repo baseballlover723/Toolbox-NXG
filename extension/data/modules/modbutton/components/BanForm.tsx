@@ -6,6 +6,8 @@ import {GeneralInlineButton,} from '../../../shared/controls/GeneralInlineButton
 import {TextInput,} from '../../../shared/controls/NormalInput'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
 import {classes,} from '../../../util/ui/reactMount'
+import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import type {SavedBanMacro,} from '../../shared/banMacros/schema'
 import {maxBanReasonLength, removalNotice,} from './ModButtonPopup.helpers'
 import css from './ModButtonPopup.module.css'
 
@@ -32,6 +34,10 @@ interface BanFormProps {
 	onSelectPermanent: () => void
 	onSelectCustom: () => void
 	onRemoveAllChange: (checked: boolean,) => void
+	/** The subreddit's named ban macros; the picker is hidden when empty. */
+	savedBanMacros: SavedBanMacro[]
+	/** Fills the form from the chosen named macro. */
+	onApplyBanMacro: (macro: SavedBanMacro,) => void
 }
 
 /** The ban note/message/duration form shown when a ban-related action is selected. */
@@ -54,9 +60,12 @@ export function BanForm ({
 	onSelectPermanent,
 	onSelectCustom,
 	onRemoveAllChange,
+	savedBanMacros,
+	onApplyBanMacro,
 }: BanFormProps,) {
 	return (
 		<div className={css.banNoteContainer}>
+			<BanMacroSelect macros={savedBanMacros} onApply={onApplyBanMacro} />
 			<div className={css.banNoteRow}>
 				<TextInput
 					className={css.banNote}

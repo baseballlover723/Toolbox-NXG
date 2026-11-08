@@ -2,6 +2,7 @@
 
 import {useEffect, useState,} from 'react'
 
+import {getCurrentUser,} from '../../api/resources/me'
 import {isModSub,} from '../../api/resources/modSubs'
 import {getModeratorListResult,} from '../../api/resources/relationships'
 import {renderAtLocation, type UILocationContext,} from '../../dom/uiLocations'
@@ -10,6 +11,7 @@ import createLogger from '../../util/infra/logging'
 import {isUserProfileSubreddit,} from '../../util/reddit/profileSubreddit'
 import {drawPosition,} from '../../util/ui/drawPosition'
 import {useFetched,} from '../../util/ui/hooks'
+import {getSavedBanMacros,} from '../shared/banMacros/moduleapi'
 import type {ModNote,} from '../shared/modnotes/schema'
 import {NativeModLogBadge,} from './components/NativeModLogBadge'
 import {showNativeModLogPopup,} from './components/NativeModLogPopup'
@@ -46,14 +48,18 @@ export function createNativeModLogDisplay (
 		const {author, subreddit,} = context
 		if (!author || !subreddit) { return }
 		const positions = drawPosition(event.nativeEvent,)
-		const {targetIsMod,} = await getModeratorListResult(subreddit, author, '',).catch(() => ({
-			targetIsMod: false,
-		}))
+		const [{targetIsMod,}, savedBanMacros, currentUser,] = await Promise.all([
+			getModeratorListResult(subreddit, author, '',).catch(() => ({targetIsMod: false,})),
+			getSavedBanMacros(subreddit,),
+			getCurrentUser().catch(() => ''),
+		],)
 		showNativeModLogPopup({
 			subreddit,
 			user: author,
 			contextID: contextFullname(context,),
 			targetIsMod,
+			savedBanMacros,
+			currentUser,
 			initialPosition: {top: positions.topPosition, left: positions.leftPosition,},
 		},)
 	}

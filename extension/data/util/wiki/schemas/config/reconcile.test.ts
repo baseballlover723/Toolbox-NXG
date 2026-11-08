@@ -220,6 +220,18 @@ describe('adoptLegacyConfigFields', () => {
 		expect(new Set(ids,).size,).toBe(2,)
 	})
 
+	it('keeps savedBanMacros across a 6.x edit to banMacros and ignores it when comparing', () => {
+		const savedBanMacros = [{title: 'Spam', note: 'n', message: 'm', permanent: false, days: 3,},]
+		const nxg = makeConfig({savedBanMacros,},)
+		const legacy = makeConfig({banMacros: {banNote: 'six', banMessage: 'edit',},},)
+
+		expect(legacyOwnedFieldsEqual(nxg, makeConfig(),),).toBe(true,)
+		const adopted = adoptLegacyConfigFields(nxg, legacy,)
+
+		expect(adopted.banMacros,).toEqual(legacy.banMacros,)
+		expect(adopted.savedBanMacros,).toEqual(nxg.savedBanMacros,)
+	})
+
 	it('keeps NXG-only keys and does not mutate its inputs', () => {
 		const nxg = makeConfig({'Toolbox.Utils.compatibilityWrites': true,},)
 		// banMacros is a legacy-owned field; verify it is adopted from the legacy page.

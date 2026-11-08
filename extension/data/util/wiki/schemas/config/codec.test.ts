@@ -252,4 +252,13 @@ describe('encodeClassicConfig native reason sync', () => {
 
 		expect(encodeClassicConfig(config,).removalReasons.reasons,).toEqual([],)
 	})
+
+	it('keeps the NXG-only savedBanMacros off the classic mirror', () => {
+		const config = v2Config({
+			savedBanMacros: [{id: 'ban00001', title: 'Spam', note: '', message: '', permanent: true, days: 7,},],
+		},)
+
+		expect('savedBanMacros' in encodeClassicConfig(config,),).toBe(false,)
+		expect(config.savedBanMacros,).toHaveLength(1,)
+	})
 })

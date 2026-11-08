@@ -19,6 +19,7 @@ The in-memory model is always v2. `normalizeConfig` up-converts anything it read
     "removalReasons": { ... },
     "modMacros": [ ... ],
     "banMacros": { ... },
+    "savedBanMacros": [ ... ],
     "showRetiredUsernoteShards": false,
     "requireUsernoteType": false,
     "requireUsernoteText": true,
@@ -36,6 +37,7 @@ The in-memory model is always v2. `normalizeConfig` up-converts anything it read
 | `removalReasons`            | `RemovalReasonsConfig` | Removal reasons configuration block; always present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `modMacros`                 | `MacroConfig[]`        | Mod macro entries; empty array when none configured                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `banMacros`                 | `BanMacros \| null`    | Ban form defaults; `null` when not configured                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `savedBanMacros`            | `SavedBanMacro[]`      | NXG-only. Named ban macros offered as an "Apply ban macro..." picker in every ban form (mod button, removal reasons, usernotes). Absent when none are configured; entries without a title are dropped and `days` is clamped to 1-999 on normalization. Kept outside the legacy-owned `banMacros` block so a 6.x save cannot erase it, and stripped from the v1 mirror.                                                                                                                                                                                                                                                                             |
 | `showRetiredUsernoteShards` | boolean                | NXG-only. When `true`, retired (tombstoned) usernote shard pages are surfaced as raw-editor tabs in the config overlay alongside the active shards. Defaults to `false`; stripped from the v1 mirror.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `requireUsernoteType`       | boolean                | NXG-only. When `true`, a usernote saved in this subreddit must have a type/tag. Defaults to `false`; stripped from the v1 mirror. Gated by `usernoteRequirementOption`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `requireUsernoteText`       | boolean                | NXG-only. When `true`, a usernote saved in this subreddit must have body text. Defaults to `true` (only an explicit `false` disables it); stripped from the v1 mirror. Gated by `usernoteRequirementOption`.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -253,6 +255,30 @@ Ban form defaults stored in `banMacros`. The field is `null` when not configured
 | `defaultBanPermanent` | yes      | boolean     | Whether the ban defaults to permanent                                                                                                                                                      |
 | `defaultBanDuration`  | yes      | integer     | Default temporary ban duration in days; `0` when permanent is the default. Also the starting duration for a ban issued from the removal reasons pane when `defaultBanPermanent` is `false` |
 | `banDurationPresets`  | yes      | `integer[]` | Quick-select duration buttons in the ban form (days, 1–999)                                                                                                                                |
+
+### `SavedBanMacro`
+
+One named ban macro in `savedBanMacros`. Choosing it in a ban form fills that form's fields; which fields apply depends on the surface. The mod button uses all of them. The removal reasons ban section uses the note and duration, since the removal message is the ban message there. The usernote popup uses the message, plus the duration for a native `BAN` label; a Toolbox note type fixes its own duration. `note` and `message` accept the same substitution tokens as `banMacros`.
+
+```json
+{
+    "id": "k3j9x0aq",
+    "title": "Spam - 7 days",
+    "note": "spam: {url}",
+    "message": "You have been banned from r/{subreddit} for 7 days for spamming.",
+    "permanent": false,
+    "days": 7
+}
+```
+
+| Field       | Required | Type    | Description                                                  |
+| ----------- | -------- | ------- | ------------------------------------------------------------ |
+| `id`        | no       | string  | Stable id, assigned on normalization                         |
+| `title`     | yes      | string  | Name shown in the picker; entries without one are dropped    |
+| `note`      | yes      | string  | Internal ban note (mod log only, up to 300 characters)       |
+| `message`   | yes      | string  | Message sent to the banned user (up to 999 characters)       |
+| `permanent` | yes      | boolean | Whether the ban is permanent; when `true`, `days` is ignored |
+| `days`      | yes      | integer | Temporary ban length in days, clamped to 1-999               |
 
 ## Substitution tokens
 

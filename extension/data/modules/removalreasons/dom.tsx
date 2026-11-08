@@ -26,6 +26,7 @@ import {pageDetails, postSite,} from '../../util/reddit/pageContext'
 import type {ThingInfo,} from '../../util/reddit/thingInfo'
 import {getApiThingInfo,} from '../../util/reddit/thingInfo'
 import {getConfig,} from '../config/moduleapi'
+import {getSavedBanMacros,} from '../shared/banMacros/moduleapi'
 import {proposeOrRemove,} from '../shared/proposals/gateway'
 import {resolveUsernoteRequirements, subUsernoteRequireFromConfig,} from '../shared/usernotes/requireRules'
 import {MountEffect,} from './components/MountEffect'
@@ -287,11 +288,13 @@ export async function openRemovalOverlayForProposal ({
 	// Permissive comment filter: the trainee already chose the reasons; show them all.
 	const visibleReasons = selectVisibleReasons(data.reasons, isComment, true,)
 	if (!visibleReasons.length) { return {ok: false, reason: 'no-reasons',} }
+	const savedBanMacros = await getSavedBanMacros(subreddit,)
 
 	const close = showRemovalReasonsOverlay({
 		data,
 		visibleReasons,
 		settings: inertOverlaySettings,
+		savedBanMacros,
 		seededFromIntent,
 		...(acceptGate ? {acceptGate,} : {}),
 		onRemoved: onAccepted,
@@ -841,6 +844,7 @@ export function createRemovalReasonsHandlers ({
 			// the moderating team's policy, and Ban Macros already holds it for the mod button.
 			defaultBan: defaultRemovalBan(reqConfig,),
 			nativeNotesAvailable,
+			savedBanMacros: reqConfig?.savedBanMacros ?? [],
 			onRemoved,
 			onClose: () => {
 				if (!drawerMode) {

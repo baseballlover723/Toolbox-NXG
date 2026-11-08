@@ -1,0 +1,6 @@
+/* Ban macro picker shown at the top of each ban form. */
+
+.select {
+	max-width: 100%;
+	margin-bottom: 6px;
+}

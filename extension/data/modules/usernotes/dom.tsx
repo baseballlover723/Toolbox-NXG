@@ -327,6 +327,7 @@ export function createNotesDisplay (
 			archivingAvailable,
 			currentUser,
 			subRequire: subUsernoteRequireFromConfig(config,),
+			savedBanMacros: config?.savedBanMacros ?? [],
 			onRefreshNotes: async () => {
 				const notesData = await getUserNotes(subreddit, true,)
 				publishSubredditNotes(subreddit, {notes: notesData, colors,},)

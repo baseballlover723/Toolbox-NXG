@@ -98,6 +98,19 @@ function validateToolboxConfig (parsed: PositionalJsonResult, collector: Diagnos
 	if (config.banMacros !== undefined && config.banMacros !== null) {
 		collector.expectObject(config.banMacros, 'banMacros', 'banMacros',)
 	}
+
+	if (
+		config.savedBanMacros !== undefined
+		&& collector.expectArray(config.savedBanMacros, 'savedBanMacros', 'savedBanMacros',)
+	) {
+		config.savedBanMacros.forEach((macro, i,) => {
+			const path = `savedBanMacros.${i}`
+			if (!collector.expectObject(macro, path, `ban macro #${i + 1}`,)) { return }
+			collector.expectString(macro.title, `${path}.title`, `ban macro #${i + 1} title`,)
+			collector.expectString(macro.note, `${path}.note`, `ban macro #${i + 1} note`,)
+			collector.expectString(macro.message, `${path}.message`, `ban macro #${i + 1} message`,)
+		},)
+	}
 }
 
 /**

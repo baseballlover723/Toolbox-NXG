@@ -40,6 +40,8 @@ import {
 } from '../../../util/wiki/schemas/shared/tokens'
 import {type UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
 import {requestCounterRefresh,} from '../../notifier/store'
+import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {
 	labelColors,
 	labelTypeToUsernoteType,
@@ -205,6 +207,11 @@ interface RemovalReasonsOverlayProps {
 	 * with the claim so two reviewers can't both apply it. Omit for normal removals.
 	 */
 	acceptGate?: RemovalAcceptGate
+	/**
+	 * The subreddit's named ban macros, offered as a picker in the "Issue a ban" section.
+	 * Only the note and duration apply here: the removal message is the ban message.
+	 */
+	savedBanMacros?: SavedBanMacro[]
 	/** Called after a successful removal, before the overlay closes. */
 	onRemoved?: () => void
 	onClose: () => void
@@ -252,6 +259,7 @@ export function RemovalReasonsOverlay ({
 	seededFromIntent,
 	suggestedReasonIds,
 	acceptGate,
+	savedBanMacros = [],
 	onRemoved,
 	onClose,
 }: RemovalReasonsOverlayProps,) {
@@ -1462,6 +1470,21 @@ export function RemovalReasonsOverlay ({
 				/>
 				{issueBan && (
 					<div className={css.subOptions}>
+						<BanMacroSelect
+							macros={savedBanMacros}
+							onApply={(macro,) => {
+								const resolved = resolveBanMacro(macro, tokenSource,)
+								setBanPermanent(resolved.permanent,)
+								if (!resolved.permanent) { setBanDays(resolved.days,) }
+								setBanNote(resolved.note,)
+							}}
+						/>
+						{savedBanMacros.length > 0 && (
+							<p className={css.subNote}>
+								Ban macros set the note and duration here; the removal message is sent as the ban
+								message.
+							</p>
+						)}
 						<CheckboxInput
 							label="Permanent ban"
 							checked={banPermanent}
