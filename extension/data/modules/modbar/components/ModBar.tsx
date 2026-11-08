@@ -5,7 +5,7 @@ import browser from 'webextension-polyfill'
 import {getModSubs,} from '../../../api/resources/modSubs'
 import type {TbReloadMessage,} from '../../../background/messages'
 import {LocationRenderers,} from '../../../dom/uiLocations'
-import {config, genSettings, modbar, usernotes,} from '../../../framework/moduleIds'
+import {config, genSettings, modbar, modmail, usernotes,} from '../../../framework/moduleIds'
 import TBModule from '../../../framework/moduleRegistry'
 import {Icon,} from '../../../shared/controls/Icon'
 import {ModbarButton,} from '../../../shared/controls/ModbarButton'
@@ -122,6 +122,13 @@ export function ModBar ({
 		setLastStoredHidden(storedHidden,)
 		setHidden(storedHidden,)
 	}
+	// The Modmail module's "open in a new tab" setting, applied here because the bar renders
+	// these links (and manages old Reddit's header icon) on both platforms. Must match that
+	// module's `enabledByDefault: true`.
+	const modmailEnabled = useSetting(modmail, 'enabled', true,)
+	const modmailNewTabSetting = useSetting(modmail, 'openInNewTab', false,)
+	const modmailInNewTab = modmailEnabled && modmailNewTabSetting
+	const modmailLinkTarget = modmailInNewTab ? {target: '_blank', rel: 'noopener',} : {}
 	// The collapsed button sits on the same side as the context menu.
 	const collapsedOnRight = useSetting<'left' | 'right'>(genSettings, 'contextMenuLocation', 'left',) === 'right'
 	const [mmTooltipVisible, setMmTooltipVisible,] = useState(false,)
@@ -212,6 +219,18 @@ export function ModBar ({
 			modmailEl.title = 'new mod mail!'
 		}
 	}, [counters.modmailCount,],)
+
+	useEffect(() => {
+		const modmailEl = document.getElementById('new_modmail',)
+		if (!modmailEl) { return }
+		if (modmailInNewTab) {
+			modmailEl.setAttribute('target', '_blank',)
+			modmailEl.setAttribute('rel', 'noopener',)
+		} else {
+			modmailEl.removeAttribute('target',)
+			modmailEl.removeAttribute('rel',)
+		}
+	}, [modmailInNewTab,],)
 
 	const handleToggle = () => setHidden((h,) => !h)
 
@@ -398,6 +417,7 @@ export function ModBar ({
 					/>
 					<a
 						href={modmailUrl}
+						{...modmailLinkTarget}
 						className={`toolbox-modmail ${
 							hasModmail ? 'havemail' : 'nohavemail'
 						} access-required toolbox-icons`}
@@ -408,6 +428,7 @@ export function ModBar ({
 					</a>
 					<a
 						href={modmailUrl}
+						{...modmailLinkTarget}
 						className="toolbox-modmailcount"
 						onMouseEnter={handleMmMouseenter}
 						onMouseLeave={handleMmMouseleave}
@@ -464,7 +485,7 @@ export function ModBar ({
 						{modmailTooltipCategories.map(({rowClass, path, label, key,},) => (
 							<tr key={key} className={rowClass}>
 								<td className="toolbox-new-mm-category">
-									<a href={`https://www.reddit.com/mail/${path}`}>{label}</a>
+									<a href={`https://www.reddit.com/mail/${path}`} {...modmailLinkTarget}>{label}</a>
 								</td>
 								<td className="toolbox-new-mm-count">{modmailCategoryCount[key] ?? ''}</td>
 							</tr>

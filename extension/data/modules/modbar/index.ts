@@ -7,6 +7,7 @@ import {Module,} from '../../framework/module'
 import {modbar,} from '../../framework/moduleIds'
 import {setSettingAsync,} from '../../util/persistence/settings'
 import {createModbarHandlers,} from './dom'
+import {createHeaderModmailNewTabHandlers,} from './features/headerModmailNewTab'
 import {createSettingsNavigationHandlers,} from './features/settingsNavigation'
 import {createShredditPinnedOffsetHandlers,} from './features/shredditPinnedOffset'
 import {type ModbarSettings, settings,} from './settings'
@@ -40,6 +41,9 @@ const self = new Module<ModbarSettings>({
 	const settingsNav = createSettingsNavigationHandlers()
 	lifecycle.mount(settingsNav.cleanup,)
 	lifecycle.on(window, 'TBHashParams', settingsNav.handleHashParams,)
+
+	const headerModmail = createHeaderModmailNewTabHandlers()
+	lifecycle.on(window, 'click', headerModmail.handleClick, true,)
 
 	const pinnedOffset = createShredditPinnedOffsetHandlers()
 	lifecycle.mount(pinnedOffset.cleanup,)

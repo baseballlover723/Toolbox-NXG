@@ -41,6 +41,17 @@ export const settings = defineSettings(
 				'In a modmail thread, clicking a participant username opens their profile page when the user info sidebar is already open',
 		},
 		{
+			// Applied by the Modbar (it renders these links, manages the old Reddit header icon, and
+			// catches new Reddit's header button), so it also works on old Reddit, where this module
+			// itself doesn't load.
+			id: 'openInNewTab',
+			sharedPolicy: 'raw',
+			type: 'boolean',
+			default: false,
+			description:
+				'Open modmail in a new tab from the modbar modmail icon, count and menu, and from the modmail button in Reddit\'s header',
+		},
+		{
 			id: 'replaceUserSidebarTabs',
 			sharedPolicy: 'raw',
 			type: 'boolean',
