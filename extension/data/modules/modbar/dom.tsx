@@ -1,6 +1,9 @@
 /** DOM integration for the Modbar module - mounts the ModBar React component into the page body. */
 
+import {Provider,} from 'react-redux'
+
 import {notifier, utils,} from '../../framework/moduleIds'
+import store from '../../store'
 import {getModuleSettingAsync,} from '../../util/persistence/settings'
 import {link,} from '../../util/reddit/pageContext'
 import {mountReactInLightBody,} from '../../util/ui/reactMount'
@@ -24,6 +27,7 @@ export async function createModbarHandlers (
 	const {
 		shortcuts,
 		compactHide,
+		showCounters,
 		unmoderatedOn,
 		enableModSubs,
 		enableOldNewToggle,
@@ -68,26 +72,31 @@ export async function createModbarHandlers (
 	// The API budget readout is a debug aid; only poll for it when debug mode is on.
 	const apiBudget = debugMode ? createApiBudgetHandlers() : null
 
+	// The Provider lets the bar follow settings changed in other tabs (collapse state,
+	// context menu side) through the settings store's storage listener.
 	const {unmount,} = mountReactInLightBody(
-		<ModBar
-			shortcuts={shortcuts}
-			compactHide={compactHide}
-			unmoderatedOn={unmoderatedOn}
-			enableModSubs={enableModSubs}
-			enableOldNewToggle={enableOldNewToggle}
-			customCSS={customCSS}
-			subredditColorSalt={subredditColorSalt}
-			initialHidden={compactHide || modbarHidden}
-			modmailUrl={modmailUrl}
-			modQueueUrl={modQueueUrl}
-			unModQueueUrl={unModQueueUrl}
-			notifierEnabled={notifierEnabled}
-			debugMode={debugMode}
-			{...(apiBudget ? {apiBudget: apiBudget.store,} : {})}
-			initialCounters={initialCounters}
-			setSetting={setSetting}
-			onMount={onModbarMount}
-		/>,
+		<Provider store={store}>
+			<ModBar
+				shortcuts={shortcuts}
+				compactHide={compactHide}
+				showCounters={showCounters}
+				unmoderatedOn={unmoderatedOn}
+				enableModSubs={enableModSubs}
+				enableOldNewToggle={enableOldNewToggle}
+				customCSS={customCSS}
+				subredditColorSalt={subredditColorSalt}
+				initialHidden={modbarHidden}
+				modmailUrl={modmailUrl}
+				modQueueUrl={modQueueUrl}
+				unModQueueUrl={unModQueueUrl}
+				notifierEnabled={notifierEnabled}
+				debugMode={debugMode}
+				{...(apiBudget ? {apiBudget: apiBudget.store,} : {})}
+				initialCounters={initialCounters}
+				setSetting={setSetting}
+				onMount={onModbarMount}
+			/>
+		</Provider>,
 		'ModBar',
 	)
 

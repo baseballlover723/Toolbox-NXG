@@ -7,10 +7,17 @@ export const settings = defineSettings(
 		{
 			id: 'compactHide',
 			sharedPolicy: 'raw',
-			description: 'Use compact mode for modbar',
+			description: 'Use compact mode for modbar (a small dot when collapsed, without the hover counts)',
 			type: 'boolean' as const,
 			default: false,
 			advanced: true,
+		},
+		{
+			id: 'showCounters',
+			sharedPolicy: 'raw',
+			description: 'Show counts next to the modbar queue and modmail icons',
+			type: 'boolean' as const,
+			default: true,
 		},
 		{
 			id: 'unmoderatedOn',

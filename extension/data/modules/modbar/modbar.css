@@ -49,6 +49,15 @@ body.toolbox-modbar-shown {
 	border-right: 1px solid var(--toolbox-header-button-hover-bg);
 }
 
+/* Collapsed button on the right, matching a right-side context menu. Compound class so it beats
+   the `.toolbox-scope .toolbox-bottombar-hidden` rule above that pins the button to the left. */
+.toolbox-scope .toolbox-bottombar-hidden.toolbox-bottombar-hidden-right {
+	left: unset;
+	right: 0;
+	border-right: 0;
+	border-left: 1px solid var(--toolbox-header-button-hover-bg);
+}
+
 /* When a Reddit modal is open (.modal.in), drop the modbar below the modal backdrop (z-index 1040)
    so the backdrop covers the bar instead of the bar floating above the modal. */
 body:has(.modal.in) .toolbox-scope .toolbox-bottombar,
@@ -158,6 +167,11 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	text-align: center;
 }
 
+/* "Show counts" off: keep the counter icons, drop their number badges. */
+.toolbox-scope .toolbox-bottombar-no-counters .toolbox-toolbarcounters .toolbox-counter-badge {
+	display: none;
+}
+
 /* Per-type tinting for unread items */
 /* intentional: mail indicator colours are fixed semantic signals - green=new mail.
  * The token carries the light/dark split (lighter green washes out on light bars). */
@@ -237,6 +251,12 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	border-image: initial;
 	padding: var(--toolbox-sp-5);
 	font-size: var(--toolbox-fs-11);
+}
+
+/* Compound class beats `.toolbox-scope .toolbox-modbar-hide-tooltip` above, which anchors it left. */
+.toolbox-scope .toolbox-modbar-hide-tooltip.toolbox-modbar-hide-tooltip-right {
+	left: unset;
+	right: 32px;
 }
 
 .toolbox-scope .toolbox-modbar-hide-tooltip td {

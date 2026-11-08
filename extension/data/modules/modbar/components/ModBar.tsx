@@ -5,7 +5,7 @@ import browser from 'webextension-polyfill'
 import {getModSubs,} from '../../../api/resources/modSubs'
 import type {TbReloadMessage,} from '../../../background/messages'
 import {LocationRenderers,} from '../../../dom/uiLocations'
-import {config, usernotes,} from '../../../framework/moduleIds'
+import {config, genSettings, modbar, usernotes,} from '../../../framework/moduleIds'
 import TBModule from '../../../framework/moduleRegistry'
 import {Icon,} from '../../../shared/controls/Icon'
 import {ModbarButton,} from '../../../shared/controls/ModbarButton'
@@ -16,8 +16,9 @@ import createLogger from '../../../util/infra/logging'
 import {currentPlatform, getDirectingTo,} from '../../../util/infra/platform'
 import {getLastVersion, toolboxVersion, versionNumber,} from '../../../util/infra/version'
 import {getModuleSettingAsync,} from '../../../util/persistence/settings'
-import {useMountEffect,} from '../../../util/ui/hooks'
+import {useMountEffect, useSetting,} from '../../../util/ui/hooks'
 import {reloadPage,} from '../../../util/ui/navigation'
+import {classes,} from '../../../util/ui/reactMount'
 import {type CounterState, subscribeCounters,} from '../../notifier/store'
 import type {ApiBudgetStore,} from '../schema'
 import {ApiBudgetIndicator,} from './ApiBudgetIndicator'
@@ -50,8 +51,10 @@ function reloadToolbox () {
 interface ModBarProps {
 	/** Name-to-URL map of user-defined shortcut links shown in the bar. */
 	shortcuts: Record<string, string>
-	/** When `true`, the bar is hidden by default and shown as a compact dot menu. */
+	/** When `true`, the collapsed bar is a compact dot menu without the hover counts tooltip. */
 	compactHide: boolean
+	/** Whether to show the count badges beside the counter icons. */
+	showCounters: boolean
 	/** Whether to show the unmoderated queue counter and icon. */
 	unmoderatedOn: boolean
 	/** Whether to show the "Moderated Subreddits" drawer button. */
@@ -62,7 +65,7 @@ interface ModBarProps {
 	customCSS: string
 	/** Salt for deterministic subreddit accent-color generation. */
 	subredditColorSalt: string
-	/** Whether the bar starts in the hidden state. */
+	/** Whether the bar starts in the hidden state (the stored state; later changes from other tabs are followed). */
 	initialHidden: boolean
 	modmailUrl: string
 	modQueueUrl: string
@@ -91,6 +94,7 @@ type MySubsRef = {
 export function ModBar ({
 	shortcuts,
 	compactHide,
+	showCounters,
 	unmoderatedOn,
 	enableModSubs,
 	enableOldNewToggle,
@@ -109,6 +113,17 @@ export function ModBar ({
 }: ModBarProps,) {
 	const [counters, setCounters,] = useState<CounterState>(initialCounters,)
 	const [hidden, setHidden,] = useState(initialHidden,)
+	// Follow collapse/expand from other tabs: the stored value changes via the settings store's
+	// storage listener, and adopting it during render (React's "adjust state on prop change"
+	// pattern) keeps every open tab in step without an extra effect pass.
+	const storedHidden = useSetting(modbar, 'modbarHidden', initialHidden,)
+	const [lastStoredHidden, setLastStoredHidden,] = useState(storedHidden,)
+	if (storedHidden !== lastStoredHidden) {
+		setLastStoredHidden(storedHidden,)
+		setHidden(storedHidden,)
+	}
+	// The collapsed button sits on the same side as the context menu.
+	const collapsedOnRight = useSetting<'left' | 'right'>(genSettings, 'contextMenuLocation', 'left',) === 'right'
 	const [mmTooltipVisible, setMmTooltipVisible,] = useState(false,)
 	const [modhidTooltipVisible, setModhidTooltipVisible,] = useState(false,)
 	const [mySubsRef, setMySubsRef,] = useState<MySubsRef | null>(null,)
@@ -250,18 +265,29 @@ export function ModBar ({
 	if (hidden) {
 		return (
 			<>
-				<div className={`toolbox-bottombar-hidden${compactHide ? ' toolbox-bottombar-compact' : ''}`}>
+				<div
+					className={classes(
+						'toolbox-bottombar-hidden',
+						compactHide && 'toolbox-bottombar-compact',
+						collapsedOnRight && 'toolbox-bottombar-hidden-right',
+					)}
+				>
 					<a
 						className="toolbox-bottombar-unhide toolbox-icons"
 						onClick={handleToggle}
 						onMouseEnter={handleModhidMouseenter}
 						onMouseLeave={handleModhidMouseleave}
 					>
-						<Icon icon={compactHide ? 'dotMenu' : 'arrowRight'} />
+						<Icon icon={compactHide ? 'dotMenu' : collapsedOnRight ? 'arrowLeft' : 'arrowRight'} />
 					</a>
 				</div>
 				{modhidTooltipVisible && (
-					<div className="toolbox-modbar-hide-tooltip">
+					<div
+						className={classes(
+							'toolbox-modbar-hide-tooltip',
+							collapsedOnRight && 'toolbox-modbar-hide-tooltip-right',
+						)}
+					>
 						<table>
 							<tbody>
 								<tr>
@@ -285,7 +311,7 @@ export function ModBar ({
 	}
 
 	return (
-		<div className="toolbox-bottombar">
+		<div className={classes('toolbox-bottombar', !showCounters && 'toolbox-bottombar-no-counters',)}>
 			<a
 				className="toolbox-bottombar-hide toolbox-icons"
 				onClick={handleToggle}
