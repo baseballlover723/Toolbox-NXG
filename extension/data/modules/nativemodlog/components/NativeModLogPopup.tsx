@@ -102,8 +102,10 @@ export function showNativeModLogPopup (props: Omit<NativeModLogPopupProps, 'onCl
 			</Provider>
 		),
 		undefined,
-		// Per-target: popups for distinct users coexist; re-opening the same user's
-		// log reveals the live popup instead of mounting a duplicate (losing typed text).
-		`nativemodlog:${props.subreddit}:${props.user}`,
+		// Per-target: re-opening from the same post or comment reveals the live popup instead
+		// of mounting a duplicate (losing typed text). The item is part of the key because the
+		// composer attaches new notes to it: keyed by user alone, opening the log from a second
+		// comment revealed the first popup, and its note was linked to the wrong comment.
+		`nativemodlog:${props.subreddit}:${props.user}:${props.contextID ?? ''}`,
 	)
 }
