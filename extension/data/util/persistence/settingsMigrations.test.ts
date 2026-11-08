@@ -131,6 +131,24 @@ describe('settings migrations', () => {
 		expect(store.get('Toolbox.NativeModLog.defaultNoteLabel',),).toBe('spam_watch',)
 	})
 
+	it('seeds the NN tag character limit from the Usernotes one without removing it', async () => {
+		store.set('Toolbox.UserNotes.maxChars', 50,)
+
+		await doSettingsUpdates()
+
+		expect(store.get('Toolbox.NativeModLog.maxChars',),).toBe(50,)
+		expect(store.get('Toolbox.UserNotes.maxChars',),).toBe(50,)
+	})
+
+	it('does not overwrite an existing NN tag character limit', async () => {
+		store.set('Toolbox.UserNotes.maxChars', 50,)
+		store.set('Toolbox.NativeModLog.maxChars', 30,)
+
+		await doSettingsUpdates()
+
+		expect(store.get('Toolbox.NativeModLog.maxChars',),).toBe(30,)
+	})
+
 	it.each([
 		['native_notes', 'reddit_mod_note',],
 		['Native Notes', 'reddit_mod_note',],

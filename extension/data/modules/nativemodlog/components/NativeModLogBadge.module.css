@@ -1,7 +1,4 @@
-/* Long note text is truncated on the author line; the full text is in the tooltip. */
+/* Note text is truncated to the "maxChars" setting in the component; keep it on one line. */
 .badge {
-	max-width: 200px;
-	overflow: hidden;
 	white-space: nowrap;
-	text-overflow: ellipsis;
 }

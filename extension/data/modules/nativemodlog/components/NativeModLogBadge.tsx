@@ -11,6 +11,8 @@ interface NativeModLogBadgeProps {
 	subreddit: string
 	/** The latest visible native mod log entry, or null/undefined when there is none (or it is still loading). */
 	note?: ModNote | null | undefined
+	/** Maximum characters of note text to show before truncating; the full text is in the tooltip. */
+	maxChars: number
 	onClick: React.MouseEventHandler<HTMLButtonElement>
 }
 
@@ -22,7 +24,7 @@ const fallbackText = 'NN'
  * shortened to "AI summary" (full text in the tooltip) so it can't flood the author
  * line; a mod action shows the action's type name.
  */
-export function NativeModLogBadge ({user, subreddit, note, onClick,}: NativeModLogBadgeProps,) {
+export function NativeModLogBadge ({user, subreddit, note, maxChars, onClick,}: NativeModLogBadgeProps,) {
 	const baseTitle = `Native mod log for /u/${user} in /r/${subreddit}`
 	let contents: React.ReactNode = fallbackText
 	let title = baseTitle
@@ -34,7 +36,8 @@ export function NativeModLogBadge ({user, subreddit, note, onClick,}: NativeModL
 		if (isAiSummary(note,)) {
 			contents = <b style={{color: labelColors[aiSummaryLabel],}}>AI summary</b>
 		} else {
-			contents = <b style={color ? {color,} : undefined}>{noteText}</b>
+			const shown = noteText.length > maxChars ? `${noteText.substring(0, maxChars,)}...` : noteText
+			contents = <b style={color ? {color,} : undefined}>{shown}</b>
 		}
 		title = `${noteText}\n\n${baseTitle}`
 	} else if (note?.mod_action_data) {

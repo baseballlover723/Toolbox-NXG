@@ -45,6 +45,14 @@ export const settings = defineSettings(
 			description:
 				'Show mod actions (removals, bans, approvals, ...) alongside notes on the NN tag and in the mod log',
 		},
+		{
+			id: 'maxChars',
+			sharedPolicy: 'raw',
+			type: 'number',
+			default: 20,
+			advanced: true,
+			description: 'Max characters of the latest note to display in the NN tag',
+		},
 	] as const,
 )
 

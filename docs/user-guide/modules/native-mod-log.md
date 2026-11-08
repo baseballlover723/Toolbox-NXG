@@ -46,5 +46,6 @@ Removal reasons can write the removal's note as a Reddit mod note instead of a T
 | Default native note label | None         | Label preselected for new notes                                                                     |
 | Show AI summaries         | Off          | Show Reddit's AI-generated user summaries on the NN tag and in the popup                            |
 | Show mod actions          | On           | Show mod actions alongside notes on the NN tag and in the popup; when off, only the Notes tab shows |
+| Max note characters       | 20           | Advanced. How much of the latest note the NN tag shows before truncating (full text on hover)       |
 
 Reddit only reports the single latest entry for the tag, so if that entry is one you have hidden, the tag shows **NN** rather than an older entry.

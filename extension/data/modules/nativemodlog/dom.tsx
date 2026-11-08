@@ -37,7 +37,7 @@ function contextFullname (context: UILocationContext,): string | undefined {
  * Registers at the `authorActions` UI location, after the usernote tag.
  */
 export function createNativeModLogDisplay (
-	{showAiSummaries, showModActions,}: NativeModLogSettings,
+	{showAiSummaries, showModActions, maxChars,}: NativeModLogSettings,
 ): NativeModLogDisplayHandlers {
 	const lifecycle = createLifecycle()
 	const getLatestEntry = createLatestEntryFetcher({showAiSummaries, showModActions,},)
@@ -94,6 +94,7 @@ export function createNativeModLogDisplay (
 				user={author}
 				subreddit={subreddit}
 				note={note}
+				maxChars={maxChars}
 				onClick={(event,) => {
 					event.preventDefault()
 					event.stopPropagation()

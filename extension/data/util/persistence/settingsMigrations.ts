@@ -266,6 +266,13 @@ export async function doSettingsUpdates () {
 		if (!(newKey in allSettings)) { migratedWrites[newKey] = allSettings[oldNoteLabelKey] }
 		migratedDeletes.push(oldNoteLabelKey,)
 	}
+	// The old merged usernote/native tag truncated native notes to Usernotes' maxChars, so
+	// seed the NN tag's own limit from it. Copied, not moved: Usernotes still uses its own.
+	const usernotesMaxCharsKey = 'Toolbox.UserNotes.maxChars'
+	const nativeMaxCharsKey = 'Toolbox.NativeModLog.maxChars'
+	if (usernotesMaxCharsKey in allSettings && !(nativeMaxCharsKey in allSettings)) {
+		migratedWrites[nativeMaxCharsKey] = allSettings[usernotesMaxCharsKey]
+	}
 	const oldNotesTabKey = 'Toolbox.UserNotes.defaultNotesTab'
 	if (oldNotesTabKey in allSettings) {
 		const newKey = 'Toolbox.RemovalReasons.defaultNoteDestination'
