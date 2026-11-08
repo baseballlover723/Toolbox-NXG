@@ -44,6 +44,23 @@ export const toolboxVersionName = `${manifest.version_name ?? manifest.version}$
  */
 export const versionNumber = parseInt(major, 10,) * 10000 + parseInt(minor, 10,) * 100 + parseInt(patch, 10,) * 1
 
+/**
+ * Builds the page classes that let subreddit stylesheets target this extension (and a given
+ * version of it) without also matching classic Toolbox, which never sets any of these.
+ * @param version A manifest version string such as '8.0.0.13'.
+ * @returns e.g. `['toolbox-nxg', 'toolbox-nxg-v8', 'toolbox-nxg-v8-0']`; only the brand class
+ *   when the version can't be parsed.
+ * @example versionClassNames('8.1.2.5') // ['toolbox-nxg', 'toolbox-nxg-v8', 'toolbox-nxg-v8-1']
+ */
+export function versionClassNames (version: string,) {
+	const groups = version.match(versionRegex,)?.groups
+	if (!groups?.major || !groups.minor) { return ['toolbox-nxg',] }
+	return ['toolbox-nxg', `toolbox-nxg-v${groups.major}`, `toolbox-nxg-v${groups.major}-${groups.minor}`,]
+}
+
+/** Page classes for the running build; see `versionClassNames`. */
+export const toolboxVersionClassNames = versionClassNames(manifest.version,)
+
 const settingsName = utils
 let lastVersionPromise: Promise<number> | null = null
 

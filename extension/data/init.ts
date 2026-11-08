@@ -19,6 +19,7 @@ import TBModule from './framework/moduleRegistry'
 import {createRateLimitNotice,} from './framework/rateLimitNotice'
 import createLogger from './util/infra/logging'
 import {isOldReddit,} from './util/infra/platform'
+import {toolboxVersionClassNames,} from './util/infra/version'
 import {clearCache,} from './util/persistence/cache'
 import {doSettingsUpdates,} from './util/persistence/settingsMigrations'
 import {setupMessageBridge,} from './util/reddit/events'
@@ -112,6 +113,11 @@ async function startToolbox () {
 
 	document.documentElement.classList.add('toolbox-scope',)
 	document.body.classList.add('toolbox-scope',)
+
+	// Public hooks for subreddit stylesheets: `toolbox` alone also matches classic Toolbox, so
+	// these let a stylesheet scope fixes to this extension, or to one major/minor version of it.
+	document.documentElement.classList.add(...toolboxVersionClassNames,)
+	document.body.classList.add(...toolboxVersionClassNames,)
 
 	// On old Reddit the page stays light regardless of OS theme, so only follow
 	// prefers-color-scheme on shreddit where Reddit itself honours it.

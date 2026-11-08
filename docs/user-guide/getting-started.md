@@ -29,3 +29,15 @@ Toolbox-NXG works on both old Reddit (`old.reddit.com`) and new Reddit / Shreddi
 ## If you're migrating from original Toolbox
 
 See [Migrating from Toolbox](../migration/index.md) for a guide to what changed and what (if anything) you need to do.
+
+## Targeting Toolbox-NXG from a subreddit stylesheet
+
+The `toolbox` class on `<body>` is set by both original Toolbox and Toolbox-NXG, so selectors built on it match both. To publish a fix that only applies to Toolbox-NXG, scope it with one of these classes, which Toolbox-NXG sets on both `<html>` and `<body>` (original Toolbox sets none of them):
+
+| Class              | Present when                            |
+| ------------------ | --------------------------------------- |
+| `toolbox-nxg`      | Toolbox-NXG is running (any version)    |
+| `toolbox-nxg-v8`   | The major version is 8                  |
+| `toolbox-nxg-v8-0` | The version is 8.0.x (major 8, minor 0) |
+
+For example, `.toolbox-nxg .some-selector { ... }` targets Toolbox-NXG only, and `.toolbox-nxg-v8-0 .some-selector { ... }` targets only the 8.0 releases.
