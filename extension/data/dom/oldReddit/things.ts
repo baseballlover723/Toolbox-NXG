@@ -166,6 +166,15 @@ export function getUncheckedComments (marker: string,): Element[] {
 	return Array.from(document.querySelectorAll(`div.comment:not(.${CSS.escape(marker,)})`,),)
 }
 
+/**
+ * Whether an old-Reddit comment is itself locked, judged by the "locked comment" tag in its own
+ * entry only. A comment element contains its whole reply tree, so a plain descendant query would
+ * also see a locked reply's tag and report every ancestor as locked.
+ */
+export function isOwnCommentLocked (comment: Element,): boolean {
+	return !!comment.querySelector(':scope > .entry .locked-tagline',)
+}
+
 /** Returns the remove button anchor within a comment's button row, or `null`. */
 export function getCommentRemoveButton (comment: Element,): Element | null {
 	return comment.querySelector(':scope > .entry ul.buttons a[data-event-action="remove"]',)

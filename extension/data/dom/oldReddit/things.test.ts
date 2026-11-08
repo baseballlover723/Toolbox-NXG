@@ -32,6 +32,7 @@ import {
 	getThingTitleAnchor,
 	getUncheckedComments,
 	getUncheckedLinkThings,
+	isOwnCommentLocked,
 	markThingSeen,
 } from './things'
 
@@ -577,5 +578,34 @@ describe('getNativeRemoveButton', () => {
 		thing.innerHTML = '<div class="entry"></div>'
 		document.body.appendChild(thing,)
 		expect(getNativeRemoveButton(thing,),).toBeNull()
+	})
+})
+
+describe('isOwnCommentLocked', () => {
+	/** A comment with one reply; either can carry Reddit's "locked comment" tag. */
+	function thread ({parentLocked, replyLocked,}: {parentLocked: boolean; replyLocked: boolean},) {
+		const tag = (locked: boolean,) => locked ? '<span class="locked-tagline">locked comment</span>' : ''
+		document.body.innerHTML = `
+			<div class="thing comment" id="parent">
+				<div class="entry"><p class="tagline">${tag(parentLocked,)}</p></div>
+				<div class="child">
+					<div class="thing comment" id="reply">
+						<div class="entry"><p class="tagline">${tag(replyLocked,)}</p></div>
+					</div>
+				</div>
+			</div>`
+		return {parent: document.getElementById('parent',)!, reply: document.getElementById('reply',)!,}
+	}
+
+	it('does not treat a comment as locked because a reply is locked', () => {
+		const {parent, reply,} = thread({parentLocked: false, replyLocked: true,},)
+		expect(isOwnCommentLocked(parent,),).toBe(false,)
+		expect(isOwnCommentLocked(reply,),).toBe(true,)
+	})
+
+	it('reports a comment locked by its own tag', () => {
+		const {parent, reply,} = thread({parentLocked: true, replyLocked: false,},)
+		expect(isOwnCommentLocked(parent,),).toBe(true,)
+		expect(isOwnCommentLocked(reply,),).toBe(false,)
 	})
 })

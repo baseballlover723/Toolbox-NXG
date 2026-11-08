@@ -1,7 +1,7 @@
 /** Renders a per-comment lock/unlock button and provides handlers to process new comment things. */
 import {useEffect, useState,} from 'react'
 
-import {getCommentRemoveButton, getUncheckedComments,} from '../../../dom/oldReddit/things'
+import {getCommentRemoveButton, getUncheckedComments, isOwnCommentLocked,} from '../../../dom/oldReddit/things'
 import {provideLocation, renderAtLocation,} from '../../../dom/uiLocations'
 import {createLifecycle,} from '../../../framework/lifecycle'
 import {positiveTextFeedback,} from '../../../store/feedback'
@@ -153,7 +153,7 @@ export function createCommentLockHandlers () {
 			if (context.kind !== 'comment') { return null }
 			const comment = target.closest('.thing',)
 			if (!comment) { return null }
-			const initialLocked = !!comment.querySelector('.locked-tagline',)
+			const initialLocked = isOwnCommentLocked(comment,)
 			return <CommentLockStatus initialLocked={initialLocked} comment={comment} />
 		},
 	)
@@ -162,7 +162,7 @@ export function createCommentLockHandlers () {
 		if (guard.isDisposed()) { return }
 		if (comment.classList.contains('toolbox-lock-button',)) { return }
 		comment.classList.add('toolbox-lock-button',)
-		const initialLocked = !!comment.querySelector('.locked-tagline',)
+		const initialLocked = isOwnCommentLocked(comment,)
 		const anchor = getCommentRemoveButton(comment,)?.closest('li',)
 		if (!anchor) { return }
 		const li = document.createElement('li',)
