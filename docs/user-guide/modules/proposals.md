@@ -1,6 +1,6 @@
 # Training Mode & Second Opinions
 
-**Platforms:** Old Reddit and New Reddit · **Default:** Enabled (no effect until a subreddit opts in)
+**Platforms:** Old Reddit and New Reddit · **Default:** Always on (no effect until a subreddit opts in)
 
 Training mode lets a subreddit route a moderator's actions into a review queue instead of performing them, so a more experienced moderator can check the work first. The same machinery powers **second opinions**: any moderator can deliberately send a single action on one item for review rather than performing it immediately.
 
@@ -62,6 +62,17 @@ A trainee can review their own subreddit's queue but cannot Accept (or Edit & ac
 ## Requesting a second opinion
 
 Second opinions don't require training mode. On a post or comment's moderation action row, Toolbox-NXG adds an inline **Second opinion** toggle. Arm it and your **next** moderation action on that item (approve, remove, lock, a removal-reason send, ban, …) is captured as a proposal instead of being performed. The toggle is one-shot — it clears itself once an action is captured — and only appears for moderators of the subreddit while the item has no open proposal yet (once one exists, the inline 🎓 badge takes its place). Use it when you want another moderator to sign off on a borderline call. The proposal appears in the team's review queue exactly like a trainee's, tagged as a second opinion rather than training.
+
+## Settings
+
+Proposals is always on: training mode and second opinions only work when the whole mod team can see and review proposals, so the module can't be switched off. Its settings tab only trims what it shows:
+
+| Setting                          | Default | Description                                                                                                  |
+| -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| Hide the modbar Proposals icon   | Off     | Hide the Modbar **Proposals** icon while its count is 0; it reappears as soon as something needs your review |
+| Show the "Second opinion" toggle | On      | Show the inline **Second opinion** toggle on posts and comments                                              |
+
+The icon's count covers the current subreddit plus any subreddits the drawer has already loaded this session, so on pages outside a subreddit you moderate it can read 0 (and stay hidden) even when another subreddit has open proposals. The inline 🎓 badges and the training-mode indicator always show.
 
 ## Pruning
 

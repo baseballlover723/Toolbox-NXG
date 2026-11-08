@@ -9,6 +9,7 @@ These modules cannot be disabled.
 - [General Settings](general.md) — cross-module preferences
 - [Modbar](modbar.md) — persistent bottom toolbar
 - [Notifier](notifier.md) — modqueue/modmail counters and notifications
+- [Proposals](proposals.md) — training mode and second opinions
 
 ## Feature modules
 
@@ -22,7 +23,6 @@ These modules cannot be disabled.
 | [Mod Button](modbutton.md)                        | On      | Both       |
 | [Native Mod Log](native-mod-log.md)               | Off     | Both       |
 | [Profile Pro](profile.md)                         | On      | Both       |
-| [Proposals](proposals.md)                         | On      | Both       |
 | [Queue Overlay](queue-overlay.md)                 | On      | Both       |
 | [Mod View Enhancements](mod-view-enhancements.md) | On      | Both       |
 | [Queue Tools](queue-tools.md)                     | On      | Both       |

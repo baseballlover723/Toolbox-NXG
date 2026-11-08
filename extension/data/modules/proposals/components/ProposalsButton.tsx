@@ -24,8 +24,18 @@ import type {SubredditProposals,} from '../../shared/proposals/selectors'
 import {sameSub,} from '../../shared/proposals/subreddits'
 import {showProposalsReviewPopup,} from './ProposalsReviewPopup'
 
+/** Props for the modbar proposals button. */
+interface Props {
+	/**
+	 * Hide the button while its count is 0. The count only covers subreddits already loaded
+	 * (the current one, plus any the drawer has scanned), so elsewhere it can read 0 even
+	 * when another subreddit has open proposals.
+	 */
+	hideWhenEmpty?: boolean
+}
+
 /** Modbar entry point for the proposals review popup. */
-export function ProposalsButton () {
+export function ProposalsButton ({hideWhenEmpty = false,}: Props,) {
 	const subreddit = postSite
 	const [count, setCount,] = useState(0,)
 	const [show, setShow,] = useState(false,)
@@ -83,7 +93,7 @@ export function ProposalsButton () {
 		}
 	}, [subreddit,],)
 
-	if (!show) { return null }
+	if (!show || (hideWhenEmpty && count === 0)) { return null }
 
 	const handleClick = () => {
 		if (closeRef.current) {

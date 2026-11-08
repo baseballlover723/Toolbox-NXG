@@ -11,12 +11,13 @@ import {TrainingModeIndicator,} from './components/TrainingModeIndicator'
  * return value to `lifecycle.mount()` in `index.ts`. Renders into the modbar's
  * counter group (immediately left of the modmail icon) so it reads as one of the
  * mod queue counters rather than a labelled button.
+ * @param hideWhenEmpty Hide the button while its count is 0.
  */
-export function createProposalsModbarSlot (): () => void {
+export function createProposalsModbarSlot (hideWhenEmpty: boolean,): () => void {
 	return renderAtLocation(
 		'modbarCounters',
 		{id: 'proposals.review', order: 0,},
-		() => <ProposalsButton />,
+		() => <ProposalsButton hideWhenEmpty={hideWhenEmpty} />,
 	)
 }
 
