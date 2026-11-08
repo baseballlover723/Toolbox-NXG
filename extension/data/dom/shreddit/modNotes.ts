@@ -19,6 +19,13 @@ export interface ModNotesTarget {
 	isRemoved: boolean
 }
 
+/** Fullname of a shreddit-comment (`thingid`) or shreddit-post (`id`), or `''` when it has none. */
+function ancestorFullname (ancestor: Element | null,): string {
+	if (!ancestor) { return '' }
+	const id = ancestor.getAttribute('thingid',) || ancestor.getAttribute('id',) || ''
+	return /^t[13]_/.test(id,) ? id : ''
+}
+
 /**
  * Find mod-notes-opener elements that need a toolbox author anchor.
  * Skips openers inside feed credit bars (handled by findCreditBarTargets), hover card
@@ -40,13 +47,15 @@ export function findModNotesTargets (root: Element,): ModNotesTarget[] {
 		const subreddit = opener.getAttribute('subreddit-name',)
 		if (!author || !subreddit) { continue }
 
-		const thingId = opener.getAttribute('thing-id',) ?? ''
-		const postId = opener.getAttribute('post-id',) ?? ''
-		const conversationId = opener.getAttribute('conversation-id',)
-
 		const ancestor = opener.closest('shreddit-comment',)
 			?? opener.closest('shreddit-post',)
 			?? opener.closest('mod-queue-list-item',)
+		// The opener normally carries the fullname, but fall back to the enclosing comment or
+		// post so a native note written from here is still attached to the item.
+		const thingId = opener.getAttribute('thing-id',)
+			|| ancestorFullname(ancestor,)
+		const postId = opener.getAttribute('post-id',) ?? ''
+		const conversationId = opener.getAttribute('conversation-id',)
 		const thingAncestor = ancestor && !ancestor.querySelector(':scope > .toolbox-thing-slot',)
 			? ancestor
 			: null

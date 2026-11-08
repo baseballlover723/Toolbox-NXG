@@ -44,6 +44,34 @@ describe('findModNotesTargets', () => {
 		expect(target.postId,).toBe('t3_abc',)
 	})
 
+	it('falls back to the enclosing comment for an opener without thing-id', () => {
+		const root = html(`
+            <shreddit-comment thingid="t1_xyz" postid="t3_abc">
+                <mod-notes-opener user-name="bob" subreddit-name="testsub" post-id="t3_abc"></mod-notes-opener>
+            </shreddit-comment>
+        `,)
+		const [target,] = findModNotesTargets(root,)
+		expect(target.thingId,).toBe('t1_xyz',)
+	})
+
+	it('falls back to the enclosing post for an opener without thing-id', () => {
+		const root = html(`
+            <shreddit-post id="t3_abc">
+                <mod-notes-opener user-name="alice" subreddit-name="testsub"></mod-notes-opener>
+            </shreddit-post>
+        `,)
+		const [target,] = findModNotesTargets(root,)
+		expect(target.thingId,).toBe('t3_abc',)
+	})
+
+	it('leaves thingId empty when neither the opener nor an ancestor has a fullname', () => {
+		const root = html(`
+            <mod-notes-opener user-name="alice" subreddit-name="testsub"></mod-notes-opener>
+        `,)
+		const [target,] = findModNotesTargets(root,)
+		expect(target.thingId,).toBe('',)
+	})
+
 	it('reads conversation-id for modmail openers', () => {
 		const root = html(`
             <mod-notes-opener user-name="alice" subreddit-name="testsub"
