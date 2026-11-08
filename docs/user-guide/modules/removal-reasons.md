@@ -44,6 +44,8 @@ Removal reasons are configured per-subreddit in the Config overlay (**Edit remov
 
 **Leave a note for the user** — record the removal as a [Toolbox usernote](usernotes.md) or, while the [Native Mod Log](native-mod-log.md) module is enabled, as a Reddit mod note. **Default note destination** picks which one is selected first; with Native Mod Log turned off, the choice is hidden and the note is always a Toolbox note.
 
+**Issue a ban** — ban the author as part of the removal. A temporary ban starts at the subreddit's default duration from the **Ban macro** tab of the [Config](config.md) overlay (the same default the Mod Button's ban form uses), or 7 days when none is set. Choosing a usernote type that carries its own ban duration replaces that starting value. The pane never starts on a permanent ban, even when the Ban macro tab defaults to permanent.
+
 ## Removal reason format
 
 Reason text supports two kinds of tokens:

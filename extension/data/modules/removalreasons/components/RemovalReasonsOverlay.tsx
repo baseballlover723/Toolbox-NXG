@@ -57,6 +57,7 @@ import {findUnresolvedMacros, nativeMacroTokens,} from '../nativeMacros'
 import {freezeRemovalParams,} from '../proposalAdapter'
 
 import {
+	fallbackBanDays,
 	isDrawerDisplayMode,
 	type NoteDestination,
 	type RemovalReason,
@@ -176,6 +177,11 @@ interface RemovalReasonsOverlayProps {
 	 */
 	defaultNoteDestination?: NoteDestination
 	/**
+	 * Days the "Issue a ban" duration starts at, from the subreddit's Ban Macros default.
+	 * Overridden by a note type's ban duration and by {@link seededFromIntent}.
+	 */
+	defaultBanDays?: number
+	/**
 	 * Whether a Reddit mod note can be chosen as the destination (the Native Mod Log
 	 * module is enabled). When false the destination selector is hidden and notes go to
 	 * Toolbox, unless a replayed proposal already chose a mod note.
@@ -242,6 +248,7 @@ export function RemovalReasonsOverlay ({
 	settings,
 	usernoteRequire = {type: false, text: true, link: false,},
 	defaultNoteDestination = 'toolbox',
+	defaultBanDays = fallbackBanDays,
 	nativeNotesAvailable = true,
 	seededFromIntent,
 	suggestedReasonIds,
@@ -525,7 +532,7 @@ export function RemovalReasonsOverlay ({
 
 	const [issueBan, setIssueBan,] = useState(!!seededFromIntent?.ban,)
 	const [banPermanent, setBanPermanent,] = useState(!!seededFromIntent?.ban?.permanent,)
-	const [banDays, setBanDays,] = useState(seededFromIntent?.ban?.days ?? 7,)
+	const [banDays, setBanDays,] = useState(seededFromIntent?.ban?.days ?? defaultBanDays,)
 	const [banNote, setBanNote,] = useState(seededFromIntent?.ban?.note ?? '',)
 
 	const reasonContentRefs = useRef<Map<string, HTMLDivElement>>(new Map(),)

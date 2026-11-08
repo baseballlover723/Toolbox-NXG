@@ -246,13 +246,13 @@ Ban form defaults stored in `banMacros`. The field is `null` when not configured
 }
 ```
 
-| Field                 | Required | Type        | Description                                                               |
-| --------------------- | -------- | ----------- | ------------------------------------------------------------------------- |
-| `banNote`             | yes      | string      | Internal mod note pre-filled into the ban form                            |
-| `banMessage`          | yes      | string      | Ban message pre-filled into the ban form (sent to the banned user)        |
-| `defaultBanPermanent` | yes      | boolean     | Whether the ban defaults to permanent                                     |
-| `defaultBanDuration`  | yes      | integer     | Default temporary ban duration in days; `0` when permanent is the default |
-| `banDurationPresets`  | yes      | `integer[]` | Quick-select duration buttons in the ban form (days, 1–999)               |
+| Field                 | Required | Type        | Description                                                                                                                                                                                |
+| --------------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `banNote`             | yes      | string      | Internal mod note pre-filled into the ban form                                                                                                                                             |
+| `banMessage`          | yes      | string      | Ban message pre-filled into the ban form (sent to the banned user)                                                                                                                         |
+| `defaultBanPermanent` | yes      | boolean     | Whether the ban defaults to permanent                                                                                                                                                      |
+| `defaultBanDuration`  | yes      | integer     | Default temporary ban duration in days; `0` when permanent is the default. Also the starting duration for a ban issued from the removal reasons pane when `defaultBanPermanent` is `false` |
+| `banDurationPresets`  | yes      | `integer[]` | Quick-select duration buttons in the ban form (days, 1–999)                                                                                                                                |
 
 ## Substitution tokens
 

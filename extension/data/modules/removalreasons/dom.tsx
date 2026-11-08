@@ -39,6 +39,7 @@ import {getNativeReasons, getRemovalReasons,} from './moduleapi'
 import {setRemovalOverlayOpener,} from './overlayOpener'
 import {
 	defaultLogTitle,
+	defaultRemovalBanDays,
 	defaultSubject,
 	isDrawerDisplayMode,
 	type NoteDestination,
@@ -836,6 +837,9 @@ export function createRemovalReasonsHandlers ({
 			},
 			usernoteRequire,
 			defaultNoteDestination,
+			// The acting subreddit's own ban default (not a `getfrom` source's): ban length is
+			// the moderating team's policy, and Ban Macros already holds it for the mod button.
+			defaultBanDays: defaultRemovalBanDays(reqConfig,),
 			nativeNotesAvailable,
 			onRemoved,
 			onClose: () => {

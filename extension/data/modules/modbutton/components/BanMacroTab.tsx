@@ -128,6 +128,10 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 						onChange={(e,) => setDefaultBanDuration(e.target.value,)}
 					/>
 				)}
+				<span className={css.fieldHint}>
+					A temporary duration here is also where a ban issued from the removal reasons pane starts (7 days if
+					unset). The pane never defaults to a permanent ban.
+				</span>
 			</div>
 			<div className={css.field}>
 				<div className={css.fieldLabel}>Duration preset buttons</div>

@@ -32,7 +32,7 @@ Each subreddit's configuration is independent. Toolbox-NXG stores it at `toolbox
 
 **Domain tags** — tag specific domains with a color, or import tags from another subreddit. Tagged domains appear with a colored indicator on link posts in the mod queue and listings.
 
-**Ban macro** — pre-fill the Mod Button's ban note and ban message with text and tokens, and set the default ban duration and duration preset buttons.
+**Ban macro** — pre-fill the Mod Button's ban note and ban message with text and tokens, and set the default ban duration and duration preset buttons. A temporary default duration is also where a ban from the [removal reasons](removal-reasons.md) pane starts.
 
 **Toolbox 6.x compatibility** — control whether the old Toolbox 6.x wiki pages are kept in sync for this subreddit.
 

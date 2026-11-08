@@ -1185,3 +1185,35 @@ describe('native chip and unresolved macro warning', () => {
 		expect(container.textContent,).toContain('instead of becoming a control',)
 	})
 })
+
+describe('RemovalReasonsOverlay (ban duration default)', () => {
+	/** Renders the overlay, ticks "Issue a ban", and returns the duration input's value. */
+	function banDaysShown (defaultBanDays?: number,): string {
+		act(() => {
+			root.render(
+				<RemovalReasonsOverlay
+					data={data}
+					visibleReasons={[reason,]}
+					displayMode="Popup"
+					settings={settings}
+					{...(defaultBanDays !== undefined ? {defaultBanDays,} : {})}
+					onClose={onClose}
+				/>,
+			)
+		},)
+		const banToggle = [...container.querySelectorAll('label',),]
+			.find((label,) => label.textContent?.includes('Issue a ban as part of this removal',))
+			?.querySelector<HTMLInputElement>('input[type="checkbox"]',)
+		expect(banToggle,).toBeTruthy()
+		act(() => banToggle!.click())
+		return container.querySelector<HTMLInputElement>('input[type="number"]',)!.value
+	}
+
+	it('starts at the subreddit default', () => {
+		expect(banDaysShown(3,),).toBe('3',)
+	})
+
+	it('starts at 7 days without one', () => {
+		expect(banDaysShown(),).toBe('7',)
+	})
+})
