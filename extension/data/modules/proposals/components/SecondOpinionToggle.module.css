@@ -1,11 +1,12 @@
 /*
  * The inline second-opinion toggle wears the shared `.toolbox-flat-list-action` pill class
  * (defined globally in toolbox-buttons.css) so it matches the other flat-list-slot controls;
- * this module only adds `vertical-align` and the armed on-state. When armed, its label turns
- * the "new mail" green (light/dark aware) so the on-state reads at a glance.
+ * this module only adds the cursor and the armed on-state. When armed, its label turns the
+ * "new mail" green (light/dark aware) so the on-state reads at a glance. It keeps the default
+ * baseline alignment: on old Reddit it sits inline with the native text links, and a
+ * `vertical-align: middle` here nudged it off their baseline.
  */
 .toggle {
-	vertical-align: middle;
 	/* The toggle is a hrefless `<a role="button">`, so without this old Reddit (light DOM, where the
 	   Shreddit `.toolbox-flat-list-action` pill rule's `cursor` no longer applies) shows a text caret
 	   on hover. Harmless on Shreddit, where the pill already sets it. */
