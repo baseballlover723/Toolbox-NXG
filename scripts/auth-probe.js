@@ -21,7 +21,8 @@ async function main () {
 			const text = await response.text()
 			out.push({
 				label,
-				status: response.status,
+				// redirect: 'manual' turns a redirect into an opaque response with status 0.
+				status: response.type === 'opaqueredirect' ? 'redirect' : response.status,
 				ratelimit: response.headers.get('x-ratelimit-remaining',),
 				body: text.slice(0, 120,),
 			},)
@@ -52,25 +53,84 @@ async function main () {
 	},)
 	const bearer = parseJSON(tokenText,)?.token
 
-	// 2. The endpoints [N]/[M] hit, under each auth mode on oauth.reddit.com.
+	// Real ids to read, so a 404 means the endpoint refused the request rather than "no such page".
+	const user = 'spez'
+	const newest = parseJSON(await probe('setup: newest post', `https://old.reddit.com/r/${sub}/new.json?limit=1`,),)
+	const postId = newest?.data?.children?.[0]?.data?.id
+	const wikiPages = parseJSON(await probe('setup: wiki pages', `https://old.reddit.com/r/${sub}/wiki/pages.json`,),)
+	const wikiPage = wikiPages?.data?.find((page,) => !page.startsWith('config/',)) ?? 'index'
+
+	// 2. Every GET Toolbox sends to oauth.reddit.com (api/resources/*), under each auth mode.
 	const paths = [
 		'/api/v1/me',
 		'/subreddits/mine/moderator.json?limit=1',
-		`/r/${sub}/about/banned/.json?limit=1`,
-		`/r/${sub}/wiki/usernotes.json`,
 		'/api/info.json?id=t3_1',
-		'/api/mod/conversations/unread/count',
-		`/api/mod/notes/recent?subreddits=${sub}&users=spez`,
+		`/r/${sub}/api/info.json?id=t3_1`,
+		`/r/${sub}/about.json`,
+		`/r/${sub}/about/rules.json`,
+		`/r/${sub}/about/log.json?limit=1`,
+		`/r/${sub}/about/modqueue.json?limit=1`,
+		`/r/${sub}/about/unmoderated.json?limit=1`,
+		`/r/${sub}/about/reports.json?limit=1`,
+		`/r/${sub}/about/spam.json?limit=1`,
+		`/r/${sub}/about/edited.json?limit=1`,
+		`/r/${sub}/hot.json?limit=2`,
+		`/r/${sub}/about/moderators.json?limit=1`,
+		`/r/${sub}/about/banned/.json?limit=1`,
+		`/r/${sub}/about/muted.json?limit=1`,
+		`/r/${sub}/about/contributors.json?limit=1`,
+		`/r/${sub}/wiki/pages.json`,
+		`/r/${sub}/wiki/${wikiPage}.json`,
+		`/r/${sub}/wiki/revisions/${wikiPage}.json?limit=1`,
 		`/r/${sub}/api/user_flair_v2`,
 		`/r/${sub}/api/link_flair_v2`,
+		`/user/${user}/about.json`,
+		`/user/${user}/overview.json?limit=1`,
+		`/user/${user}/submitted.json?limit=1`,
+		`/user/${user}/comments.json?limit=1`,
+		`/user/${user}.json?limit=1`,
+		...(postId ? [`/r/${sub}/comments/${postId}.json?limit=1`,] : []),
+		'/api/mod/conversations/unread/count',
+		`/api/mod/notes?subreddit=${sub}&user=${user}&limit=1`,
+		`/api/mod/notes/recent?subreddits=${sub}&users=${user}`,
+		`/api/v1/${sub}/removal_reasons`,
 	]
+
+	// Mirrors initialOAuthMode in background/handlers/webrequest.ts; keep the two in step.
+	const bearerOnlyPrefixes = ['/api/mod/', '/api/v1/',]
+	const bearerOnlySuffixes = ['/api/user_flair_v2', '/api/link_flair_v2',]
+	const firstMode = (path,) => {
+		const pathname = path.split('?',)[0]
+		const bearerFirst = bearerOnlyPrefixes.some((prefix,) => pathname.startsWith(prefix,))
+			|| bearerOnlySuffixes.some((suffix,) => pathname.endsWith(suffix,))
+		return bearerFirst ? 'bearer' : 'cookie'
+	}
+	const isOk = (status,) => typeof status === 'number' && status >= 200 && status < 300
+	const verdicts = []
+
 	for (const path of paths) {
 		const url = `https://oauth.reddit.com${path}`
 		await probe(`cookie only   ${path}`, url,)
+		const cookieStatus = out.at(-1,).status
+		let bearerStatus
 		if (bearer) {
 			await probe(`bearer only   ${path}`, url, bearerOnly(bearer,),)
+			bearerStatus = out.at(-1,).status
 			await probe(`cookie+bearer ${path}`, url, cookieAndBearer(bearer,),)
 		}
+
+		// What Toolbox would actually get: the first mode, plus the other mode only after a 403.
+		const mode = firstMode(path,)
+		const [first, second,] = mode === 'cookie' ? [cookieStatus, bearerStatus,] : [bearerStatus, cookieStatus,]
+		const works = isOk(first,) || (first === 403 && isOk(second,))
+		const verdict = works
+			? 'ok'
+			: first === 'redirect'
+			? 'BROKEN: redirects, which the transport refuses to follow -- use another endpoint'
+			: isOk(second,)
+			? `BROKEN: ${mode} gets ${first}, other mode works -- fix initialOAuthMode`
+			: `BROKEN: ${first} / ${second} under both modes`
+		verdicts.push({path, firstMode: mode, cookie: cookieStatus, bearer: bearerStatus, verdict,},)
 	}
 
 	// 2b. The Mod Button's User Flair tab. flairselector is a POST but only reads, so it is safe to probe.
@@ -125,6 +185,8 @@ async function main () {
 	}
 
 	console.table(out,)
+	// The summary that matters: any BROKEN row is an endpoint Toolbox cannot read today.
+	console.table(verdicts,)
 }
 
 main()
