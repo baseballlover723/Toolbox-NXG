@@ -24,6 +24,13 @@
 	overflow-wrap: anywhere;
 }
 
+/* Delete column: shrink to the button instead of sharing the table's spare width. */
+.noteTable .actionCell {
+	width: 1px;
+	white-space: nowrap;
+	text-align: center;
+}
+
 .actionSummary {
 	font-style: italic;
 	opacity: 0.5;

@@ -77,7 +77,7 @@ export function ModNotesPager (
 										<th>Author</th>
 										<th>Type</th>
 										<th>Details</th>
-										<th></th>
+										<th className={css.actionCell}></th>
 									</tr>
 								</thead>
 								<tbody>

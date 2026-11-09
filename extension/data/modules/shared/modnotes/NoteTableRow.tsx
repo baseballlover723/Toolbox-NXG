@@ -120,12 +120,13 @@ export function NoteTableRow ({note, onDelete, card = false,}: NoteTableRowProps
 					</blockquote>
 				)}
 			</td>
-			<td>
+			<td className={css.actionCell}>
 				{note.type === 'NOTE' && (
 					<button
 						type="button"
 						aria-label="Delete note"
 						data-note-id={note.id}
+						className={css.nativeNoteIconButton}
 						onClick={() => onDelete()}
 					>
 						<Icon mood="negative" icon="delete" />
