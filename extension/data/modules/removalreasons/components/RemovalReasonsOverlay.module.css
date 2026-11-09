@@ -292,6 +292,11 @@
 	background: var(--toolbox-action-bg);
 }
 
+/* Without a drag handle, drop its 20px column so the checkbox and number aren't squeezed into it. */
+.reasonCardHeaderStatic {
+	grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
 .dragHandle {
 	background: none;
 	border: none;

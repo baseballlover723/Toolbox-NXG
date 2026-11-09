@@ -103,7 +103,7 @@ export function SortableReasonCard ({
 				onToggle()
 			}}
 		>
-			<div className={css.reasonCardHeader}>
+			<div className={`${css.reasonCardHeader} ${reorderable ? '' : css.reasonCardHeaderStatic}`}>
 				{reorderable && (
 					<button
 						ref={setActivatorNodeRef}
