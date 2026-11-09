@@ -274,21 +274,27 @@ export interface RemovalReasonsOverlaySettings {
 /** Temporary ban length the removal pane starts at when the subreddit sets no default. */
 export const fallbackBanDays = 7
 
+/** Where the removal pane's "Issue a ban" form starts. */
+export interface RemovalBanDefault {
+	/** Whether the ban starts permanent. */
+	permanent: boolean
+	/** Temporary ban length in whole days, [1, 999]; used when the ban is (or is made) temporary. */
+	days: number
+}
+
 /**
- * Returns the temporary ban length the removal pane should start at, from the subreddit's
- * Ban Macros default (Config > Ban Macros), so the team sets one ban default for both the
- * mod button and removals. Only the duration is taken: "permanent by default" is left out
- * because that checkbox starts ticked in the Ban Macros tab, so a stored `true` usually
- * means nobody chose it, and a removal ban silently turning permanent would be a surprise.
+ * Returns where the removal pane's ban form should start, from the subreddit's Ban Macros
+ * defaults (Config > Ban Macros), so the team sets one ban default for both the mod button
+ * and removals. "Permanent by default" is read the same way the mod button reads it: on
+ * unless explicitly turned off. A subreddit with no Ban Macros at all starts temporary.
  * @param config The acting subreddit's config, or undefined when it couldn't be read.
- * @returns A whole number of days in [1, 999].
  */
-export function defaultRemovalBanDays (
+export function defaultRemovalBan (
 	config: {banMacros?: {defaultBanPermanent?: boolean; defaultBanDuration?: number} | null} | undefined,
-): number {
+): RemovalBanDefault {
 	const macros = config?.banMacros
-	if (!macros || macros.defaultBanPermanent !== false) { return fallbackBanDays }
+	if (!macros) { return {permanent: false, days: fallbackBanDays,} }
 	const days = macros.defaultBanDuration
-	if (typeof days !== 'number' || !Number.isInteger(days,) || days < 1 || days > 999) { return fallbackBanDays }
-	return days
+	const validDays = typeof days === 'number' && Number.isInteger(days,) && days >= 1 && days <= 999
+	return {permanent: macros.defaultBanPermanent !== false, days: validDays ? days : fallbackBanDays,}
 }

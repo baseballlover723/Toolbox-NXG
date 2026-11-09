@@ -1187,9 +1187,12 @@ describe('native chip and unresolved macro warning', () => {
 	})
 })
 
-describe('RemovalReasonsOverlay (ban duration default)', () => {
-	/** Renders the overlay, ticks "Issue a ban", and returns the duration input's value. */
-	function banDaysShown (defaultBanDays?: number,): string {
+describe('RemovalReasonsOverlay (ban default)', () => {
+	/**
+	 * Renders the overlay and ticks "Issue a ban".
+	 * @returns Whether "Permanent ban" is ticked, and the duration shown once it is unticked.
+	 */
+	function banFormShown (defaultBan?: {permanent: boolean; days: number},) {
 		act(() => {
 			root.render(
 				<RemovalReasonsOverlay
@@ -1197,25 +1200,32 @@ describe('RemovalReasonsOverlay (ban duration default)', () => {
 					visibleReasons={[reason,]}
 					displayMode="Popup"
 					settings={settings}
-					{...(defaultBanDays !== undefined ? {defaultBanDays,} : {})}
+					{...(defaultBan !== undefined ? {defaultBan,} : {})}
 					onClose={onClose}
 				/>,
 			)
 		},)
-		const banToggle = [...container.querySelectorAll('label',),]
-			.find((label,) => label.textContent?.includes('Issue a ban as part of this removal',))
-			?.querySelector<HTMLInputElement>('input[type="checkbox"]',)
-		expect(banToggle,).toBeTruthy()
-		act(() => banToggle!.click())
-		return container.querySelector<HTMLInputElement>('input[type="number"]',)!.value
+		const checkboxLabelled = (text: string,) =>
+			[...container.querySelectorAll('label',),]
+				.find((label,) => label.textContent?.includes(text,))
+				?.querySelector<HTMLInputElement>('input[type="checkbox"]',)
+		act(() => checkboxLabelled('Issue a ban as part of this removal',)!.click())
+		const permanentBox = checkboxLabelled('Permanent ban',)!
+		const permanent = permanentBox.checked
+		if (permanent) { act(() => permanentBox.click()) }
+		return {permanent, days: container.querySelector<HTMLInputElement>('input[type="number"]',)!.value,}
 	}
 
-	it('starts at the subreddit default', () => {
-		expect(banDaysShown(3,),).toBe('3',)
+	it('starts at the subreddit temporary default', () => {
+		expect(banFormShown({permanent: false, days: 3,},),).toEqual({permanent: false, days: '3',},)
 	})
 
-	it('starts at 7 days without one', () => {
-		expect(banDaysShown(),).toBe('7',)
+	it('starts permanent when the subreddit defaults to permanent', () => {
+		expect(banFormShown({permanent: true, days: 3,},),).toEqual({permanent: true, days: '3',},)
+	})
+
+	it('starts at a 7 day temporary ban without a default', () => {
+		expect(banFormShown(),).toEqual({permanent: false, days: '7',},)
 	})
 })
 

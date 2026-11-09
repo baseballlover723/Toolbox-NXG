@@ -129,8 +129,8 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 					/>
 				)}
 				<span className={css.fieldHint}>
-					A temporary duration here is also where a ban issued from the removal reasons pane starts (7 days if
-					unset). The pane never defaults to a permanent ban.
+					Bans issued from the removal reasons pane start from this default too (7 days if no temporary
+					duration is set).
 				</span>
 			</div>
 			<div className={css.field}>
