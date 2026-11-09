@@ -51,6 +51,15 @@
 	z-index: 1;
 }
 
+/* Old-Reddit flat-list slot. Every renderer at this location shares one `<li>`, so their links sit
+   flush against each other. Native items are separated by their `<li>`'s 4px right padding plus the
+   whitespace between `<li>`s; reproduce both so the gap matches. */
+body.toolbox-scope .toolbox-flat-list-actions-slot > [data-toolbox-mount] > * + * {
+	/* 4px mirrors old Reddit's `.flat-list li` padding (a fixed px value there); 0.3em stands in for
+	   the inter-`<li>` space character at the row's font size. */
+	margin-left: calc(4px + 0.3em);
+}
+
 /* Inline flat-list-slot controls (ModActions pills, the Toolbox Remove link, the Second opinion
    toggle), styled as native Reddit pills. These render inside the row's Toolbox shadow host on
    Shreddit, so they are NOT scoped under `.toolbox-flat-list-slot`: that ancestor lives in light DOM,
