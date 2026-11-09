@@ -240,7 +240,7 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 					{hasSubmittedAccounts && (
 						<div>
 							<AccountTable
-								heading="account submitted from"
+								heading="account behind submitted links"
 								accounts={submissionData.accounts}
 								total={submissionData.total}
 								ratioClassName={ratioClassName}

@@ -66,9 +66,6 @@ const recognized: [string, string,][] = [
 	['https://ko-fi.com/creator', 'Ko-fi:creator',],
 	['https://onlyfans.com/creator', 'OnlyFans:creator',],
 	['https://linktr.ee/creator', 'Linktree:creator',],
-	['https://github.com/someuser/repo', 'GitHub:someuser',],
-	['https://someuser.github.io/project/', 'GitHub:someuser',],
-	['https://github.com/orgs/someorg/repositories', 'GitHub:someorg',],
 	['https://www.etsy.com/shop/ShopName', 'Etsy:ShopName',],
 	['https://www.etsy.com/de/shop/ShopName', 'Etsy:ShopName',],
 ]
@@ -103,7 +100,9 @@ const unrecognized = [
 	'https://soundcloud.com/discover',
 	'https://on.soundcloud.com/abc',
 	'https://www.patreon.com/posts/some-post-123',
-	'https://github.com/topics/rust',
+	// GitHub is deliberately not an account provider: its links are almost always to repos.
+	'https://github.com/someuser/repo',
+	'https://someuser.github.io/project/',
 	'https://www.etsy.com/listing/123/item',
 	'https://www.reddit.com/r/foo',
 	'https://example.com/foo',

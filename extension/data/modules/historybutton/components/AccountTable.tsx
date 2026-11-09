@@ -5,7 +5,7 @@ import css from './historybutton.module.css'
 
 /** Props for {@link AccountTable}. */
 interface AccountTableProps {
-	/** Column heading, e.g. `account submitted from`. */
+	/** Column heading, e.g. `account behind submitted links`. */
 	heading: string
 	accounts: LinkedAccounts
 	/** When set, a `%` column is shown relative to this total and over-represented rows are highlighted. */
