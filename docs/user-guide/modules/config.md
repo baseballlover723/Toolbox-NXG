@@ -6,7 +6,7 @@ The Config module provides the per-subreddit configuration overlay, letting mode
 
 ## Overview
 
-Open the config overlay from the Modbar — it is accessible on any subreddit page you moderate. Changes are saved to the subreddit wiki when you click Save. If 6.x compatibility writes are enabled, the save also updates the classic `toolbox` wiki page so moderators on the original Toolbox see the changes.
+Open the config overlay from the Modbar — it is accessible on any subreddit page you moderate. Drag its bottom-right corner to make the overlay wider than its default width, which helps with long AutoModerator lines. Changes are saved to the subreddit wiki when you click Save. If 6.x compatibility writes are enabled, the save also updates the classic `toolbox` wiki page so moderators on the original Toolbox see the changes.
 
 Each subreddit's configuration is independent. Toolbox-NXG stores it at `toolbox-nxg` in the subreddit wiki.
 

@@ -30,7 +30,7 @@ Each entry links to the post or comment it is about, where there is one. Notes c
 
 Below the tabs, pick a label (optional), type the note, and click **Save for /r/...**. A note added from a post or comment is attached to it. Reddit limits a mod note to 250 characters.
 
-Choosing the **Ban** or **Permaban** label also offers to ban the user at the same time, with an optional ban message (and a duration for Ban). Moderators can't be banned, so the option is disabled for them.
+Choosing the **Ban** or **Permaban** label also offers to ban the user at the same time, with an optional ban message (and a duration for Ban). Moderators can't be banned, so the option is disabled for them. If the subreddit has named ban macros (Config overlay, **Ban macro** tab), an **Apply ban macro...** picker fills the ban message, and the duration for Ban, from one.
 
 ## The mod log in other places
 
