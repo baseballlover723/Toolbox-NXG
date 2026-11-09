@@ -6,6 +6,34 @@
 	border-bottom: 1px solid var(--toolbox-divider-color);
 }
 
+.loading {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--toolbox-sp-4);
+	margin-left: var(--toolbox-sp-6);
+	color: var(--toolbox-text-secondary);
+}
+
+.spinner {
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentcolor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: history-spin 0.7s linear infinite;
+}
+
+@keyframes history-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.loadError {
+	color: var(--toolbox-text-secondary);
+	font-style: italic;
+}
+
 .headerRow {
 	display: flex;
 	align-items: center;

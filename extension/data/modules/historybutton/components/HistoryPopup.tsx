@@ -1,5 +1,5 @@
 /** Draggable popup that displays a user's submission and comment history broken down by domain, subreddit, and linked account. */
-import {useMemo, useState,} from 'react'
+import {useEffect, useMemo, useState,} from 'react'
 import {Provider,} from 'react-redux'
 
 import {historyButton,} from '../../../framework/moduleIds'
@@ -61,7 +61,22 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 	// with unhandled rejections.
 	const userInfo = useFetched(useMemo(() => getUserInfo(user,), [user,],),)
 	const submissionData = useFetched(useMemo(() => getSubmissionHistoryData(user,), [user,],),)
-	const commentData = useFetched(useMemo(() => getCommentHistoryData(user, commentCount,), [user, commentCount,],),)
+	const commentPromise = useMemo(() => getCommentHistoryData(user, commentCount,), [user, commentCount,],)
+	const commentData = useFetched(commentPromise,)
+
+	// Comment history (up to commentCount comments over several requests) arrives well after the
+	// rest, and its tables appear without notice, so the popup shows a loading line until it does.
+	// useFetched never resolves on failure, so track that separately rather than spin forever.
+	const [commentsFailed, setCommentsFailed,] = useState(false,)
+	useEffect(() => {
+		let live = true
+		commentPromise.catch(() => {
+			if (live) { setCommentsFailed(true,) }
+		},)
+		return () => {
+			live = false
+		}
+	}, [commentPromise,],)
 
 	const [commentReportShown, setCommentReportShown,] = useState(alwaysComments,)
 
@@ -109,6 +124,16 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 				<b>Available history:</b> {submissionData.total} submissions
 				{commentReportShown && commentData && (
 					<span>, {commentData.total} comments</span>
+				)}
+				{commentReportShown && !commentData && (
+					commentsFailed
+						? <span className={css.loadError}>, comment history failed to load</span>
+						: (
+							<span className={css.loading} role="status">
+								<span className={css.spinner} aria-hidden="true" />
+								loading comment history...
+							</span>
+						)
 				)}
 			</div>
 			<div className={css.row}>

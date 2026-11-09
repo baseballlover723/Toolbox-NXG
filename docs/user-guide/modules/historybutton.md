@@ -8,6 +8,8 @@ History Button adds a per-user history breakdown popup, accessible directly from
 
 Clicking the history button next to a username opens a popup that summarizes that user's submission and comment history by domain and subreddit, along with their karma and account age. This gives moderators quick context about a user — for example, spotting an account that mostly submits one domain — without navigating away from the current page. The popup notes that this is an indication, not a complete picture.
 
+It also lists the off-site accounts (YouTube channels, social and creator profiles) a user submits from or links in selfposts and comments. Comment history loads after the rest of the popup; a spinner next to the history totals shows while it's still loading.
+
 ## Features
 
 **Submission breakdown** — tables of the domains the user has submitted from and the subreddits they have submitted to, with counts, percentages and (for subreddits) karma.
