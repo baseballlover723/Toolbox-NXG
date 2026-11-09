@@ -284,7 +284,9 @@
 
 .reasonCardHeader {
 	display: grid;
-	grid-template-columns: 20px auto minmax(0, 1fr) auto auto;
+	/* The title keeps at least 10em: with a 0 minimum, long flair chips in the auto columns took
+	   their full width first and squeezed the title to a letter per line (#60). */
+	grid-template-columns: 20px auto minmax(10em, 1fr) auto auto;
 	align-items: center;
 	gap: var(--toolbox-sp-6);
 	min-height: 32px;
@@ -294,7 +296,7 @@
 
 /* Without a drag handle, drop its 20px column so the checkbox and number aren't squeezed into it. */
 .reasonCardHeaderStatic {
-	grid-template-columns: auto minmax(0, 1fr) auto auto;
+	grid-template-columns: auto minmax(10em, 1fr) auto auto;
 }
 
 .dragHandle {
@@ -341,6 +343,8 @@
 	flex-wrap: wrap;
 	gap: var(--toolbox-sp-3);
 	justify-content: flex-end;
+	/* Caps the chips' column so long flair text wraps there instead of taking the title's room. */
+	max-width: 16em;
 }
 
 .reasonSelected {
