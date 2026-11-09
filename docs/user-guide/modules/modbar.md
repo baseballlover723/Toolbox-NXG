@@ -20,6 +20,8 @@ The Modbar is always on and appears on both old and new Reddit. It shows counter
 
 **Custom shortcuts** — add named links to any URL for one-click access from the Modbar.
 
+**Beta version label** — beta builds show their version in the Modbar, which you can click to copy for bug reports. Turning the label off (an advanced setting) replaces it with a reminder popup that appears once in each new tab until you close it, so you don't forget you're on a beta.
+
 **Compact mode** — shows the collapsed Modbar as a small dot-menu button instead of the arrow, without the hover tooltip of queue counts. Like the normal bar, it remembers whether you last left it collapsed or expanded.
 
 ## Subreddits you moderate drawer
@@ -47,11 +49,12 @@ The subreddit name itself is also a link to `/r/<sub>`. The queue and unmoderate
 
 ## Settings
 
-| Setting                   | Default   | Description                                                 |
-| ------------------------- | --------- | ----------------------------------------------------------- |
-| Compact mode              | Off       | Collapse the Modbar to a small dot-menu button _(advanced)_ |
-| Show counts               | On        | Show the number badges beside the queue and modmail icons   |
-| Show unmoderated icon     | Off       | Add an unmoderated-queue counter to the Modbar              |
-| Show moderated subreddits | On        | List moderated subreddits in the Modbar                     |
-| Old/New Reddit toggle     | On        | Show a button to switch between old and new Reddit          |
-| Shortcuts                 | _(empty)_ | Named URL shortcuts shown in the Modbar                     |
+| Setting                   | Default   | Description                                                                                                  |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------ |
+| Compact mode              | Off       | Collapse the Modbar to a small dot-menu button _(advanced)_                                                  |
+| Show counts               | On        | Show the number badges beside the queue and modmail icons                                                    |
+| Show beta version label   | On        | Show the version label on beta builds; when off, a reminder popup shows in each new tab instead _(advanced)_ |
+| Show unmoderated icon     | Off       | Add an unmoderated-queue counter to the Modbar                                                               |
+| Show moderated subreddits | On        | List moderated subreddits in the Modbar                                                                      |
+| Old/New Reddit toggle     | On        | Show a button to switch between old and new Reddit                                                           |
+| Shortcuts                 | _(empty)_ | Named URL shortcuts shown in the Modbar                                                                      |

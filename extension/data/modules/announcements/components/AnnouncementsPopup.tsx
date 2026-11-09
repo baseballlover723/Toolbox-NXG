@@ -3,6 +3,7 @@
 import {useEffect, useState,} from 'react'
 
 import {mountPopup,} from '../../../util/ui/reactMount'
+import {dismissPrereleaseReminder, prereleaseReminderId,} from '../prereleaseReminder'
 import {markSeen,} from '../seen'
 import type {AnnouncementNote,} from '../types'
 import {AnnouncementCard,} from './AnnouncementCard'
@@ -27,15 +28,22 @@ function AnnouncementsPopup ({notes, onClose,}: Props,) {
 	// when `note.id` changes (paging away) or on unmount (closing the popup), but
 	// never on the initial render. So a quick reload that never engages the popup
 	// leaves every note unseen, and only notes actually viewed get hidden later.
+	// The prerelease reminder is never marked seen, so it keeps coming back; closing the popup
+	// only dismisses it for this tab.
 	useEffect(() => () => {
-		void markSeen(note.id,)
+		if (note.id !== prereleaseReminderId) { void markSeen(note.id,) }
 	}, [note.id,],)
+
+	const close = () => {
+		if (notes.some((n,) => n.id === prereleaseReminderId)) { dismissPrereleaseReminder() }
+		onClose()
+	}
 
 	return (
 		<div className={css.anchor}>
 			<AnnouncementCard
 				note={note}
-				onClose={onClose}
+				onClose={close}
 				pageCount={notes.length}
 				pageIndex={index}
 				onSelectPage={setIndex}

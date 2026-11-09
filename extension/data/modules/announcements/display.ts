@@ -7,6 +7,7 @@ import createLogger from '../../util/infra/logging'
 import {showAnnouncementsPopup,} from './components/AnnouncementsPopup'
 import {ANNOUNCEMENTS_PAGE, ANNOUNCEMENTS_SUB,} from './constants'
 import {filterByPublishAt,} from './noteUtils'
+import {pendingPrereleaseReminder,} from './prereleaseReminder'
 import {getSeenIds,} from './seen'
 import type {AnnouncementNote, AnnouncementsWikiData,} from './types'
 
@@ -51,30 +52,43 @@ export function filterUnseen (notes: AnnouncementNote[], seenIds: string[],): An
 }
 
 /**
- * Fetches announcements from the toolbox_nxg wiki, filters out not-yet-due
- * (scheduled), irrelevant-build, and already-seen notes, then shows the popup
- * for any that remain. No-op in dev builds.
+ * Fetches announcements from the toolbox_nxg wiki and filters out not-yet-due (scheduled),
+ * irrelevant-build, and already-seen notes. Empty in dev builds, and on any failure, so a
+ * wiki problem never also suppresses the prerelease reminder.
  */
-export async function displayAnnouncements (): Promise<void> {
+async function unseenAnnouncements (): Promise<AnnouncementNote[]> {
 	if (buildType === 'dev') {
-		return
+		return []
 	}
-
 	try {
 		const notes = await fetchNotes()
 		const live = filterByPublishAt(notes, nowInSeconds(),)
 		const buildFiltered = filterByBuildType(live, buildType,)
 		const seenIds = await getSeenIds()
-		const unseen = filterUnseen(buildFiltered, seenIds,)
+		return filterUnseen(buildFiltered, seenIds,)
+	} catch (error: unknown) {
+		log.error('Failed to load announcements:', error,)
+		return []
+	}
+}
 
-		if (unseen.length === 0) {
+/**
+ * Shows the announcements popup for any unseen announcements, led by the prerelease reminder
+ * when that is due (see {@link pendingPrereleaseReminder}). One popup, so the two never stack.
+ */
+export async function displayAnnouncements (): Promise<void> {
+	try {
+		const [reminder, unseen,] = await Promise.all([pendingPrereleaseReminder(), unseenAnnouncements(),],)
+		const notes = reminder ? [reminder, ...unseen,] : unseen
+
+		if (notes.length === 0) {
 			return
 		}
 
 		// Notes are marked seen individually by the popup as the user pages away
 		// from or closes each one (see markSeen), not here - so a note the user
 		// never actually views (e.g. a quick reload) is not silently hidden.
-		showAnnouncementsPopup(unseen,)
+		showAnnouncementsPopup(notes,)
 	} catch (error: unknown) {
 		log.error('Failed to display announcements:', error,)
 	}

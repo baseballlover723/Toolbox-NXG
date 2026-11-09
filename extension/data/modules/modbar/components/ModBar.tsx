@@ -122,6 +122,8 @@ export function ModBar ({
 		setLastStoredHidden(storedHidden,)
 		setHidden(storedHidden,)
 	}
+	// Off swaps the label for a once-per-tab reminder popup (see the Announcements module).
+	const showPrereleaseLabel = useSetting(modbar, 'showPrereleaseLabel', true,)
 	// The Modmail module's "open in a new tab" setting, applied here because the bar renders
 	// these links (and manages old Reddit's header icon) on both platforms. Must match that
 	// module's `enabledByDefault: true`.
@@ -384,7 +386,7 @@ export function ModBar ({
 				</span>
 			</span>
 			<span className="toolbox-bottombar-contentright">
-				{buildType !== 'stable' && (
+				{buildType !== 'stable' && showPrereleaseLabel && (
 					<button
 						className="toolbox-prerelease-link"
 						title={`this is a ${buildType} build of Toolbox-NXG. click to copy version information`}

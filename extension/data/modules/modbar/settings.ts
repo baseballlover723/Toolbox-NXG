@@ -13,6 +13,17 @@ export const settings = defineSettings(
 			advanced: true,
 		},
 		{
+			// Read by the Announcements module too: with the label off, a prerelease build shows a
+			// reminder popup once per tab instead, so testers can't forget they're on a beta.
+			id: 'showPrereleaseLabel',
+			sharedPolicy: 'raw',
+			description:
+				'Show the version label on beta builds (when off, a reminder popup appears in each new tab instead)',
+			type: 'boolean' as const,
+			default: true,
+			advanced: true,
+		},
+		{
 			id: 'showCounters',
 			sharedPolicy: 'raw',
 			description: 'Show counts next to the modbar queue and modmail icons',
