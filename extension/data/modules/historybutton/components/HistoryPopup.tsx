@@ -135,6 +135,37 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 							</span>
 						)
 				)}
+				{submissionData.total > 0 && (
+					<div className={css.opStat}>
+						<b>Removed:</b>{' '}
+						<span
+							className={ratioClassName(
+								submissionData.removed / submissionData.total,
+								submissionData.removed,
+							)}
+							title="Posts removed by moderators, AutoModerator, or Reddit. Posts the user deleted themselves are not counted. Removed comments can't be counted: Reddit leaves them out of the history for non-moderators of the subreddit."
+						>
+							{submissionData.removed} of {submissionData.total} posts (
+							{asPercentage(submissionData.removed / submissionData.total,)})
+						</span>
+					</div>
+				)}
+				{commentReportShown && commentData && commentData.total > 0 && (
+					<div className={css.opStat}>
+						<b>Commented as OP:</b> {commentData.opCount} of {commentData.total} comments (
+						{asPercentage(commentData.opCount / commentData.total,)})
+						{commentData.deletedPostCount > 0 && (
+							<span
+								className={css.opStatDeleted}
+								title="Reddit hides who wrote a deleted post, so some of these may be on the user's own deleted posts."
+							>
+								{' '}+{commentData.deletedPostCount} on deleted posts, up to {asPercentage(
+									(commentData.opCount + commentData.deletedPostCount) / commentData.total,
+								)}
+							</span>
+						)}
+					</div>
+				)}
 			</div>
 			<div className={css.row}>
 				<div>
@@ -195,12 +226,13 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 								<th>count</th>
 								<th>%</th>
 								<th>karma</th>
+								<th title="posts removed by moderators, AutoModerator, or Reddit">removed</th>
 							</tr>
 						</thead>
 						<tbody>
 							{Object.entries(submissionData.subreddits,)
 								.sort(([_, a,], [__, b,],) => b.count - a.count)
-								.map(([subreddit, {count, karma,},],) => {
+								.map(([subreddit, {count, karma, removed,},],) => {
 									const ratio = count / submissionData.total
 									const subredditSearchQuery = baseSearchParams(includeNsfwSearches,)
 									subredditSearchQuery.set('q', `author:${user}`,)
@@ -228,6 +260,7 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 											<td>{count}</td>
 											<td>{asPercentage(ratio,)}</td>
 											<td>{karma}</td>
+											<td>{removed || ''}</td>
 										</tr>
 									)
 								},)}

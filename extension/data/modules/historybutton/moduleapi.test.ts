@@ -77,7 +77,45 @@ describe('getSubmissionHistoryData', () => {
 	})
 })
 
+describe('removed submissions', () => {
+	it('counts removals by others overall and per subreddit, but not self-deletions', async () => {
+		const post = (subreddit: string, category: string | null,) => ({
+			kind: 't3',
+			data: {subreddit, score: 1, domain: 'example.com', is_self: false, url: '', removed_by_category: category,},
+		})
+		getUserSubmissions.mockResolvedValue([
+			post('a', 'moderator',),
+			post('a', 'automod_filtered',),
+			post('a', null,),
+			post('b', 'reddit',),
+			post('b', 'author',),
+			post('b', 'deleted',),
+		],)
+
+		const data = await getSubmissionHistoryData('alice',)
+
+		expect(data.removed,).toBe(3,)
+		expect(data.subreddits['a']?.removed,).toBe(2,)
+		expect(data.subreddits['b']?.removed,).toBe(1,)
+	})
+})
+
 describe('getCommentHistoryData', () => {
+	it('counts comments made as OP and on deleted posts', async () => {
+		getUserComments.mockResolvedValue([
+			{kind: 't1', data: {subreddit: 'a', body: 'x', link_author: 'Alice',},},
+			{kind: 't1', data: {subreddit: 'a', body: 'x', link_author: 'alice',},},
+			{kind: 't1', data: {subreddit: 'a', body: 'x', link_author: '[deleted]',},},
+			{kind: 't1', data: {subreddit: 'a', body: 'x', link_author: 'bob',},},
+			{kind: 't1', data: {subreddit: 'a', body: 'x',},},
+		],)
+
+		const data = await getCommentHistoryData('alice', 100,)
+
+		expect(data.opCount,).toBe(2,)
+		expect(data.deletedPostCount,).toBe(1,)
+	})
+
 	it('counts accounts linked in comment bodies', async () => {
 		getUserComments.mockResolvedValue([
 			{kind: 't1', data: {subreddit: 'a', body: 'sub to https://www.youtube.com/@spammer!',},},

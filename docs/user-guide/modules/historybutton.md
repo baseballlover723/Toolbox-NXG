@@ -8,7 +8,7 @@ History Button adds a per-user history breakdown popup, accessible directly from
 
 Clicking the history button next to a username opens a popup that summarizes that user's submission and comment history by domain and subreddit, along with their karma and account age. This gives moderators quick context about a user — for example, spotting an account that mostly submits one domain — without navigating away from the current page. The popup notes that this is an indication, not a complete picture.
 
-It also lists the off-site accounts (YouTube channels, social and creator profiles) a user submits from or links in selfposts and comments. Comment history loads after the rest of the popup; a spinner next to the history totals shows while it's still loading.
+It also lists the off-site accounts (YouTube channels, social and creator profiles) a user submits from or links in selfposts and comments. It also shows how many of the user's posts were removed by moderators, AutoModerator, or Reddit (posts they deleted themselves aren't counted), overall and per subreddit. Removed comments can't be counted: Reddit leaves them out of a user's history for anyone who doesn't moderate that subreddit. With comment history shown, it also reports how many of the user's comments were on their own posts (commented as OP), a quick signal for self-promotion. Comments on deleted posts are counted separately, as an upper bound: Reddit hides who wrote a deleted post, and self-promoters often delete old posts. Comment history loads after the rest of the popup; a spinner next to the history totals shows while it's still loading.
 
 ## Features
 

@@ -29,6 +29,15 @@
 	}
 }
 
+.opStat {
+	margin-top: var(--toolbox-sp-2);
+}
+
+/* An upper bound rather than a count, so it reads as secondary to the OP figure. */
+.opStatDeleted {
+	color: var(--toolbox-text-secondary);
+}
+
 .loadError {
 	color: var(--toolbox-text-secondary);
 	font-style: italic;

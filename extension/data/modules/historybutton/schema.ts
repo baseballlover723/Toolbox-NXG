@@ -28,8 +28,10 @@ export interface SubmissionHistoryData {
 	total: number
 	/** Submission counts keyed by submission domain. */
 	domains: Record<string, {count: number}>
-	/** Submission counts and total karma keyed by subreddit. */
-	subreddits: Record<string, {count: number; karma: number}>
+	/** Submission counts, total karma, and removed counts keyed by subreddit. */
+	subreddits: Record<string, {count: number; karma: number; removed: number}>
+	/** Submissions removed by moderators, AutoModerator, or Reddit (see `isRemovedByOthers`). */
+	removed: number
 	/** External domains linked in selfpost bodies, keyed by hostname. */
 	textLinkDomains: Record<string, {count: number}>
 	/** Off-site accounts the user submitted links from (oEmbed authors and recognized account URLs). */
@@ -48,6 +50,14 @@ export interface CommentHistoryData {
 	linkDomains: Record<string, {count: number}>
 	/** Off-site accounts linked in comment bodies. */
 	linkAccounts: LinkedAccounts
+	/** Comments the user made on their own posts (commented as OP). */
+	opCount: number
+	/**
+	 * Comments on posts whose author is now `[deleted]`. Reddit hides who wrote a deleted post,
+	 * so some of these may be on the user's own deleted posts: self-promoters often delete old
+	 * posts, which otherwise drags their OP share down.
+	 */
+	deletedPostCount: number
 }
 
 /** Fields shared by every account rule. */

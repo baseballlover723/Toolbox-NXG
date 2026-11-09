@@ -68,8 +68,22 @@ function accumulateTextLinks (
 /** Submission fields read when aggregating history; `media`/`secure_media` carry Reddit's oEmbed data. */
 type HistorySubmission = SubmissionData & {
 	selftext?: string
+	removed_by_category?: string | null
 	media?: {oembed?: OembedData} | null
 	secure_media?: {oembed?: OembedData} | null
+}
+
+// removed_by_category values that mean the user took the post down themselves.
+const selfRemovedCategories = new Set(['author', 'deleted',],)
+
+/**
+ * Whether a submission was removed by someone other than its author: moderators, AutoModerator,
+ * Reddit's spam filters, or Reddit itself. Reddit includes `removed_by_category` in a user's
+ * post history even for subreddits the viewer doesn't moderate, unlike removed comments,
+ * which drop out of the history entirely (so there's no comment equivalent).
+ */
+export function isRemovedByOthers (category: string | null | undefined,): boolean {
+	return !!category && !selfRemovedCategories.has(category,)
 }
 
 /** Resolves the account behind a link submission: oEmbed author first, then the link URL itself. */
@@ -80,13 +94,14 @@ function submissionAccount (submission: HistorySubmission,): ResolvedAccount | u
 
 /**
  * Fetches and aggregates a user's submission history into domain, subreddit, and linked-account frequency tables.
- * @returns Total submission count, per-domain counts, per-subreddit counts with karma, accounts submitted from,
- * and external domains and accounts linked in selfpost bodies.
+ * @returns Total and removed submission counts, per-domain counts, per-subreddit counts with karma and
+ * removals, accounts submitted from, and external domains and accounts linked in selfpost bodies.
  */
 export async function getSubmissionHistoryData (user: string,): Promise<SubmissionHistoryData> {
 	let total = 0
 	const domains = Object.create(null,) as Record<string, {count: number}>
-	const subreddits = Object.create(null,) as Record<string, {count: number; karma: number}>
+	const subreddits = Object.create(null,) as Record<string, {count: number; karma: number; removed: number}>
+	let removed = 0
 	const textLinkDomains = Object.create(null,) as Record<string, {count: number}>
 	const accounts = Object.create(null,) as LinkedAccounts
 	const textLinkAccounts = Object.create(null,) as LinkedAccounts
@@ -100,9 +115,13 @@ export async function getSubmissionHistoryData (user: string,): Promise<Submissi
 		const domainEntry = domains[submission.domain ?? ''] ??= {count: 0,}
 		domainEntry.count += 1
 
-		const subredditEntry = subreddits[submission.subreddit] ??= {count: 0, karma: 0,}
+		const subredditEntry = subreddits[submission.subreddit] ??= {count: 0, karma: 0, removed: 0,}
 		subredditEntry.count += 1
 		subredditEntry.karma += submission.score ?? 0
+		if (isRemovedByOthers(submission.removed_by_category,)) {
+			subredditEntry.removed += 1
+			removed += 1
+		}
 
 		if (submission.is_self) {
 			accumulateTextLinks(textLinkDomains, textLinkAccounts, submission.selftext,)
@@ -114,14 +133,15 @@ export async function getSubmissionHistoryData (user: string,): Promise<Submissi
 		}
 	},)
 
-	return {total, domains, subreddits, textLinkDomains, accounts, textLinkAccounts,}
+	return {total, domains, subreddits, removed, textLinkDomains, accounts, textLinkAccounts,}
 }
 
 /**
  * Fetches and aggregates a user's comment history into subreddit and external link domain frequency tables.
  * @param user The user whose comment history to fetch.
  * @param commentCount Maximum number of comments to retrieve.
- * @returns Total comment count, per-subreddit counts, and external domains linked in comment bodies.
+ * @returns Total comment count, per-subreddit counts, external domains linked in comment bodies, and
+ *   how many comments were made as OP or on since-deleted posts.
  */
 export async function getCommentHistoryData (user: string, commentCount: number,): Promise<CommentHistoryData> {
 	const subreddits = Object.create(null,) as Record<string, number>
@@ -130,13 +150,21 @@ export async function getCommentHistoryData (user: string, commentCount: number,
 
 	const children = await getUserComments(user, commentCount,) as RedditThing<CommentData & {body?: string}>[]
 	const total = children.length
+	let opCount = 0
+	let deletedPostCount = 0
+	const userLower = user.toLowerCase()
 
 	children.forEach((comment,) => {
-		const {subreddit, body,} = comment.data
+		const {subreddit, body, link_author: linkAuthor,} = comment.data
 		subreddits[subreddit] ??= 0
 		subreddits[subreddit] += 1
 		accumulateTextLinks(linkDomains, linkAccounts, body,)
+		if (linkAuthor?.toLowerCase() === userLower) {
+			opCount++
+		} else if (linkAuthor === '[deleted]') {
+			deletedPostCount++
+		}
 	},)
 
-	return {total, subreddits, linkDomains, linkAccounts,}
+	return {total, subreddits, linkDomains, linkAccounts, opCount, deletedPostCount,}
 }
