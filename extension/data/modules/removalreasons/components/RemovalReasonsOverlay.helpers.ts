@@ -13,7 +13,6 @@
  */
 
 import {
-	decodeTicks,
 	encodeTicks,
 	findUnfilledRequired,
 	htmlFieldsToTokens,
@@ -349,34 +348,6 @@ export function renderReasonHtml (
 	flush()
 
 	return parts.join('',)
-}
-
-/**
- * Syncs radio button checked states inside a `.toolbox-radio-group` to match the
- * current value of the hidden input that tracks the selection.
- * @param input The `<input type="hidden">` inside the radio group wrapper.
- */
-export function syncRadiosToHiddenInput (input: HTMLInputElement,) {
-	const wrapper = input.closest('.toolbox-radio-group',)
-	if (!wrapper) { return }
-	wrapper.querySelectorAll<HTMLInputElement>('input[type="radio"]',).forEach((radio,) => {
-		radio.checked = radio.value === input.value
-	},)
-}
-
-/**
- * Syncs the checkboxes inside a `.toolbox-check-group` to the tick state held by its
- * hidden input (an `encodeTicks` value), e.g. after restoring it from the cache.
- * @param input The `<input type="hidden">` inside the checkbox group wrapper.
- */
-export function syncChecksToHiddenInput (input: HTMLInputElement,) {
-	const wrapper = input.closest('.toolbox-check-group',)
-	if (!wrapper) { return }
-	const boxes = wrapper.querySelectorAll<HTMLInputElement>('input[type="checkbox"]',)
-	const ticks = decodeTicks(input.value, boxes.length,)
-	boxes.forEach((box, index,) => {
-		box.checked = ticks[index] ?? false
-	},)
 }
 
 /**

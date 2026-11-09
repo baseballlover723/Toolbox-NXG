@@ -78,8 +78,6 @@ import {
 	requiredFieldsError,
 	settingToReasonType,
 	statusDefaultText,
-	syncChecksToHiddenInput,
-	syncRadiosToHiddenInput,
 	ticksFromCheckboxes,
 } from './RemovalReasonsOverlay.helpers'
 import css from './RemovalReasonsOverlay.module.css'
@@ -570,19 +568,18 @@ export function RemovalReasonsOverlay ({
 				// Tick-box groups reuse the radio group's classes, so they are told apart first.
 				const isCheckGroupInput = isHidden && !!input.closest('.toolbox-check-group',)
 				const isRadioGroupInput = isHidden && !isCheckGroupInput && !!input.closest('.toolbox-radio-group',)
-				getCache(removalReasons, cacheKey, input.value,).then((value,) => {
-					if (value != null) {
-						input.value = value as string
-						// Sync radio/checkbox checked state after restoring from cache.
-						if (isRadioGroupInput) {
-							syncRadiosToHiddenInput(input as HTMLInputElement,)
-						} else if (isCheckGroupInput) {
-							syncChecksToHiddenInput(input as HTMLInputElement,)
-						}
-					}
-				},).catch((error: unknown,) => log.error(error,))
+				// Only typed text is remembered between removals. Choices and tick boxes ({choice},
+				// {multi}, {highlight}, {check: ...}) describe the item being removed, so they always
+				// start from the template's defaults instead of the last item's picks.
+				const remembered = !isCheckGroupInput && !isRadioGroupInput && !(input instanceof HTMLSelectElement)
+				if (remembered) {
+					getCache(removalReasons, cacheKey, input.value,).then((value,) => {
+						if (value != null) { input.value = value as string }
+					},).catch((error: unknown,) => log.error(error,))
+				}
 				const onChange = () => {
-					void setCache(removalReasons, cacheKey, input.value,) // Filling in a field flagged on a blocked send clears its outline right away.
+					if (remembered) { void setCache(removalReasons, cacheKey, input.value,) } // Filling in a field flagged on a blocked send clears its outline right away.
+
 					;(input.closest('.toolbox-radio-group',) ?? input).classList.remove(missingFieldClass,)
 				}
 				input.addEventListener('change', onChange,)

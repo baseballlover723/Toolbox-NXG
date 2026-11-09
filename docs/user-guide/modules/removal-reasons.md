@@ -85,7 +85,7 @@ These become fill-in fields in the removal dialog:
 
 | `{note: text}` | Guidance for moderators, shown in the dialog and never sent |
 
-Write `- [x]` (or `{check: [x] text}`) to start a box ticked. For example, to list a rule's requirements and bold the ones a post broke:
+Write `- [x]` (or `{check: [x] text}`) to start a box ticked. Tick boxes and `{choice}` picks reset to their starting state each time the dialog opens; only typed text is remembered from your last removal on that subreddit. For example, to list a rule's requirements and bold the ones a post broke:
 
 ```
 Image posts must:

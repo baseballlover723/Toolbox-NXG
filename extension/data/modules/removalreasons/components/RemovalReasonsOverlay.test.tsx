@@ -89,6 +89,7 @@ vi.mock('@dnd-kit/sortable', async () => {
 	}
 },)
 
+import {getCache, setCache,} from '../../../util/persistence/cache'
 import type {NoteDestination, RemovalReason, RemovalReasonsData, RemovalReasonsOverlaySettings,} from '../schema'
 import {
 	type RemovalAcceptGate,
@@ -1215,5 +1216,35 @@ describe('RemovalReasonsOverlay (ban duration default)', () => {
 
 	it('starts at 7 days without one', () => {
 		expect(banDaysShown(),).toBe('7',)
+	})
+})
+
+describe('RemovalReasonsOverlay (remembered field values)', () => {
+	it('remembers typed text between removals but not choices or tick boxes', async () => {
+		const fieldReason: RemovalReason = {
+			...reason,
+			text: 'Broke {check: rule one}. Why: {input#why: why}\n\n{choice#rule}\n- Rule 1\n- Rule 2',
+		}
+		await act(async () => {
+			renderOverlay({reasons: [fieldReason,],}, 'Popup', [fieldReason,],)
+		},)
+
+		const checkKey = container.querySelector<HTMLInputElement>('.toolbox-check-group input[type="hidden"]',)!.id
+		const choiceKey = container.querySelector<HTMLInputElement>(
+			'.toolbox-radio-group:not(.toolbox-check-group) input[type="hidden"]',
+		)!.id
+		const whyInput = container.querySelector<HTMLInputElement>('input[id$="-why"]',)!
+		const readKeys = vi.mocked(getCache,).mock.calls.map(([, key,],) => key)
+		expect(readKeys,).toContain(whyInput.id,)
+		expect(readKeys,).not.toContain(checkKey,)
+		expect(readKeys,).not.toContain(choiceKey,)
+
+		act(() => {
+			container.querySelector<HTMLInputElement>('.toolbox-check-group input[type="checkbox"]',)!.click()
+			container.querySelectorAll<HTMLInputElement>('input[type="radio"]',)[1]!.click()
+		},)
+		const writtenKeys = vi.mocked(setCache,).mock.calls.map(([, key,],) => key)
+		expect(writtenKeys,).not.toContain(checkKey,)
+		expect(writtenKeys,).not.toContain(choiceKey,)
 	})
 })
