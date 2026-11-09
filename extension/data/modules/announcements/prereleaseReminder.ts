@@ -44,7 +44,7 @@ export function prereleaseReminderNote (build: string, version: string,): Announ
 		body: `This is ${version}. Prerelease builds can have bugs: if something breaks or looks wrong, `
 			+ `please report it in r/${ANNOUNCEMENTS_SUB}. This shows in each new tab because the modbar `
 			+ 'version label is turned off.',
-		link: `https://www.reddit.com/r/${ANNOUNCEMENTS_SUB}/`,
+		link: `https://www.reddit.com/r/${ANNOUNCEMENTS_SUB}/submit?selftext=true`,
 		linkLabel: 'Report an issue',
 	}
 }

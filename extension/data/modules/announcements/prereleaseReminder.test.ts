@@ -29,6 +29,8 @@ describe('pendingPrereleaseReminder', () => {
 		const note = await pendingPrereleaseReminder()
 		expect(note?.id,).toBe(prereleaseReminderId,)
 		expect(note?.body,).toContain('8.0.0.14 beta abc1234',)
+		// "Report an issue" opens a new text post in the subreddit, not just its front page.
+		expect(note?.link,).toBe('https://www.reddit.com/r/toolbox_nxg/submit?selftext=true',)
 	})
 
 	it('does not show while the version label is on', async () => {
