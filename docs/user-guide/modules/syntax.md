@@ -14,6 +14,8 @@ When you edit a wiki page on old Reddit, Syntax Highlighter replaces the plain t
 
 **Word wrap** — optionally wraps long lines in the editor instead of scrolling horizontally.
 
+**Editor size** — the editor grows with its content up to 70% of the window height, then scrolls inside, so the search and replace panel at its top stays in reach. Drag the bottom-right corner to make it any size, or press F11 for fullscreen (Esc to leave).
+
 **Theme selection** — choose from a range of syntax highlight color themes (default: Dracula).
 
 ## Settings
