@@ -367,23 +367,31 @@ export function ModButtonPopup ({
 	useEffect(() => {
 		if (!activeSub || !user || activeTabIndex !== 1 || flairLoaded) { return }
 		void (async () => {
-			try {
-				const [userFlairInfo, userFlairTemplates,] = await Promise.all([
-					getFlairSelector(activeSub, user,),
-					getUserFlairTemplates(activeSub,),
-				],)
-				if (!userFlairInfo.current) { return }
-				setFlairTemplates(userFlairTemplates,)
-				setFlairText(userFlairInfo.current.flair_text || '',)
-				setFlairClass(userFlairInfo.current.flair_css_class || '',)
-				if (userFlairInfo.current.flair_template_id) {
-					setFlairTemplateId(userFlairInfo.current.flair_template_id,)
+			// Loaded independently so one failing endpoint cannot blank the other half of the tab.
+			const [infoResult, templatesResult,] = await Promise.allSettled([
+				getFlairSelector(activeSub, user,),
+				getUserFlairTemplates(activeSub,),
+			],)
+			if (templatesResult.status === 'fulfilled') {
+				setFlairTemplates(templatesResult.value,)
+			} else {
+				log.error('Error loading user flair templates:', templatesResult.reason,)
+			}
+			const current = infoResult.status === 'fulfilled' ? infoResult.value.current : null
+			if (current) {
+				setFlairText(current.flair_text || '',)
+				setFlairClass(current.flair_css_class || '',)
+				if (current.flair_template_id) {
+					setFlairTemplateId(current.flair_template_id,)
 					setFlairClassDisabled(true,)
 				}
-				setFlairLoaded(true,)
-			} catch (e) {
-				log.error('Error loading user flair info:', e,)
+			} else if (infoResult.status === 'rejected') {
+				log.error('Error loading user flair info:', infoResult.reason,)
 			}
+			if (infoResult.status === 'rejected' || templatesResult.status === 'rejected') {
+				setStatus('error: could not load flair from reddit',)
+			}
+			setFlairLoaded(true,)
 		})()
 	}, [activeSub, user, activeTabIndex, flairLoaded,],)
 

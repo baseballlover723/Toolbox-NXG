@@ -61,6 +61,8 @@ async function main () {
 		'/api/info.json?id=t3_1',
 		'/api/mod/conversations/unread/count',
 		`/api/mod/notes/recent?subreddits=${sub}&users=spez`,
+		`/r/${sub}/api/user_flair_v2`,
+		`/r/${sub}/api/link_flair_v2`,
 	]
 	for (const path of paths) {
 		const url = `https://oauth.reddit.com${path}`
@@ -69,6 +71,28 @@ async function main () {
 			await probe(`bearer only   ${path}`, url, bearerOnly(bearer,),)
 			await probe(`cookie+bearer ${path}`, url, cookieAndBearer(bearer,),)
 		}
+	}
+
+	// 2b. The Mod Button's User Flair tab. flairselector is a POST but only reads, so it is safe to probe.
+	const flairUser = 'spez'
+	const flairselectorBody = () => {
+		const form = new FormData()
+		form.append('name', flairUser,)
+		return form
+	}
+	const flairselectorUrl = `https://oauth.reddit.com/r/${sub}/api/flairselector`
+	await probe('cookie only   POST flairselector', flairselectorUrl, {method: 'POST', body: flairselectorBody(),},)
+	if (bearer) {
+		await probe('bearer only   POST flairselector', flairselectorUrl, {
+			method: 'POST',
+			body: flairselectorBody(),
+			...bearerOnly(bearer,),
+		},)
+		await probe('cookie+bearer POST flairselector', flairselectorUrl, {
+			method: 'POST',
+			body: flairselectorBody(),
+			...cookieAndBearer(bearer,),
+		},)
 	}
 
 	// 3. Modhash availability and the CSRF requirement for mutations

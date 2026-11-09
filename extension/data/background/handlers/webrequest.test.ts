@@ -205,6 +205,17 @@ describe('makeRequest', () => {
 			expect(authHeaderOfCall(0,),).toBe('Bearer token',)
 		})
 
+		it('sends flair template reads with a bearer token, since they answer cookie-only requests with 404', async () => {
+			validToken()
+
+			await makeRequest({method: 'GET', endpoint: '/r/sub/api/user_flair_v2', oauth: true,},)
+			await makeRequest({method: 'GET', endpoint: '/r/sub/api/link_flair_v2', oauth: true,},)
+
+			expect(fetch,).toHaveBeenCalledTimes(2,)
+			expect(authHeaderOfCall(0,),).toBe('Bearer token',)
+			expect(authHeaderOfCall(1,),).toBe('Bearer token',)
+		})
+
 		it('retries a cookie read refused with 403 using a bearer token', async () => {
 			validToken()
 			vi.mocked(fetch,).mockResolvedValueOnce(forbidden(),)

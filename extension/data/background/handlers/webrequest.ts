@@ -289,18 +289,27 @@ function isReadMethod (method: RequestMethod | undefined,): boolean {
 const bearerOnlyPrefixes = ['/api/mod/', '/api/v1/',]
 
 /**
+ * Path suffixes of subreddit-scoped OAuth-native APIs that only recognize bearer tokens. The flair
+ * template lists answer a cookie-only request with 404, not 403, so the 403 fallback never fires.
+ */
+const bearerOnlySuffixes = ['/api/user_flair_v2', '/api/link_flair_v2',]
+
+/**
  * Picks the auth mode to try first for a request on oauth.reddit.com.
  *
  * Reddit rejects bearer tokens on some classic read endpoints (e.g. `/api/info.json` returns 403
  * for any request carrying one), while the OAuth-native APIs in {@link bearerOnlyPrefixes} ignore
  * the session cookie. Mutations still accept bearer tokens. Reads therefore start with the session
- * cookie, except under those prefixes, and everything else keeps using a bearer token.
+ * cookie, except under those prefixes or {@link bearerOnlySuffixes}, and everything else keeps using
+ * a bearer token.
  */
 function initialOAuthMode (method: RequestMethod | undefined, endpoint: string,): OAuthMode {
 	if (!isReadMethod(method,)) {
 		return 'bearer'
 	}
-	return bearerOnlyPrefixes.some((prefix,) => endpoint.startsWith(prefix,)) ? 'bearer' : 'cookie'
+	const bearerOnly = bearerOnlyPrefixes.some((prefix,) => endpoint.startsWith(prefix,))
+		|| bearerOnlySuffixes.some((suffix,) => endpoint.endsWith(suffix,))
+	return bearerOnly ? 'bearer' : 'cookie'
 }
 
 /** Options accepted by {@link makeRequest}. */
