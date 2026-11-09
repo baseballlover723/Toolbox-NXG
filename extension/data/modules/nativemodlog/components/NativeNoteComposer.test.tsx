@@ -6,11 +6,17 @@ import {afterEach, describe, expect, it, vi,} from 'vitest'
 
 const createModNote = vi.hoisted(() => vi.fn())
 const proposeOrBan = vi.hoisted(() => vi.fn())
+// Personal setting `banWithBanLabel`; undefined falls through to the hook's default.
+const banWithBanLabel = vi.hoisted(() => ({value: undefined as boolean | undefined,}))
 
 vi.mock('../../../api/resources/modnotes', () => ({createModNote,}),)
 vi.mock('../../shared/proposals/gateway', () => ({proposeOrBan,}),)
 vi.mock('../../../util/ui/reactMount', () => ({
 	classes: (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean,).join(' ',),
+}),)
+vi.mock('../../../util/ui/hooks', () => ({
+	useSetting: (_module: string, key: string, fallback: unknown,) =>
+		key === 'banWithBanLabel' && banWithBanLabel.value !== undefined ? banWithBanLabel.value : fallback,
 }),)
 vi.mock('../../../store', () => ({default: {dispatch: vi.fn(), getState: vi.fn(), subscribe: vi.fn(),},}),)
 vi.mock('../../../store/feedback', () => ({positiveTextFeedback: vi.fn(),}),)
@@ -62,6 +68,7 @@ afterEach(() => {
 		act(() => root.unmount())
 	}
 	document.body.innerHTML = ''
+	banWithBanLabel.value = undefined
 	vi.clearAllMocks()
 },)
 
@@ -128,7 +135,7 @@ describe('NativeNoteComposer', () => {
 		proposeOrBan.mockResolvedValue(undefined,)
 		const {host,} = renderComposer({
 			defaultLabel: 'BAN',
-			currentUser: 'testmod',
+			banTokenInfo: {author: 'alice', subreddit: 'testsub', mod: 'testmod',},
 			savedBanMacros: [{
 				title: 'Spam',
 				note: 'n',
@@ -163,5 +170,65 @@ describe('NativeNoteComposer', () => {
 		expect(createModNote,).toHaveBeenCalled()
 		expect(host.querySelector<HTMLInputElement>('input[type="checkbox"]',)!.checked,).toBe(false,)
 		expect(proposeOrBan,).not.toHaveBeenCalled()
+	})
+
+	it('starts the ban from the subreddit defaults', async () => {
+		createModNote.mockResolvedValue(undefined,)
+		proposeOrBan.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({
+			defaultLabel: 'BAN',
+			banDefaults: {note: '', message: 'You are banned from r/testsub', permanent: false, days: 3,},
+		},)
+
+		setNoteText(host, 'repeat offender',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(proposeOrBan,).toHaveBeenCalledWith(
+			expect.anything(),
+			{permanent: false, days: 3, note: 'repeat offender', message: 'You are banned from r/testsub',},
+		)
+	})
+
+	it('leaves the ban off for a Ban label when the setting is off', async () => {
+		banWithBanLabel.value = false
+		createModNote.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+		expect(host.querySelector<HTMLInputElement>('input[type="checkbox"]',)!.checked,).toBe(false,)
+		setNoteText(host, 'already banned elsewhere',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(createModNote,).toHaveBeenCalled()
+		expect(proposeOrBan,).not.toHaveBeenCalled()
+	})
+
+	it('refuses an empty ban message when the subreddit requires one', async () => {
+		const {host,} = renderComposer({defaultLabel: 'PERMA_BAN', requireBanMessage: true,},)
+
+		setNoteText(host, 'permaban',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(createModNote,).not.toHaveBeenCalled()
+		expect(host.textContent,).toContain('/r/testsub requires a ban message',)
+	})
+
+	it('does not require a ban message for a note without a ban', async () => {
+		createModNote.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({requireBanMessage: true,},)
+
+		setNoteText(host, 'just a note',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(createModNote,).toHaveBeenCalled()
+	})
+
+	it('warns about tokens it cannot fill instead of dropping them', () => {
+		const {host,} = renderComposer({
+			defaultLabel: 'BAN',
+			banDefaults: {note: '', message: 'Banned for {url}', permanent: false,},
+		},)
+
+		expect(host.querySelector<HTMLTextAreaElement>('textarea',)!.value,).toBe('Banned for {url}',)
+		expect(host.textContent,).toContain('{url} can',)
 	})
 })

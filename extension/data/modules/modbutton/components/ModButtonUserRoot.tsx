@@ -12,7 +12,7 @@ import {getApiThingInfo,} from '../../../util/reddit/thingInfo'
 import {drawPosition,} from '../../../util/ui/drawPosition'
 import {getConfig,} from '../../config/moduleapi'
 import {requestCounterRefresh,} from '../../notifier/store'
-import {getSavedBanMacros,} from '../../shared/banMacros/moduleapi'
+import {getBanFormSettings, getSavedBanMacros,} from '../../shared/banMacros/moduleapi'
 import {
 	proposeOrBan,
 	proposeOrMute,
@@ -117,6 +117,9 @@ function createActions (): ModButtonActions {
 		},
 		getSavedBanMacros (subreddit,) {
 			return getSavedBanMacros(subreddit,)
+		},
+		async getRequireBanMessage (subreddit,) {
+			return (await getBanFormSettings(subreddit,)).requireBanMessage
 		},
 		async suggestBanNote (subreddit, user,) {
 			const notesData = await getUserNotes(subreddit,)

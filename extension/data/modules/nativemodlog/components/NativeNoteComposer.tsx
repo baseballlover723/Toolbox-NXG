@@ -3,11 +3,14 @@
 import {useEffect, useRef, useState,} from 'react'
 
 import {createModNote,} from '../../../api/resources/modnotes'
+import {nativeModLog,} from '../../../framework/moduleIds'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {positiveTextFeedback,} from '../../../store/feedback'
 import createLogger from '../../../util/infra/logging'
+import {useSetting,} from '../../../util/ui/hooks'
 import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
-import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
+import {BanTokenWarning,} from '../../shared/banMacros/components/BanTokenWarning'
+import {resolveBanMacro, type ResolvedBanDefaults, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {labelColors, maxNativeNoteLength, selectableLabelNames,} from '../../shared/modnotes/schema'
 import {proposeOrBan,} from '../../shared/proposals/gateway'
 import css from './NativeNoteComposer.module.css'
@@ -26,8 +29,15 @@ export interface NativeNoteComposerProps {
 	targetIsMod?: boolean | undefined
 	/** The subreddit's named ban macros, offered as a picker when a ban is issued with the note. */
 	savedBanMacros?: SavedBanMacro[]
-	/** The acting moderator's username, for the `{mod}` token in ban macros. */
-	currentUser?: string | undefined
+	/**
+	 * Token values for ban messages (see `banTokenInfo`): the user, subreddit and acting mod, plus
+	 * the post or comment the composer was opened from when there is one.
+	 */
+	banTokenInfo?: Record<string, string>
+	/** The subreddit's ban defaults (Config > Ban macro), resolved; the ban fields start from these. */
+	banDefaults?: ResolvedBanDefaults | undefined
+	/** Whether this subreddit requires a message on every ban (only checked when banning). */
+	requireBanMessage?: boolean
 	/** Called after the note (and any ban) has been saved. */
 	onSaved: () => void
 }
@@ -45,38 +55,48 @@ export function NativeNoteComposer ({
 	defaultLabel,
 	targetIsMod = false,
 	savedBanMacros = [],
-	currentUser,
+	banTokenInfo = {author: user, subreddit,},
+	banDefaults,
+	requireBanMessage = false,
 	onSaved,
 }: NativeNoteComposerProps,) {
+	// Whether choosing Ban / Permaban turns the ban option on (a personal setting, on by default).
+	const banWithBanLabel = !!useSetting(nativeModLog, 'banWithBanLabel', true,)
+	const defaultBanDays = banDefaults?.days ?? 7
+	const defaultBanMessage = banDefaults?.message ?? ''
 	const inputRef = useRef<HTMLInputElement>(null,)
 	const [noteText, setNoteText,] = useState('',)
 	const [selectedLabel, setSelectedLabel,] = useState<string | undefined>(defaultLabel,)
 	const [saving, setSaving,] = useState(false,)
 	const [error, setError,] = useState<string | undefined>()
-	const [triggerBan, setTriggerBan,] = useState(true,)
-	const [banDays, setBanDays,] = useState(7,)
-	const [banMessage, setBanMessage,] = useState('',)
+	const [triggerBan, setTriggerBan,] = useState(banWithBanLabel,)
+	const [banDays, setBanDays,] = useState(defaultBanDays,)
+	const [banMessage, setBanMessage,] = useState(defaultBanMessage,)
 
 	// Using autoFocus would make the page jump; focus manually without scrolling instead.
 	useEffect(() => {
 		inputRef.current?.focus({preventScroll: true,},)
 	}, [],)
 
-	// Switching label resets the ban options so a stale choice never carries over.
+	// Switching label resets the ban options to the subreddit's defaults so a stale choice never
+	// carries over.
 	useEffect(() => {
-		setTriggerBan(true,)
-		setBanDays(7,)
-		setBanMessage('',)
-	}, [selectedLabel,],)
+		setTriggerBan(banWithBanLabel,)
+		setBanDays(defaultBanDays,)
+		setBanMessage(defaultBanMessage,)
+	}, [selectedLabel, banWithBanLabel, defaultBanDays, defaultBanMessage,],)
 
 	const showBanFields = isBanLabel(selectedLabel,) && triggerBan && !targetIsMod
-	// Tokens a ban macro can resolve from this context (no thing is in scope here).
-	const banMacroTokenInfo: Record<string, string> = {author: user, subreddit, mod: currentUser ?? '',}
 
 	async function handleSave () {
 		const text = noteText.trim()
 		if (!text) {
 			setError('Note text is required',)
+			return
+		}
+		const banning = triggerBan && !targetIsMod && isBanLabel(selectedLabel,)
+		if (banning && requireBanMessage && !banMessage.trim()) {
+			setError(`/r/${subreddit} requires a ban message`,)
 			return
 		}
 		setError(undefined,)
@@ -91,7 +111,7 @@ export function NativeNoteComposer ({
 			},)
 			// The ban toggle reads unchecked for a mod but its state stays on, so check
 			// targetIsMod here too - mods can't be banned.
-			if (triggerBan && !targetIsMod && isBanLabel(selectedLabel,)) {
+			if (banning) {
 				await proposeOrBan(
 					{subreddit, itemId: user, itemKind: 'user', link: `https://www.reddit.com/user/${user}`,},
 					{
@@ -157,7 +177,7 @@ export function NativeNoteComposer ({
 					macros={savedBanMacros}
 					disabled={saving}
 					onApply={(macro,) => {
-						const resolved = resolveBanMacro(macro, banMacroTokenInfo,)
+						const resolved = resolveBanMacro(macro, banTokenInfo,)
 						setBanMessage(resolved.message,)
 						// A PERMA_BAN label is always permanent; only BAN takes a day count.
 						if (selectedLabel === 'BAN' && !resolved.permanent) {
@@ -176,6 +196,7 @@ export function NativeNoteComposer ({
 					onChange={(event,) => setBanMessage(event.target.value,)}
 				/>
 			)}
+			{showBanFields && <BanTokenWarning text={banMessage} />}
 			<div className={css.composerFooter}>
 				{selectedLabel === 'PERMA_BAN' && (
 					<label className={css.banRow}>

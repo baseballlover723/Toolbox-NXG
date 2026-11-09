@@ -30,7 +30,7 @@ Each entry links to the post or comment it is about, where there is one. Notes c
 
 Below the tabs, pick a label (optional), type the note, and click **Save for /r/...**. A note added from a post or comment is attached to it. Reddit limits a mod note to 250 characters.
 
-Choosing the **Ban** or **Permaban** label also offers to ban the user at the same time, with an optional ban message (and a duration for Ban). Moderators can't be banned, so the option is disabled for them. If the subreddit has named ban macros (Config overlay, **Ban macro** tab), an **Apply ban macro...** picker fills the ban message, and the duration for Ban, from one.
+Choosing the **Ban** or **Permaban** label also offers to ban the user at the same time, with an optional ban message (and a duration for Ban). The ban option is turned on when you pick the label; turn off **Turn on the ban option for Ban and Permaban** to have it start off instead, so you tick it only when you mean to ban. The message and duration start from the subreddit's defaults in the Config overlay's **Ban macro** tab. Moderators can't be banned, so the option is disabled for them. If the subreddit has named ban macros (Config overlay, **Ban macro** tab), an **Apply ban macro...** picker fills the ban message, and the duration for Ban, from one.
 
 ## The mod log in other places
 
@@ -40,12 +40,13 @@ Removal reasons can write the removal's note as a Reddit mod note instead of a T
 
 ## Settings
 
-| Setting                   | Default      | Description                                                                                         |
-| ------------------------- | ------------ | --------------------------------------------------------------------------------------------------- |
-| Default tab               | All Activity | Which tab the popup opens on                                                                        |
-| Default native note label | None         | Label preselected for new notes                                                                     |
-| Show AI summaries         | Off          | Show Reddit's AI-generated user summaries on the NN tag and in the popup                            |
-| Show mod actions          | On           | Show mod actions alongside notes on the NN tag and in the popup; when off, only the Notes tab shows |
-| Max note characters       | 20           | Advanced. How much of the latest note the NN tag shows before truncating (full text on hover)       |
+| Setting                                     | Default      | Description                                                                                             |
+| ------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
+| Default tab                                 | All Activity | Which tab the popup opens on                                                                            |
+| Default native note label                   | None         | Label preselected for new notes                                                                         |
+| Turn on the ban option for Ban and Permaban | On           | Whether choosing the Ban or Permaban label starts with "Issue ban" ticked; off means you tick it to ban |
+| Show AI summaries                           | Off          | Show Reddit's AI-generated user summaries on the NN tag and in the popup                                |
+| Show mod actions                            | On           | Show mod actions alongside notes on the NN tag and in the popup; when off, only the Notes tab shows     |
+| Max note characters                         | 20           | Advanced. How much of the latest note the NN tag shows before truncating (full text on hover)           |
 
 Reddit only reports the single latest entry for the tag, so if that entry is one you have hidden, the tag shows **NN** rather than an older entry.

@@ -74,3 +74,92 @@ export function resolveBanMacro (macro: SavedBanMacro, tokenInfo: Record<string,
 		removeAll: macro.permanent && macro.removeAll === true,
 	}
 }
+
+/** The token names ban note and message templates can use (see `banMacroTokens`). */
+export const banTokenNames = ['author', 'subreddit', 'kind', 'title', 'url', 'mod', 'body',] as const
+
+/** Token values a ban form knows regardless of what it was opened from. */
+export interface BanTokenBase {
+	author: string
+	subreddit: string
+	mod: string
+}
+
+/** The post or comment fields a ban form can fill the remaining tokens from. */
+export interface BanTokenThing {
+	kind?: string | undefined
+	title?: string | undefined
+	url?: string | undefined
+	body?: string | undefined
+}
+
+/**
+ * Builds the token values a ban form can substitute: author, subreddit and mod, plus kind, title,
+ * url and body from the post or comment the form was opened from, when there is one. Empty values
+ * are left out rather than substituted, so a token with nothing behind it (a comment's title, or any
+ * item token when no item is in scope) stays visible for {@link unresolvedBanTokens} to flag instead
+ * of silently vanishing from the message.
+ * @param base Values always known to the form.
+ * @param thing The item the form was opened from, if any.
+ */
+export function banTokenInfo (base: BanTokenBase, thing?: BanTokenThing | undefined,): Record<string, string> {
+	const info: Record<string, string> = {}
+	const candidates: Record<string, string | undefined> = {
+		...base,
+		kind: thing?.kind,
+		title: thing?.title,
+		url: thing?.url,
+		body: thing?.body,
+	}
+	for (const [key, value,] of Object.entries(candidates,)) {
+		if (typeof value === 'string' && value !== '') { info[key] = value }
+	}
+	return info
+}
+
+/**
+ * Returns the ban tokens still written out in `text` - the ones the form couldn't fill - in the
+ * order they're declared, so the form can warn that they will be sent as written.
+ * @param text A ban note or message after substitution.
+ */
+export function unresolvedBanTokens (text: string,): string[] {
+	const lower = text.toLowerCase()
+	return banTokenNames.filter((name,) => lower.includes(`{${name}}`,)).map((name,) => `{${name}}`)
+}
+
+/** The subreddit-wide ban defaults (Config > Ban macro) a ban form starts from. */
+export interface BanDefaultsSource {
+	banNote?: string | undefined
+	banMessage?: string | undefined
+	defaultBanPermanent?: boolean | undefined
+	defaultBanDuration?: number | undefined
+}
+
+/** A ban form's starting values, resolved from the subreddit's ban defaults. */
+export interface ResolvedBanDefaults {
+	note: string
+	message: string
+	permanent: boolean
+	/** The default temporary duration, when the subreddit sets a valid one. */
+	days?: number
+}
+
+/**
+ * Resolves the subreddit's ban defaults into a form's starting values, with tokens substituted.
+ * "Permanent by default" reads the way the mod button reads it: on unless explicitly off.
+ * @param defaults The subreddit's `banMacros` block, or null/undefined when it has none.
+ * @param tokenInfo Token values for this form (see {@link banTokenInfo}).
+ */
+export function resolveBanDefaults (
+	defaults: BanDefaultsSource | null | undefined,
+	tokenInfo: Record<string, string>,
+): ResolvedBanDefaults {
+	const resolved: ResolvedBanDefaults = {
+		note: replaceTokens(tokenInfo, defaults?.banNote ?? '',).slice(0, maxBanMacroNote,),
+		message: replaceTokens(tokenInfo, defaults?.banMessage ?? '',).slice(0, maxBanMacroMessage,),
+		permanent: !!defaults && defaults.defaultBanPermanent !== false,
+	}
+	const days = defaults?.defaultBanDuration
+	if (typeof days === 'number' && Number.isInteger(days,) && days >= 1 && days <= 999) { resolved.days = days }
+	return resolved
+}

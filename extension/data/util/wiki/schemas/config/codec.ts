@@ -79,6 +79,8 @@ export function encodeClassicConfig (
 
 	// NXG-only named ban macros; 6.x only knows the single `banMacros` template.
 	delete classic.savedBanMacros
+	// NXG-only ban message requirement; 6.x never enforces it.
+	delete classic.requireBanMessage
 
 	// NXG-only report→reason mapping; 6.x has no concept of it, so keep it off the
 	// legacy mirror entirely.

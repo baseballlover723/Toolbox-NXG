@@ -25,7 +25,7 @@ import createLogger from '../../util/infra/logging'
 import type {TBPageContext,} from '../../util/reddit/pageContext'
 import {isEditUserPage,} from '../../util/reddit/pageContext'
 import {isUserProfileSubreddit,} from '../../util/reddit/profileSubreddit'
-import {getApiThingInfo,} from '../../util/reddit/thingInfo'
+import {getApiThingInfo, type ThingInfo,} from '../../util/reddit/thingInfo'
 import {drawPosition,} from '../../util/ui/drawPosition'
 import {navigateToSubredditPage, reloadPage,} from '../../util/ui/navigation'
 import {
@@ -43,6 +43,7 @@ import {getSessionStorageInfo,} from '../../util/wiki/schemas/usernotes/sharded'
 import {OLD_WIKI_PATHS,} from '../../util/wiki/wikiConstants'
 import {resolveWikiLayout,} from '../../util/wiki/wikiPaths'
 import {getConfig,} from '../config/moduleapi'
+import {banTokenInfo, resolveBanDefaults,} from '../shared/banMacros/schema'
 import {proposeOrBan,} from '../shared/proposals/gateway'
 import {getMessageLink,} from '../shared/usernotes/messageLinkCache'
 import {
@@ -195,13 +196,15 @@ export function createNotesDisplay (
 				event.stopPropagation()
 				let link = ''
 				let disableLink = false
+				// The item the note is about, when there is one; it also fills ban message tokens.
+				let thing: ThingInfo | undefined
 				const conversationId = (rawDetail as {conversationId?: string} | undefined)?.conversationId
 				if (conversationId) {
 					const shortId = conversationId.replace('ModmailConversation_', '',)
 					if (shortId) { link = `https://www.reddit.com/mail/perma/${shortId}` }
 				} else if (thingId) {
-					const info = await getApiThingInfo(subreddit, thingId, true,) as {permalink: string}
-					link = info.permalink
+					thing = await getApiThingInfo(subreddit, thingId, true,)
+					link = thing.permalink
 				} else {
 					disableLink = true
 				}
@@ -215,6 +218,7 @@ export function createNotesDisplay (
 						top: positions.topPosition,
 						left: positions.leftPosition,
 					},
+					thing,
 				)
 			})()
 		)
@@ -283,6 +287,7 @@ export function createNotesDisplay (
 		link: string,
 		disableLink: boolean,
 		initialPosition: {top: number; left: number},
+		thing?: ThingInfo,
 	) {
 		const [colors, modListResult, layout, currentUser, config,] = await Promise.all([
 			getSubredditColors(subreddit,),
@@ -295,6 +300,7 @@ export function createNotesDisplay (
 			getConfig(subreddit,).catch(() => undefined),
 		],)
 		const targetIsMod = modListResult.targetIsMod
+		const banTokens = banTokenInfo({author: user, subreddit, mod: currentUser,}, thing,)
 		// Archive/soft-delete need NXG storage; the legacy v6 page can't carry
 		// tombstones, so legacy-fallback subs keep plain hard deletes.
 		const archivingAvailable = layout.state !== 'legacyFallback' && !layout.nxgMissing
@@ -328,6 +334,9 @@ export function createNotesDisplay (
 			currentUser,
 			subRequire: subUsernoteRequireFromConfig(config,),
 			savedBanMacros: config?.savedBanMacros ?? [],
+			banTokenInfo: banTokens,
+			defaultBanMessage: resolveBanDefaults(config?.banMacros, banTokens,).message,
+			requireBanMessage: config?.requireBanMessage === true,
 			onRefreshNotes: async () => {
 				const notesData = await getUserNotes(subreddit, true,)
 				publishSubredditNotes(subreddit, {notes: notesData, colors,},)

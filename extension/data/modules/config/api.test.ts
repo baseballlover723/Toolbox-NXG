@@ -352,6 +352,15 @@ describe('normalizeConfig', () => {
 		expect(macros.every((m,) => typeof m.id === 'string' && m.id !== ''),).toBe(true,)
 	})
 
+	it('normalizes requireBanMessage to a strict boolean, off by default', () => {
+		const on: unknown = {requireBanMessage: true,}
+		const garbage: unknown = {requireBanMessage: 'yes',}
+		normalizeConfig(on,)
+		normalizeConfig(garbage,)
+		expect(on.requireBanMessage,).toBe(true,)
+		expect(garbage.requireBanMessage,).toBe(false,)
+	})
+
 	it('drops savedBanMacros when it is not a non-empty list', () => {
 		const configData: unknown = {savedBanMacros: 'nope',}
 

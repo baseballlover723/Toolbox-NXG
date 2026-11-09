@@ -31,6 +31,14 @@ export const settings = defineSettings(
 			default: 'none',
 		},
 		{
+			id: 'banWithBanLabel',
+			sharedPolicy: 'raw',
+			type: 'boolean',
+			default: true,
+			description:
+				'Turn on the ban option when choosing the Ban or Permaban label for a new native note (off: tick it to ban)',
+		},
+		{
 			id: 'showAiSummaries',
 			sharedPolicy: 'raw',
 			type: 'boolean',

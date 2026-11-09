@@ -21,7 +21,7 @@ import {replaceTokens,} from '../../../util/data/string'
 import createLogger from '../../../util/infra/logging'
 import type {ThingInfo,} from '../../../util/reddit/thingInfo'
 import {useFetched,} from '../../../util/ui/hooks'
-import {removeAllBanNotice, resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
+import {banTokenInfo, removeAllBanNotice, resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 
 import {classes, mountPopup,} from '../../../util/ui/reactMount'
@@ -47,6 +47,15 @@ import {StatusBadges, SubredditRow,} from './SubredditRow'
 import {type FlairTemplate, UserFlairTab,} from './UserFlairTab'
 
 const log = createLogger('ModButton',)
+
+/**
+ * Ban token values for the mod button: the target user, the item's subreddit, the acting mod, and
+ * the item fields when the button was opened from a post or comment. Empty values are left out so
+ * an unfilled token is flagged rather than silently blanked (see `banTokenInfo`).
+ */
+function modButtonBanTokens (info: ThingInfo, user: string,): Record<string, string> {
+	return banTokenInfo({author: info.author || user, subreddit: info.subreddit, mod: info.mod,}, info,)
+}
 
 /** Stable fallback while mod subs load, so the memos keyed on `modSubs` don't recompute every render. */
 const noModSubs: string[] = []
@@ -241,10 +250,9 @@ export function ModButtonPopup ({
 
 		ctx.actions.getBanMacros(activeSub,).then((macros: BanMacros | null,) => {
 			if (cancelled || !macros) { return }
-			if (macros.banNote) { setBanNote(replaceTokens(ctx.info as Record<string, string>, macros.banNote,),) }
-			if (macros.banMessage) {
-				setBanMessage(replaceTokens(ctx.info as Record<string, string>, macros.banMessage,),)
-			}
+			const tokens = modButtonBanTokens(ctx.info, user,)
+			if (macros.banNote) { setBanNote(replaceTokens(tokens, macros.banNote,),) }
+			if (macros.banMessage) { setBanMessage(replaceTokens(tokens, macros.banMessage,),) }
 			const permanent = macros.defaultBanPermanent !== false
 			setBanPermanent(permanent,)
 			let presets: number[] = DEFAULT_BAN_PRESETS
@@ -608,6 +616,22 @@ export function ModButtonPopup ({
 		setLastAction(actionType,)
 
 		if (actionType === 'ban' || actionType === 'change ban') {
+			if (!banMessage.trim()) {
+				// Only consulted for an empty message, so a filled one never waits on the config reads.
+				const subs = isGlobal ? globalTargetSubs : collectSelectedSubs()
+				const required = await Promise.all(
+					subs.map((subreddit,) => actions.getRequireBanMessage(subreddit,).catch(() => false)),
+				)
+				const requiring = subs.filter((_sub, i,) => required[i])
+				if (requiring.length) {
+					setStatus(
+						`error, a ban message is required by ${
+							requiring.map((subreddit,) => `/r/${subreddit}`).join(', ',)
+						}`,
+					)
+					return
+				}
+			}
 			if (banNote.length > maxBanReasonLength) {
 				setStatus(`error, ban note is ${banNote.length - maxBanReasonLength} characters over limit`,)
 				return
@@ -690,7 +714,7 @@ export function ModButtonPopup ({
 
 	/** Fills the ban form from a named macro, mapping its duration onto the preset/custom buttons. */
 	const applySavedBanMacro = (macro: SavedBanMacro,) => {
-		const resolved = resolveBanMacro(macro, info as Record<string, string>,)
+		const resolved = resolveBanMacro(macro, modButtonBanTokens(info, user,),)
 		setBanNote(resolved.note,)
 		setBanMessage(resolved.message,)
 		if (resolved.permanent) {

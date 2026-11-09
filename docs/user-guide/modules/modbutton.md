@@ -12,7 +12,7 @@ The Mod Button appears next to usernames on moderation pages. Clicking it opens 
 
 **Per-user action popup** — ban (or change ban), add/remove approved submitter, mod/demod, and mute/unmute from a single popup next to any username. The popup also has **User Flair**, **Send Modmail**, and **User Modlog** tabs.
 
-**Ban form** — the ban note, message and duration start from the subreddit's defaults in the Config overlay's **Ban macro** tab. If the subreddit has named ban macros, an **Apply ban macro...** picker fills the note, message and duration from one (replacing what's there). A permanent ban can also **remove all posts & comments** the user made in the subreddit, adding a note saying so to the ban message; like other bulk actions it isn't available in training mode.
+**Ban form** — the ban note, message and duration start from the subreddit's defaults in the Config overlay's **Ban macro** tab. If the subreddit has named ban macros, an **Apply ban macro...** picker fills the note, message and duration from one (replacing what's there). Tokens such as `{url}` or `{title}` that can't be filled (for example when the button was opened from a username rather than a post or comment) stay in the message as written, and a warning under the message names them so they're never sent by surprise. If the subreddit requires a ban message, the form won't ban with an empty one. A permanent ban can also **remove all posts & comments** the user made in the subreddit, adding a note saying so to the ban message; like other bulk actions it isn't available in training mode.
 
 **Remember last action** — pre-selects the last action you used when you open the popup again.
 

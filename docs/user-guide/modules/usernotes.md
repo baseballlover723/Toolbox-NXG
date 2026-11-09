@@ -32,7 +32,7 @@ Note types control the color and label shown in the tag. Each subreddit can defi
 - **Label** — display name shown in the popup and as a tooltip on the tag.
 - **Color** — the tag color in light mode.
 - **Dark color** — optional separate color for dark mode.
-- **Auto-ban duration** _(optional)_ — when set, the popup offers a one-click ban for the configured duration (in days; 0 = permanent ban) whenever a note of this type is saved. If the subreddit has named ban macros, an **Apply ban macro...** picker beside that ban fills its message from one; the note type still sets the duration.
+- **Auto-ban duration** _(optional)_ — when set, the popup offers a one-click ban for the configured duration (in days; 0 = permanent ban) whenever a note of this type is saved. The ban message starts from the subreddit's default ban message (Config overlay, **Ban macro** tab). If the subreddit has named ban macros, an **Apply ban macro...** picker beside that ban fills its message from one; the note type still sets the duration.
 - **Auto-archive threshold** _(optional)_ — notes of this type older than the specified number of days are automatically archived on every save.
 
 If a subreddit has no custom types configured, the built-in defaults are used:

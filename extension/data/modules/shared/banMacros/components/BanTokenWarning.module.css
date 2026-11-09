@@ -1,0 +1,7 @@
+/* Warning line under a ban message naming tokens the form could not fill. */
+
+.warning {
+	margin: var(--toolbox-sp-2) 0;
+	font-size: var(--toolbox-fs-11);
+	color: var(--toolbox-error-color);
+}

@@ -7,6 +7,7 @@ import {TextInput,} from '../../../shared/controls/NormalInput'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
 import {classes,} from '../../../util/ui/reactMount'
 import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import {BanTokenWarning,} from '../../shared/banMacros/components/BanTokenWarning'
 import {removeAllBanNotice, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {maxBanReasonLength,} from './ModButtonPopup.helpers'
 import css from './ModButtonPopup.module.css'
@@ -109,6 +110,7 @@ export function BanForm ({
 			>
 				({banMessage.length}/{effectiveMaxMessage})
 			</span>
+			<BanTokenWarning text={banMessage} />
 			<div className={css.banDurationRow}>
 				{banDurationPresets.map((days,) => (
 					<GeneralButton

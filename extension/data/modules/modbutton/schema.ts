@@ -49,6 +49,8 @@ export interface ModButtonActions {
 	getBanMacros(subreddit: string,): Promise<BanMacros | null>
 	/** Loads the subreddit's named ban macros offered in the ban form's picker. */
 	getSavedBanMacros(subreddit: string,): Promise<SavedBanMacro[]>
+	/** Whether the subreddit requires a message on every ban (Config > Ban macro). */
+	getRequireBanMessage(subreddit: string,): Promise<boolean>
 	/** Returns the latest ban note from usernotes for a user in a subreddit, or null if none. */
 	suggestBanNote(subreddit: string, user: string,): Promise<string | null>
 	/** Refreshes notification counters after batch actions. */

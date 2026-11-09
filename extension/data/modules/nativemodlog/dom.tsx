@@ -9,9 +9,11 @@ import {renderAtLocation, type UILocationContext,} from '../../dom/uiLocations'
 import {createLifecycle,} from '../../framework/lifecycle'
 import createLogger from '../../util/infra/logging'
 import {isUserProfileSubreddit,} from '../../util/reddit/profileSubreddit'
+import {getApiThingInfo,} from '../../util/reddit/thingInfo'
 import {drawPosition,} from '../../util/ui/drawPosition'
 import {useFetched,} from '../../util/ui/hooks'
-import {getSavedBanMacros,} from '../shared/banMacros/moduleapi'
+import {getBanFormSettings,} from '../shared/banMacros/moduleapi'
+import {banTokenInfo, resolveBanDefaults,} from '../shared/banMacros/schema'
 import type {ModNote,} from '../shared/modnotes/schema'
 import {NativeModLogBadge,} from './components/NativeModLogBadge'
 import {showNativeModLogPopup,} from './components/NativeModLogPopup'
@@ -48,18 +50,24 @@ export function createNativeModLogDisplay (
 		const {author, subreddit,} = context
 		if (!author || !subreddit) { return }
 		const positions = drawPosition(event.nativeEvent,)
-		const [{targetIsMod,}, savedBanMacros, currentUser,] = await Promise.all([
+		const contextID = contextFullname(context,)
+		const [{targetIsMod,}, banSettings, currentUser, thing,] = await Promise.all([
 			getModeratorListResult(subreddit, author, '',).catch(() => ({targetIsMod: false,})),
-			getSavedBanMacros(subreddit,),
+			getBanFormSettings(subreddit,),
 			getCurrentUser().catch(() => ''),
+			// The item the log was opened from fills {kind}, {title}, {url} and {body} in ban messages.
+			contextID ? getApiThingInfo(subreddit, contextID,).catch(() => undefined) : undefined,
 		],)
+		const tokens = banTokenInfo({author, subreddit, mod: currentUser,}, thing,)
 		showNativeModLogPopup({
 			subreddit,
 			user: author,
-			contextID: contextFullname(context,),
+			contextID,
 			targetIsMod,
-			savedBanMacros,
-			currentUser,
+			savedBanMacros: banSettings.savedBanMacros,
+			banTokenInfo: tokens,
+			banDefaults: resolveBanDefaults(banSettings.defaults, tokens,),
+			requireBanMessage: banSettings.requireBanMessage,
 			initialPosition: {top: positions.topPosition, left: positions.leftPosition,},
 		},)
 	}

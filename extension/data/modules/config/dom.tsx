@@ -297,8 +297,9 @@ function buildConfigTabs (
 			contentNode: <BanMacroTab
 				state={state}
 				saveRef={save.banMacro}
-				onSave={(banMacros, savedBanMacros,) => {
+				onSave={(banMacros, savedBanMacros, requireBanMessage,) => {
 					state.config.banMacros = banMacros
+					state.config.requireBanMessage = requireBanMessage
 					if (savedBanMacros.length) {
 						state.config.savedBanMacros = savedBanMacros
 					} else {

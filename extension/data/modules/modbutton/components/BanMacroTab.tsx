@@ -22,9 +22,10 @@ interface Props {
 	/** Optional ref wired up by the parent tab to trigger saving the ban macro config. */
 	saveRef?: TriggerRef
 	/**
-	 * Called with the validated defaults and named macro list; the parent is responsible for persisting both.
+	 * Called with the validated defaults, the named macro list, and whether a ban message is required;
+	 * the parent is responsible for persisting all three.
 	 */
-	onSave: (banMacros: BanMacros, savedBanMacros: SavedBanMacro[],) => void
+	onSave: (banMacros: BanMacros, savedBanMacros: SavedBanMacro[], requireBanMessage: boolean,) => void
 }
 
 const maxBanNoteLength = maxBanMacroNote
@@ -47,6 +48,7 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 			: DEFAULT_BAN_PRESETS,
 	)
 	const [savedBanMacros, setSavedBanMacros,] = useState<SavedBanMacro[]>(state.config.savedBanMacros ?? [],)
+	const [requireBanMessage, setRequireBanMessage,] = useState(state.config.requireBanMessage === true,)
 
 	function handleSave () {
 		if (!state.subreddit) { return }
@@ -56,13 +58,17 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 		}
 		const validPresets = banDurationPresets.filter((n,) => n >= 1 && n <= 999)
 		const invalidCount = banDurationPresets.length - validPresets.length
-		onSave({
-			banNote,
-			banMessage,
-			defaultBanPermanent,
-			defaultBanDuration: defaultBanPermanent ? 0 : (parseInt(defaultBanDuration, 10,) || 0),
-			banDurationPresets: validPresets.length > 0 ? validPresets : DEFAULT_BAN_PRESETS,
-		}, savedBanMacros,)
+		onSave(
+			{
+				banNote,
+				banMessage,
+				defaultBanPermanent,
+				defaultBanDuration: defaultBanPermanent ? 0 : (parseInt(defaultBanDuration, 10,) || 0),
+				banDurationPresets: validPresets.length > 0 ? validPresets : DEFAULT_BAN_PRESETS,
+			},
+			savedBanMacros,
+			requireBanMessage,
+		)
 		if (invalidCount > 0) {
 			negativeTextFeedback(`${invalidCount} preset(s) out of range (1–999) were removed before saving.`,)
 		} else {
@@ -134,6 +140,17 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 				<span className={css.fieldHint}>
 					Bans issued from the removal reasons pane start from this default too (7 days if no temporary
 					duration is set).
+				</span>
+			</div>
+			<div className={css.field}>
+				<CheckboxInput
+					label="Require a ban message"
+					checked={requireBanMessage}
+					onChange={(e,) => setRequireBanMessage(e.target.checked,)}
+				/>
+				<span className={css.fieldHint}>
+					The mod button, usernote and native note ban forms won&apos;t send a ban with an empty message. Only
+					checked when a ban is actually being issued. Toolbox NXG only.
 				</span>
 			</div>
 			<div className={css.field}>

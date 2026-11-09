@@ -9,6 +9,7 @@ import {Icon,} from '../../../shared/controls/Icon'
 import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {Window,} from '../../../shared/window/Window'
 import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
+import {BanTokenWarning,} from '../../shared/banMacros/components/BanTokenWarning'
 import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 
 import store from '../../../store'
@@ -103,6 +104,15 @@ export interface AddUserNotePopupProps {
 	subRequire?: SubUsernoteRequire | undefined
 	/** The subreddit's named ban macros, offered as a picker wherever a ban message is entered. */
 	savedBanMacros?: SavedBanMacro[]
+	/**
+	 * Token values for ban messages (see `banTokenInfo`): the user, subreddit and acting mod, plus
+	 * the post or comment the popup was opened from when there is one.
+	 */
+	banTokenInfo?: Record<string, string>
+	/** The subreddit's default ban message (Config > Ban macro), tokens resolved; the ban starts from it. */
+	defaultBanMessage?: string
+	/** Whether this subreddit requires a message on every ban (only checked when banning). */
+	requireBanMessage?: boolean
 }
 
 /** Renders a draggable popup for adding, editing, and viewing a user's Toolbox usernotes. */
@@ -127,6 +137,9 @@ export function AddUserNotePopup ({
 	targetIsMod = false,
 	subRequire,
 	savedBanMacros = [],
+	banTokenInfo = {author: user, subreddit, ...(currentUser ? {mod: currentUser,} : {}),},
+	defaultBanMessage = '',
+	requireBanMessage = false,
 }: AddUserNotePopupProps,) {
 	const inputRef = useRef<HTMLInputElement>(null,)
 	const [noteText, setNoteText,] = useState('',)
@@ -141,7 +154,7 @@ export function AddUserNotePopup ({
 	const [busyNoteIds, setBusyNoteIds,] = useState<Set<number>>(() => new Set())
 	const [showArchived, setShowArchived,] = useState(false,)
 	const [triggerBan, setTriggerBan,] = useState(true,)
-	const [banMessage, setBanMessage,] = useState('',)
+	const [banMessage, setBanMessage,] = useState(defaultBanMessage,)
 	const notesTouchedRef = useRef(false,)
 
 	const closePopupAfterNoteSave = useSetting(usernotes, 'closePopupAfterNoteSave', true,)
@@ -175,9 +188,6 @@ export function AddUserNotePopup ({
 	const nothingToSave = !usernoteDraft.hasText && !usernoteDraft.hasType
 	const saveDisabled = saving || requirementMessage !== null || nothingToSave
 
-	// Tokens a ban macro can resolve from this popup's context (no thing is in scope here).
-	const banMacroTokenInfo: Record<string, string> = {author: user, subreddit, mod: currentUser ?? '',}
-
 	// Using autoFocus would make the page jump; focus manually without scrolling instead.
 	useEffect(() => {
 		inputRef.current?.focus({preventScroll: true,},)
@@ -197,10 +207,11 @@ export function AddUserNotePopup ({
 		}
 	}, [onRefreshNotes,],)
 
+	// Switching type resets the ban options, with the message back at the subreddit's default.
 	useEffect(() => {
 		setTriggerBan(true,)
-		setBanMessage('',)
-	}, [selectedType,],)
+		setBanMessage(defaultBanMessage,)
+	}, [selectedType, defaultBanMessage,],)
 
 	const currentColor = selectedType !== undefined ? colors.find((c,) => c.key === selectedType) : undefined
 	const autoBanDuration = currentColor?.banDuration
@@ -213,6 +224,11 @@ export function AddUserNotePopup ({
 		}
 		if (nothingToSave) {
 			setError('Add note text or a type',)
+			return
+		}
+		const banning = editingNoteId === undefined && hasAutoBan && triggerBan && !targetIsMod
+		if (banning && requireBanMessage && !banMessage.trim()) {
+			setError(`/r/${subreddit} requires a ban message`,)
 			return
 		}
 		setError(undefined,)
@@ -539,7 +555,7 @@ export function AddUserNotePopup ({
 						macros={savedBanMacros}
 						disabled={saving}
 						// The note type fixes this ban's duration, so only the message applies.
-						onApply={(macro,) => setBanMessage(resolveBanMacro(macro, banMacroTokenInfo,).message,)}
+						onApply={(macro,) => setBanMessage(resolveBanMacro(macro, banTokenInfo,).message,)}
 					/>
 				)}
 				{editingNoteId === undefined && hasAutoBan && triggerBan && (
@@ -552,6 +568,7 @@ export function AddUserNotePopup ({
 						onChange={(event,) => setBanMessage(event.target.value,)}
 					/>
 				)}
+				{editingNoteId === undefined && hasAutoBan && triggerBan && <BanTokenWarning text={banMessage} />}
 				<div className={css.composerFooter}>
 					{editingNoteId === undefined && hasAutoBan && (
 						<label className={css.includeBan}>

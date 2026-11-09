@@ -2,7 +2,16 @@
 
 import {describe, expect, it,} from 'vitest'
 
-import {clampBanDays, maxBanMacroMessage, maxBanMacroNote, resolveBanMacro, type SavedBanMacro,} from './schema'
+import {
+	banTokenInfo,
+	clampBanDays,
+	maxBanMacroMessage,
+	maxBanMacroNote,
+	resolveBanDefaults,
+	resolveBanMacro,
+	type SavedBanMacro,
+	unresolvedBanTokens,
+} from './schema'
 
 /** Builds a macro with the given overrides. */
 function macro (overrides: Partial<SavedBanMacro> = {},): SavedBanMacro {
@@ -51,5 +60,55 @@ describe('clampBanDays', () => {
 		expect(clampBanDays(3.7,),).toBe(3,)
 		expect(clampBanDays('5',),).toBe(7,)
 		expect(clampBanDays(Number.NaN,),).toBe(7,)
+	})
+})
+
+describe('banTokenInfo', () => {
+	it('fills item tokens from the item and leaves out empty ones', () => {
+		const info = banTokenInfo(
+			{author: 'alice', subreddit: 'pics', mod: 'bob',},
+			{kind: 'comment', title: '', url: 'https://x', body: 'hi',},
+		)
+		expect(info,).toEqual({
+			author: 'alice',
+			subreddit: 'pics',
+			mod: 'bob',
+			kind: 'comment',
+			url: 'https://x',
+			body: 'hi',
+		},)
+	})
+
+	it('has no item tokens without an item', () => {
+		expect(Object.keys(banTokenInfo({author: 'a', subreddit: 's', mod: 'm',},),),)
+			.toEqual(['author', 'subreddit', 'mod',],)
+	})
+})
+
+describe('unresolvedBanTokens', () => {
+	it('names the tokens still written out, in declaration order', () => {
+		expect(unresolvedBanTokens('see {URL} and {title} for {author}',),).toEqual(['{author}', '{title}', '{url}',],)
+		expect(unresolvedBanTokens('all filled in',),).toEqual([],)
+	})
+})
+
+describe('resolveBanDefaults', () => {
+	it('substitutes known tokens and keeps unknown ones visible', () => {
+		const tokens = banTokenInfo({author: 'alice', subreddit: 'pics', mod: 'bob',},)
+		const resolved = resolveBanDefaults(
+			{
+				banNote: 'by {mod}',
+				banMessage: 'Bye {author}: {url}',
+				defaultBanPermanent: false,
+				defaultBanDuration: 3,
+			},
+			tokens,
+		)
+		expect(resolved,).toEqual({note: 'by bob', message: 'Bye alice: {url}', permanent: false, days: 3,},)
+	})
+
+	it('reads an unset permanent flag as permanent and an empty config as no defaults', () => {
+		expect(resolveBanDefaults({banMessage: '',}, {},).permanent,).toBe(true,)
+		expect(resolveBanDefaults(null, {},),).toEqual({note: '', message: '', permanent: false,},)
 	})
 })

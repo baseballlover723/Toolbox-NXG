@@ -9,7 +9,7 @@ import store from '../../../store'
 import {selectorOptionKey,} from '../../../util/data/string'
 import {useSetting,} from '../../../util/ui/hooks'
 import {mountPopup,} from '../../../util/ui/reactMount'
-import type {SavedBanMacro,} from '../../shared/banMacros/schema'
+import type {ResolvedBanDefaults, SavedBanMacro,} from '../../shared/banMacros/schema'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 import {defaultNoteLabelValueToLabelType,} from '../../shared/modnotes/schema'
 import {defaultTabIndex, visibleTabs,} from '../schema'
@@ -26,8 +26,12 @@ export interface NativeModLogPopupProps {
 	targetIsMod?: boolean | undefined
 	/** The subreddit's named ban macros, offered when a ban is issued with a note. */
 	savedBanMacros?: SavedBanMacro[]
-	/** The acting moderator's username, for the `{mod}` token in ban macros. */
-	currentUser?: string | undefined
+	/** Token values for ban messages; see the composer's prop of the same name. */
+	banTokenInfo?: Record<string, string>
+	/** The subreddit's resolved ban defaults, which the composer's ban fields start from. */
+	banDefaults?: ResolvedBanDefaults | undefined
+	/** Whether this subreddit requires a message on every ban. */
+	requireBanMessage?: boolean
 	/** Where to position the draggable popup on initial render. */
 	initialPosition: {top: number; left: number}
 	onClose: () => void
@@ -40,7 +44,9 @@ export function NativeModLogPopup ({
 	contextID,
 	targetIsMod = false,
 	savedBanMacros = [],
-	currentUser,
+	banTokenInfo,
+	banDefaults,
+	requireBanMessage = false,
 	initialPosition,
 	onClose,
 }: NativeModLogPopupProps,) {
@@ -90,7 +96,9 @@ export function NativeModLogPopup ({
 						defaultLabel={defaultLabel}
 						targetIsMod={targetIsMod}
 						savedBanMacros={savedBanMacros}
-						currentUser={currentUser}
+						{...(banTokenInfo ? {banTokenInfo,} : {})}
+						banDefaults={banDefaults}
+						requireBanMessage={requireBanMessage}
 						onSaved={onClose}
 					/>
 				}

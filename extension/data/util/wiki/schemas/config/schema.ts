@@ -82,6 +82,12 @@ export interface ToolboxConfig {
 	 */
 	savedBanMacros?: SavedBanMacro[]
 	/**
+	 * When true, a ban issued from the mod button, usernote, or native note ban form must carry a
+	 * ban message; the form refuses to send an empty one. Only checked when a ban is actually being
+	 * issued. Defaults to false. NXG-only: stripped from the legacy v1 mirror.
+	 */
+	requireBanMessage?: boolean
+	/**
 	 * When true, retired (tombstoned) usernote shard pages left behind by shard
 	 * splits are exposed as raw-editor tabs in the config overlay, alongside the
 	 * active shards. Defaults to false (only active shards shown). NXG-only: this
@@ -547,6 +553,9 @@ export function normalizeConfig (configInput: unknown,): asserts configInput is 
 	config.requireUsernoteType = config.requireUsernoteType === true
 	config.requireUsernoteText = config.requireUsernoteText !== false
 	config.requireUsernoteLink = config.requireUsernoteLink === true
+
+	// Ban message requirement: a strict boolean, off unless explicitly true.
+	config.requireBanMessage = config.requireBanMessage === true
 
 	// trainingMods: keep only non-empty strings; anything else -> empty list.
 	config.trainingMods = Array.isArray(config.trainingMods,)
