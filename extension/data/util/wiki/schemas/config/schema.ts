@@ -224,7 +224,7 @@ function coerceSavedBanMacros (config: Record<string, unknown>,): void {
 	if (Array.isArray(raw,)) {
 		for (const entry of raw) {
 			if (!entry || typeof entry !== 'object' || Array.isArray(entry,)) { continue }
-			const {id, title, note, message, permanent, days,} = entry as Record<string, unknown>
+			const {id, title, note, message, permanent, days, removeAll,} = entry as Record<string, unknown>
 			if (typeof title !== 'string' || title.trim() === '') { continue }
 			const macro: SavedBanMacro = {
 				title,
@@ -234,6 +234,8 @@ function coerceSavedBanMacros (config: Record<string, unknown>,): void {
 				days: clampBanMacroDays(days,),
 			}
 			if (typeof id === 'string' && id !== '') { macro.id = id }
+			// Only stored when on, and only meaningful on a permanent ban.
+			if (removeAll === true && macro.permanent) { macro.removeAll = true }
 			result.push(macro,)
 		}
 	}

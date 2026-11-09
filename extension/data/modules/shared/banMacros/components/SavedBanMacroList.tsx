@@ -89,6 +89,9 @@ function MacroCard ({macro, index, count, onUpdate, onMove, onRemove,}: MacroCar
 					onChange={(e,) => onUpdate({note: e.target.value,},)}
 				/>
 			</TokenChips>
+			<span className={css.hint}>
+				Visible only to moderators ({maxBanMacroNote - macro.note.length} chars remaining).
+			</span>
 			<label className={css.fieldLabel} htmlFor={`${idBase}-message`}>Ban message (sent to user)</label>
 			<TokenChips
 				tokens={banMacroTokens}
@@ -104,12 +107,24 @@ function MacroCard ({macro, index, count, onUpdate, onMove, onRemove,}: MacroCar
 					onChange={(e,) => onUpdate({message: e.target.value,},)}
 				/>
 			</TokenChips>
+			<span className={css.hint}>
+				Sent to the user when banned ({maxBanMacroMessage - macro.message.length} chars remaining).
+			</span>
 			<div className={css.durationRow}>
 				<CheckboxInput
 					label="Permanent"
 					checked={macro.permanent}
-					onChange={(e,) => onUpdate({permanent: e.target.checked,},)}
+					// Remove-all is only for permanent bans, so a temporary macro must not keep it.
+					onChange={(e,) =>
+						onUpdate(e.target.checked ? {permanent: true,} : {permanent: false, removeAll: false,},)}
 				/>
+				{macro.permanent && (
+					<CheckboxInput
+						label="Remove all posts & comments"
+						checked={macro.removeAll === true}
+						onChange={(e,) => onUpdate({removeAll: e.target.checked,},)}
+					/>
+				)}
 				{!macro.permanent && (
 					<label className={css.daysLabel}>
 						<TextInput
@@ -127,6 +142,12 @@ function MacroCard ({macro, index, count, onUpdate, onMove, onRemove,}: MacroCar
 					</label>
 				)}
 			</div>
+			{macro.permanent && macro.removeAll && (
+				<p className={css.hint}>
+					Applies in the mod button and removal reasons ban forms; the usernote and native note ban options
+					can&apos;t remove content and ignore it.
+				</p>
+			)}
 		</div>
 	)
 }

@@ -27,7 +27,9 @@ import {removeQuotes,} from '../../../util/data/string'
 import createLogger from '../../../util/infra/logging'
 import type {RemovalTarget,} from '../../../util/wiki/schemas/proposals/schema'
 import {type UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
+import {removeAllBanNotice,} from '../../shared/banMacros/schema'
 import {maxNativeNoteLength,} from '../../shared/modnotes/schema'
+import {removeAllUserContent,} from '../../shared/proposals/gateway'
 import {rememberMessageLink,} from '../../shared/usernotes/messageLinkCache'
 import {updateUserNotes,} from '../../shared/usernotes/moduleapi'
 import {applyUserNoteMutation, makeUserNoteEntry,} from '../../shared/usernotes/noteMutations'
@@ -47,6 +49,7 @@ import {
 	noReasonError,
 	noReplyTypeError,
 	type ReasonType,
+	removeAllError,
 	removeError,
 	replyError,
 	replyErrorSubreddit,
@@ -129,6 +132,8 @@ export interface SubmitRemovalParams {
 	banPermanent: boolean
 	banDays: number
 	banNote: string
+	/** With a permanent ban, also remove all the user's posts and comments in the subreddit. */
+	banRemoveAll?: boolean
 	/**
 	 * Reddit native removal-reason ids to register in the mod log after the item is
 	 * removed. Present only in native-reasons fallback mode; empty/absent for Toolbox
@@ -186,6 +191,9 @@ export async function submitRemoval (
 		banDays,
 		banNote,
 	} = params
+	// Remove-all rides on a permanent ban only, matching the mod button.
+	const removeAll = issueBan && banPermanent && params.banRemoveAll === true
+	const banNotice = removeAll ? removeAllBanNotice : ''
 
 	try {
 		await removeThing(data.fullname, params.spam ?? false,)
@@ -246,7 +254,7 @@ export async function submitRemoval (
 		// *before* the usernote write below so the note can carry its link -
 		// it's the only removal message that exists when banning.
 		let banMsg = reasonText
-		if (issueBan && reasonText.length > 999) {
+		if (issueBan && reasonText.length + banNotice.length > 999) {
 			let conversationUrl = ''
 			try {
 				const mailBody = `${reasonText}\n\n---\n[[Link to removed ${data.kind}](${data.url})]`
@@ -326,13 +334,26 @@ export async function submitRemoval (
 					user: data.author,
 					subreddit: data.subreddit,
 					note: banNote.slice(0, 300,),
-					banMessage: banMsg,
+					banMessage: banMsg + banNotice,
 					banDuration: banPermanent ? 0 : banDays,
 					banContext: data.link,
 				},)
 			} catch {
 				throw new Error(banError,)
 			}
+		}
+
+		if (removeAll) {
+			// After the ban, so the user can't post more in the meantime. Refused in training mode
+			// (a bulk action is never captured), which surfaces as this error like a failed scan.
+			let outcome: 'done' | 'refused'
+			try {
+				outcome = await removeAllUserContent(data.subreddit, data.author,)
+			} catch (error) {
+				log.error('remove-all after ban failed', error,)
+				outcome = 'refused'
+			}
+			if (outcome === 'refused') { throw new Error(removeAllError,) }
 		}
 	}
 

@@ -20,6 +20,7 @@ const applyNativeRemovalReason = vi.hoisted(() => vi.fn())
 const updateUserNotes = vi.hoisted(() => vi.fn())
 const publishSubredditNotes = vi.hoisted(() => vi.fn())
 const createModNote = vi.hoisted(() => vi.fn())
+const removeAllUserContent = vi.hoisted(() => vi.fn())
 
 vi.mock('webextension-polyfill', () => ({
 	default: {runtime: {getURL: (path: string,) => `chrome-extension://fake/${path}`,},},
@@ -50,6 +51,8 @@ vi.mock('../../../api/resources/things', () => ({
 vi.mock('../../shared/usernotes/moduleapi', () => ({updateUserNotes,}),)
 
 vi.mock('../../shared/usernotes/store', () => ({publishSubredditNotes,}),)
+
+vi.mock('../../shared/proposals/gateway', () => ({removeAllUserContent,}),)
 
 import {clearMessageLinks,} from '../../shared/usernotes/messageLinkCache'
 import {submitRemoval,} from './submitRemoval'
@@ -274,5 +277,39 @@ describe('submitRemoval native removal-reason registration', () => {
 
 		expect(result,).toEqual({ok: true,},)
 		expect(applyNativeRemovalReason,).not.toHaveBeenCalled()
+	})
+})
+
+describe('submitRemoval ban with remove-all', () => {
+	const banParams = (overrides: Partial<SubmitRemovalParams> = {},) =>
+		makeParams({leaveUsernote: false, issueBan: true, banPermanent: true, banRemoveAll: true, ...overrides,},)
+
+	it('notes the removal in the ban message and clears the user content after banning', async () => {
+		removeAllUserContent.mockResolvedValue('done',)
+
+		const result = await submitRemoval(banParams(), () => {},)
+
+		expect(result.ok,).toBe(true,)
+		const {banMessage,} = banUser.mock.calls[0]![0] as {banMessage: string}
+		expect(banMessage,).toContain('All of your posts and comments in this subreddit have been removed',)
+		expect(removeAllUserContent,).toHaveBeenCalledWith('testsub', 'testuser',)
+		expect(banUser.mock.invocationCallOrder[0],).toBeLessThan(removeAllUserContent.mock.invocationCallOrder[0]!,)
+	})
+
+	it('reports an error when remove-all is refused', async () => {
+		removeAllUserContent.mockResolvedValue('refused',)
+
+		const result = await submitRemoval(banParams(), () => {},)
+
+		expect(result.ok,).toBe(false,)
+		expect(banUser,).toHaveBeenCalledOnce()
+	})
+
+	it('ignores remove-all on a temporary ban', async () => {
+		await submitRemoval(banParams({banPermanent: false, banDays: 3,},), () => {},)
+
+		expect(removeAllUserContent,).not.toHaveBeenCalled()
+		const {banMessage,} = banUser.mock.calls[0]![0] as {banMessage: string}
+		expect(banMessage,).not.toContain('have been removed',)
 	})
 })

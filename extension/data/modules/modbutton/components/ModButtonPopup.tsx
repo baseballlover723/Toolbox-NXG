@@ -21,7 +21,7 @@ import {replaceTokens,} from '../../../util/data/string'
 import createLogger from '../../../util/infra/logging'
 import type {ThingInfo,} from '../../../util/reddit/thingInfo'
 import {useFetched,} from '../../../util/ui/hooks'
-import {resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
+import {removeAllBanNotice, resolveBanMacro, type SavedBanMacro,} from '../../shared/banMacros/schema'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 
 import {classes, mountPopup,} from '../../../util/ui/reactMount'
@@ -40,7 +40,6 @@ import {
 	maxBanMessageLength,
 	maxBanReasonLength,
 	notApplicableReason,
-	removalNotice,
 } from './ModButtonPopup.helpers'
 import css from './ModButtonPopup.module.css'
 import {SendModmailTab,} from './SendModmailTab'
@@ -525,7 +524,7 @@ export function ModButtonPopup ({
 			case 'ban':
 			case 'change ban': {
 				const messageToSend = (removeAll && banPermanent)
-					? banMessage + removalNotice
+					? banMessage + removeAllBanNotice
 					: banMessage
 				await actions.ban({
 					user,
@@ -602,7 +601,7 @@ export function ModButtonPopup ({
 	}
 
 	const effectiveMaxMessage = (removeAll && banPermanent)
-		? maxBanMessageLength - removalNotice.length
+		? maxBanMessageLength - removeAllBanNotice.length
 		: maxBanMessageLength
 
 	const handleSave = async (isGlobal: boolean,) => {
@@ -697,6 +696,7 @@ export function ModButtonPopup ({
 		if (resolved.permanent) {
 			setBanPermanent(true,)
 			setShowCustomDuration(false,)
+			setRemoveAll(resolved.removeAll,)
 			return
 		}
 		setBanPermanent(false,)

@@ -95,6 +95,12 @@ describe('freezeRemovalParams', () => {
 		expect(intent.flair,).toEqual({text: 'Removed', templateId: 'tmpl',},)
 		expect(intent.usernote,).toEqual({text: '(R8) RP', type: 'warning', includeLink: true,},)
 		expect(intent.ban,).toEqual({permanent: false, days: 7, note: 'note',},)
+		// Remove-all only rides on a permanent ban.
+		expect(
+			freezeRemovalParams(makeParams({issueBan: true, banPermanent: true, banRemoveAll: true,},),).ban?.removeAll,
+		)
+			.toBe(true,)
+		expect(freezeRemovalParams(makeParams({issueBan: true, banRemoveAll: true,},),).ban?.removeAll,).toBeUndefined()
 		expect(intent.reasonAsSub,).toBe(true,)
 		expect(intent.actionLockThread,).toBe(true,)
 		expect('reasonSticky' in intent,).toBe(false,)

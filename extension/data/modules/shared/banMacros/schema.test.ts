@@ -36,6 +36,14 @@ describe('resolveBanMacro', () => {
 	})
 })
 
+describe('resolveBanMacro removeAll', () => {
+	it('keeps remove-all only on a permanent macro', () => {
+		expect(resolveBanMacro(macro({permanent: true, removeAll: true,},), {},).removeAll,).toBe(true,)
+		expect(resolveBanMacro(macro({permanent: false, removeAll: true,},), {},).removeAll,).toBe(false,)
+		expect(resolveBanMacro(macro({permanent: true,},), {},).removeAll,).toBe(false,)
+	})
+})
+
 describe('clampBanDays', () => {
 	it('keeps the value within 1-999 and falls back to 7 for garbage', () => {
 		expect(clampBanDays(0,),).toBe(1,)

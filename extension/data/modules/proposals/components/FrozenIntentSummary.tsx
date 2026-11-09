@@ -131,8 +131,8 @@ function RemovalReasonSummary (
 					<Effect
 						label="Ban"
 						value={`${intent.ban.permanent ? 'Permanent' : `${intent.ban.days}d`}${
-							intent.ban.note ? ` - ${intent.ban.note}` : ''
-						}`}
+							intent.ban.removeAll ? ', removing all posts & comments' : ''
+						}${intent.ban.note ? ` - ${intent.ban.note}` : ''}`}
 					/>
 				)}
 				{intent.logSub && <Effect label="Log to" value={`r/${intent.logSub}`} />}

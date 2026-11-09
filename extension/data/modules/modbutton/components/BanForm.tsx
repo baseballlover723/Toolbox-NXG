@@ -7,8 +7,8 @@ import {TextInput,} from '../../../shared/controls/NormalInput'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
 import {classes,} from '../../../util/ui/reactMount'
 import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
-import type {SavedBanMacro,} from '../../shared/banMacros/schema'
-import {maxBanReasonLength, removalNotice,} from './ModButtonPopup.helpers'
+import {removeAllBanNotice, type SavedBanMacro,} from '../../shared/banMacros/schema'
+import {maxBanReasonLength,} from './ModButtonPopup.helpers'
 import css from './ModButtonPopup.module.css'
 
 /** Props for the BanForm component. All state lives in the parent so it survives tab switches. */
@@ -167,7 +167,7 @@ export function BanForm ({
 					/>
 					{removeAll && (
 						<p className={css.removalNotice}>
-							The following will be appended to the ban message: &ldquo;{removalNotice
+							The following will be appended to the ban message: &ldquo;{removeAllBanNotice
 								.trim()}&rdquo;
 						</p>
 					)}

@@ -19,6 +19,7 @@
 
 import {flairUser,} from '../../../api/resources/flair'
 import {banUser, muteUser, unbanUser, unmuteUser,} from '../../../api/resources/relationships'
+import type {RedditContentThing,} from '../../../api/resources/things'
 import {
 	approveThing,
 	distinguishThing,
@@ -30,9 +31,15 @@ import {
 	unMarkOver18,
 	unstickyThread,
 } from '../../../api/resources/things'
+import {getUserPage,} from '../../../api/resources/users'
 import {assertNever,} from '../../../util/data/assertNever'
 import {nowInSeconds,} from '../../../util/data/time'
-import {isCaptureActiveFor, runInReplay,} from '../../../util/infra/captureGuard'
+import {
+	isCaptureActiveFor,
+	registerItemSubreddit,
+	runInReplay,
+	unregisterItemSubreddit,
+} from '../../../util/infra/captureGuard'
 import {
 	isTerminalStatus,
 	type Proposal,
@@ -337,6 +344,47 @@ export async function proposeOrUnmute (ctx: ProposalContext,): Promise<ProposeOr
  */
 export async function isTrainingCaptureActive (subreddit: string,): Promise<boolean> {
 	return (await captureDecider(subreddit,)) === true
+}
+
+/**
+ * Removes every post and comment `user` made in `subreddit` that isn't already removed, walking
+ * their whole overview listing. Shared by the ban surfaces' "remove all posts & comments" option.
+ * A bulk action, so it is never captured as a proposal: it refuses (returning `'refused'`) when
+ * the current user is in training mode for `subreddit`, rather than letting the per-item guard
+ * fail closed partway through the scan. Inside an accept replay the reviewer performs it.
+ * @param subreddit The subreddit to clear the user's content from.
+ * @param user The user whose content to remove.
+ */
+export async function removeAllUserContent (subreddit: string, user: string,): Promise<'done' | 'refused'> {
+	if (await isTrainingCaptureActive(subreddit,)) { return 'refused' }
+	let after: string | undefined
+	while (true) {
+		const data = await getUserPage<RedditContentThing>(user, 'overview', {
+			raw_json: '1',
+			after: after ?? '',
+			sort: 'new',
+			limit: '100',
+			t: 'all',
+		},)
+		for (const item of data.items) {
+			if (item.data?.subreddit?.toLowerCase() !== subreddit.toLowerCase()) { continue }
+			if (item.data?.banned_by) { continue }
+			const fullname: string = item.data.name
+			// These bulk-fetched items aren't DOM-attached, so the capture guard can't resolve
+			// their subreddit from its item map; for a trainee sandboxed in some OTHER sub it
+			// would then fail closed on the first removal and abort the scan. Every kept item is
+			// in `subreddit` (filtered above), so register that mapping for the guard, then clean
+			// it up. (A trainee sandboxed in `subreddit` itself was refused upfront.)
+			registerItemSubreddit(subreddit, fullname,)
+			try {
+				await removeThing(fullname,)
+			} finally {
+				unregisterItemSubreddit(fullname,)
+			}
+		}
+		if (!data.cursor) { return 'done' }
+		after = data.cursor
+	}
 }
 
 /**

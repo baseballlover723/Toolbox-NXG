@@ -7,6 +7,10 @@ import {pickSubstitutionTokens,} from '../../../util/wiki/schemas/shared/tokens'
 export const maxBanMacroNote = 300
 /** Maximum length of the ban message `banUser` sends (longer text is truncated by the API wrapper). */
 export const maxBanMacroMessage = 999
+/** Notice appended to the ban message when a ban also removes all the user's posts and comments. */
+export const removeAllBanNotice =
+	'\n\nNote: All of your posts and comments in this subreddit have been removed as a result of this ban.'
+
 /** Duration used when a stored macro has no usable day count. */
 export const defaultBanMacroDays = 7
 
@@ -33,6 +37,11 @@ export interface SavedBanMacro {
 	permanent: boolean
 	/** Temporary ban length in days (1-999). */
 	days: number
+	/**
+	 * Also remove all the user's posts and comments in the subreddit. Permanent bans only, like
+	 * the mod button's own option; only the mod button ban form can act on it.
+	 */
+	removeAll?: boolean
 }
 
 /** A ban macro with its tokens substituted, ready to drop into a ban form. */
@@ -41,6 +50,8 @@ export interface ResolvedBanMacro {
 	message: string
 	permanent: boolean
 	days: number
+	/** True only for a permanent macro with `removeAll` set. */
+	removeAll: boolean
 }
 
 /** Clamps a day count to Reddit's accepted 1-999 range, falling back to the default for garbage. */
@@ -60,5 +71,6 @@ export function resolveBanMacro (macro: SavedBanMacro, tokenInfo: Record<string,
 		message: replaceTokens(tokenInfo, macro.message,).slice(0, maxBanMacroMessage,),
 		permanent: macro.permanent,
 		days: clampBanDays(macro.days,),
+		removeAll: macro.permanent && macro.removeAll === true,
 	}
 }

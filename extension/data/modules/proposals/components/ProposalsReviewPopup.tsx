@@ -366,7 +366,14 @@ function ProposalsReviewPopup ({currentSubreddit, onClose,}: Props,) {
 			...(intent.logReasonText ? {logReasonText: intent.logReasonText,} : {}),
 			...(intent.usernote ? {usernote: {...intent.usernote,},} : {}),
 			...(intent.ban
-				? {ban: {permanent: intent.ban.permanent, days: intent.ban.days, note: intent.ban.note,},}
+				? {
+					ban: {
+						permanent: intent.ban.permanent,
+						days: intent.ban.days,
+						note: intent.ban.note,
+						...(intent.ban.removeAll ? {removeAll: true,} : {}),
+					},
+				}
 				: {}),
 		}
 		const result = await openRemovalOverlayForProposal({

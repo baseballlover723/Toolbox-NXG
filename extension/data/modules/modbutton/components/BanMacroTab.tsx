@@ -181,7 +181,10 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 				<div className={css.fieldLabel}>Named ban macros</div>
 				<span className={css.fieldHint}>
 					Offered as an &ldquo;Apply ban macro...&rdquo; picker in the mod button ban form, the removal
-					reasons ban section, and the usernote ban options. Toolbox NXG only - not visible to 6.x.
+					reasons ban section, the usernote ban options, and the native note composer. Applying a macro
+					replaces what is already in that form&apos;s fields rather than adding to them. Not every form uses
+					every field: the removal reasons pane keeps the removal reason as the ban message and takes only the
+					macro&apos;s note and duration. Toolbox NXG only - not visible to 6.x.
 				</span>
 				<SavedBanMacroList macros={savedBanMacros} onChange={setSavedBanMacros} />
 			</div>

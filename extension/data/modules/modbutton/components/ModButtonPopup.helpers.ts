@@ -12,9 +12,6 @@ import {type ActionKind, type SubStatus,} from '../schema'
 export const maxBanReasonLength = 300
 /** Reddit character limit for the ban message sent to the user. */
 export const maxBanMessageLength = 5000
-/** Notice appended to the ban message when "remove all content" is selected. */
-export const removalNotice =
-	'\n\nNote: All of your posts and comments in this subreddit have been removed as a result of this ban.'
 /** Reddit character limit for user flair text. */
 export const maxFlairTextLength = 64
 

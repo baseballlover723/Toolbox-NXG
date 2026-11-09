@@ -44,6 +44,12 @@
 	gap: var(--toolbox-sp-8);
 }
 
+.hint {
+	margin: 0;
+	font-size: var(--toolbox-fs-11);
+	color: var(--toolbox-text-secondary);
+}
+
 .daysLabel {
 	display: inline-flex;
 	align-items: center;

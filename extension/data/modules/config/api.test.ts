@@ -333,8 +333,8 @@ describe('normalizeConfig', () => {
 	it('sanitizes savedBanMacros and assigns stable ids', () => {
 		const configData: unknown = {
 			savedBanMacros: [
-				{title: 'Spam', note: 'n', message: 'm', permanent: true, days: 3,},
-				{title: 'Temp', days: 5000,},
+				{title: 'Spam', note: 'n', message: 'm', permanent: true, days: 3, removeAll: true,},
+				{title: 'Temp', days: 5000, removeAll: true,},
 				{title: '   ',},
 				'garbage',
 				{note: 'untitled',},
@@ -345,8 +345,10 @@ describe('normalizeConfig', () => {
 
 		const macros = configData.savedBanMacros!
 		expect(macros.map((m,) => m.title),).toEqual(['Spam', 'Temp',],)
-		expect(macros[0],).toMatchObject({note: 'n', message: 'm', permanent: true, days: 3,},)
+		expect(macros[0],).toMatchObject({note: 'n', message: 'm', permanent: true, days: 3, removeAll: true,},)
 		expect(macros[1],).toMatchObject({note: '', message: '', permanent: false, days: 999,},)
+		// Remove-all is dropped from a temporary macro.
+		expect('removeAll' in macros[1]!,).toBe(false,)
 		expect(macros.every((m,) => typeof m.id === 'string' && m.id !== ''),).toBe(true,)
 	})
 

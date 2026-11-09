@@ -151,6 +151,8 @@ export interface FrozenRemovalBan {
 	days: number
 	/** Ban mod note. */
 	note: string
+	/** Also remove all the user's posts and comments in the subreddit (permanent bans only); omitted when off. */
+	removeAll?: boolean
 }
 
 /**

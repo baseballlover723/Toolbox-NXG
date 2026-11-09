@@ -271,14 +271,15 @@ One named ban macro in `savedBanMacros`. Choosing it in a ban form fills that fo
 }
 ```
 
-| Field       | Required | Type    | Description                                                  |
-| ----------- | -------- | ------- | ------------------------------------------------------------ |
-| `id`        | no       | string  | Stable id, assigned on normalization                         |
-| `title`     | yes      | string  | Name shown in the picker; entries without one are dropped    |
-| `note`      | yes      | string  | Internal ban note (mod log only, up to 300 characters)       |
-| `message`   | yes      | string  | Message sent to the banned user (up to 999 characters)       |
-| `permanent` | yes      | boolean | Whether the ban is permanent; when `true`, `days` is ignored |
-| `days`      | yes      | integer | Temporary ban length in days, clamped to 1-999               |
+| Field       | Required | Type    | Description                                                                                                                                                                                                                                |
+| ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`        | no       | string  | Stable id, assigned on normalization                                                                                                                                                                                                       |
+| `title`     | yes      | string  | Name shown in the picker; entries without one are dropped                                                                                                                                                                                  |
+| `note`      | yes      | string  | Internal ban note (mod log only, up to 300 characters)                                                                                                                                                                                     |
+| `message`   | yes      | string  | Message sent to the banned user (up to 999 characters)                                                                                                                                                                                     |
+| `permanent` | yes      | boolean | Whether the ban is permanent; when `true`, `days` is ignored                                                                                                                                                                               |
+| `days`      | yes      | integer | Temporary ban length in days, clamped to 1-999                                                                                                                                                                                             |
+| `removeAll` | no       | boolean | Also remove all the user's posts and comments in the subreddit. Permanent macros only (dropped from a temporary one on normalization); the mod button and removal reasons ban forms act on it, the usernote and native note ones ignore it |
 
 ## Substitution tokens
 

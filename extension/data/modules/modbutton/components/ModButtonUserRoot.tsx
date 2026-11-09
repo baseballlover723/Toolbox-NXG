@@ -3,13 +3,9 @@
 import {getCurrentUser,} from '../../../api/resources/me'
 import {sendModmail,} from '../../../api/resources/modmail'
 import {addContributor, addModerator, removeContributor, removeModerator,} from '../../../api/resources/relationships'
-import type {RedditContentThing,} from '../../../api/resources/things'
-import {removeThing,} from '../../../api/resources/things'
-import {getUserPage,} from '../../../api/resources/users'
 import {AuthorButton,} from '../../../shared/controls/AuthorButton'
 import {GeneralButton,} from '../../../shared/controls/GeneralButton'
 import {negativeTextFeedback,} from '../../../store/feedback'
-import {registerItemSubreddit, unregisterItemSubreddit,} from '../../../util/infra/captureGuard'
 import {link,} from '../../../util/reddit/pageContext'
 import type {ThingInfo,} from '../../../util/reddit/thingInfo'
 import {getApiThingInfo,} from '../../../util/reddit/thingInfo'
@@ -18,12 +14,12 @@ import {getConfig,} from '../../config/moduleapi'
 import {requestCounterRefresh,} from '../../notifier/store'
 import {getSavedBanMacros,} from '../../shared/banMacros/moduleapi'
 import {
-	isTrainingCaptureActive,
 	proposeOrBan,
 	proposeOrMute,
 	proposeOrUnban,
 	proposeOrUnmute,
 	proposeOrUserFlair,
+	removeAllUserContent as removeAllInSubreddit,
 } from '../../shared/proposals/gateway'
 import {activeNotes, getUser, getUserNotes,} from '../../shared/usernotes/moduleapi'
 import {type BanMacros, type ModButtonActions,} from '../schema'
@@ -103,41 +99,8 @@ function createActions (): ModButtonActions {
 			await proposeOrUnmute(userCtx(subreddit, user,),)
 		},
 		async removeAllUserContent (subreddit, user,) {
-			// Bulk action - not captured in training mode; refuse rather than let the
-			// per-item guard fail-close mid-scan.
-			if (await isTrainingCaptureActive(subreddit,)) {
-				negativeTextFeedback('Bulk removal isn\'t available in training mode',)
-				return
-			}
-			let after: string | undefined
-			while (true) {
-				const data = await getUserPage<RedditContentThing>(user, 'overview', {
-					raw_json: '1',
-					after: after ?? '',
-					sort: 'new',
-					limit: '100',
-					t: 'all',
-				},)
-				const children = data.items
-				for (const item of children) {
-					if (item.data?.subreddit?.toLowerCase() !== subreddit.toLowerCase()) { continue }
-					if (item.data?.banned_by) { continue }
-					const fullname: string = item.data.name
-					// These bulk-fetched items aren't DOM-attached, so the capture guard can't
-					// resolve their subreddit from its item map; for a trainee sandboxed in some
-					// OTHER sub it would then fail closed on the first removal and abort the whole
-					// scan. Every kept item is in `subreddit` (filtered above), so register that
-					// mapping for the guard, then clean it up. (A trainee sandboxed in `subreddit`
-					// itself was already refused upfront, so the loop never runs for them.)
-					registerItemSubreddit(subreddit, fullname,)
-					try {
-						await removeThing(fullname,)
-					} finally {
-						unregisterItemSubreddit(fullname,)
-					}
-				}
-				if (!data.cursor) { break }
-				after = data.cursor
+			if (await removeAllInSubreddit(subreddit, user,) === 'refused') {
+				negativeTextFeedback('Bulk removal is not available in training mode',)
 			}
 		},
 		async flairUser (params,) {

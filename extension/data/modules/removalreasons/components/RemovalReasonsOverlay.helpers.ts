@@ -64,6 +64,8 @@ export const logPostError = 'failed to create log post'
 export const usernoteError = 'failed to save usernote'
 export const nativeNoteError = 'failed to save Reddit mod note'
 export const banError = 'failed to issue ban'
+/** The ban went through but removing the user's other content was refused (training mode) or failed. */
+export const removeAllError = 'banned, but failed to remove the other posts and comments by this user'
 export const nativeReasonError = 'failed to register native removal reason'
 
 /** Class marking a required field the moderator left unfilled on a send attempt. */
