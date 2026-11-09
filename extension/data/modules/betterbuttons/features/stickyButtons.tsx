@@ -1,7 +1,7 @@
 /** Adds sticky/unsticky action buttons to post listing items on old Reddit. */
 import {useEffect, useState,} from 'react'
 
-import {getSubredditListing,} from '../../../api/resources/subreddits'
+import {subredditHasStickiedPost,} from '../../../api/resources/subreddits'
 import {getThingFullname, getThingSubreddit, getThingSubredditName,} from '../../../dom/oldReddit/things'
 import {renderAtLocation,} from '../../../dom/uiLocations'
 import createLogger from '../../../util/infra/logging'
@@ -32,9 +32,11 @@ const subStickyCache = new Map<string, Promise<boolean>>()
 function subredditHasSticky (subreddit: string,): Promise<boolean> {
 	let cached = subStickyCache.get(subreddit,)
 	if (!cached) {
-		// /r/<sub>/about/sticky?num=1 resolves to the slot-1 sticky listing, or rejects (404)
-		// when the subreddit has no sticky at all.
-		cached = getSubredditListing(subreddit, 'sticky', {num: '1',},).then(() => true, () => false,)
+		// A failed lookup hides slot 2 rather than offering an action Reddit may reject.
+		cached = subredditHasStickiedPost(subreddit,).catch((error: unknown,) => {
+			log.warn(`Sticky lookup failed for /r/${subreddit}; hiding slot 2:`, error,)
+			return false
+		},)
 		subStickyCache.set(subreddit, cached,)
 	}
 	return cached
@@ -119,7 +121,7 @@ export function StickyButton ({thing,}: StickyButtonProps,) {
 			<a style={{cursor: 'pointer',}} onClick={() => doSticky(1,)}>sticky slot 1</a>
 			{slot2Available && (
 				<>
-					<span>/</span>
+					{' / '}
 					<a style={{cursor: 'pointer',}} onClick={() => doSticky(2,)}>sticky slot 2</a>
 				</>
 			)}

@@ -161,3 +161,20 @@ export async function getSubredditRules (subreddit: string,): Promise<SubredditR
 		description: rule.description ?? '',
 	}))
 }
+
+/**
+ * Resolves true when the subreddit currently has at least one stickied post.
+ *
+ * Reads the hot listing rather than `/about/sticky`: that endpoint answers with a redirect to
+ * the stickied post, which the transport refuses to follow, so it fails whether or not a sticky
+ * exists. Stickied posts always lead the hot listing, so the first two items are enough.
+ * @param subreddit The bare subreddit name.
+ */
+export async function subredditHasStickiedPost (subreddit: string,): Promise<boolean> {
+	const response = await apiOauthGetJSON<{data?: {children?: {data?: {stickied?: boolean}}[]}}>(
+		`/r/${subreddit}/hot.json`,
+		{limit: '2',},
+	)
+	const children = response.data?.children
+	return Array.isArray(children,) && children.some((child,) => child.data?.stickied === true)
+}

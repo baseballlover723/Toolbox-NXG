@@ -11,18 +11,18 @@ vi.mock('../../shared/proposals/gateway', () => ({
 	proposeOrUnsticky: vi.fn(() => Promise.resolve('performed',)),
 }),)
 vi.mock('../../../api/resources/subreddits', () => ({
-	getSubredditListing: vi.fn(),
+	subredditHasStickiedPost: vi.fn(),
 }),)
 // uiLocations transitively loads the webextension polyfill, which throws outside a
 // browser. StickyButton itself never touches it, so a stub keeps the import graph clean.
 vi.mock('../../../dom/uiLocations', () => ({renderAtLocation: vi.fn(),}),)
 ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true
 
-import {getSubredditListing,} from '../../../api/resources/subreddits'
+import {subredditHasStickiedPost,} from '../../../api/resources/subreddits'
 import {proposeOrSticky, proposeOrUnsticky,} from '../../shared/proposals/gateway'
 import {StickyButton,} from './stickyButtons'
 
-const mockGetSubredditListing = vi.mocked(getSubredditListing,)
+const mockHasSticky = vi.mocked(subredditHasStickiedPost,)
 const mockProposeOrSticky = vi.mocked(proposeOrSticky,)
 const mockProposeOrUnsticky = vi.mocked(proposeOrUnsticky,)
 
@@ -74,7 +74,7 @@ afterEach(() => {
 
 describe('StickyButton', () => {
 	it('hides "sticky slot 2" when the subreddit has no sticky', async () => {
-		mockGetSubredditListing.mockRejectedValue(new Error('404',),)
+		mockHasSticky.mockResolvedValue(false,)
 		const host = await renderButton(makeThing(),)
 
 		expect(host.textContent,).toContain('sticky slot 1',)
@@ -82,9 +82,7 @@ describe('StickyButton', () => {
 	})
 
 	it('shows "sticky slot 2" when the subreddit already has a sticky', async () => {
-		mockGetSubredditListing.mockResolvedValue(
-			{items: [{},], cursor: null,},
-		)
+		mockHasSticky.mockResolvedValue(true,)
 		const host = await renderButton(makeThing(),)
 
 		expect(host.textContent,).toContain('sticky slot 1',)
@@ -92,7 +90,7 @@ describe('StickyButton', () => {
 	})
 
 	it('stickies into slot 1 on click', async () => {
-		mockGetSubredditListing.mockRejectedValue(new Error('404',),)
+		mockHasSticky.mockResolvedValue(false,)
 		const host = await renderButton(makeThing(),)
 
 		await clickLink(host, 'sticky slot 1',)
@@ -105,9 +103,7 @@ describe('StickyButton', () => {
 	})
 
 	it('stickies into slot 2 on click', async () => {
-		mockGetSubredditListing.mockResolvedValue(
-			{items: [{},], cursor: null,},
-		)
+		mockHasSticky.mockResolvedValue(true,)
 		const host = await renderButton(makeThing(),)
 
 		await clickLink(host, 'sticky slot 2',)
@@ -130,7 +126,7 @@ describe('StickyButton', () => {
 	})
 
 	it('surfaces an error when the sticky call rejects', async () => {
-		mockGetSubredditListing.mockRejectedValue(new Error('404',),)
+		mockHasSticky.mockResolvedValue(false,)
 		mockProposeOrSticky.mockRejectedValueOnce(new Error('boom',),)
 		const host = await renderButton(makeThing(),)
 

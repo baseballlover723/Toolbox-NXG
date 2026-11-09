@@ -13,6 +13,7 @@ import {
 	getModLogEntries,
 	getSubredditAbout,
 	getSubredditListing,
+	subredditHasStickiedPost,
 } from './subreddits'
 
 beforeEach(() => {
@@ -72,5 +73,26 @@ describe('getSubredditAbout', () => {
 		await expect(getSubredditAbout('a',),).resolves.toMatchObject({subscribers: null,},)
 		apiOauthGetJSON.mockResolvedValueOnce({data: {subscribers: 'lots',},},)
 		await expect(getSubredditAbout('b',),).resolves.toMatchObject({subscribers: null,},)
+	})
+})
+
+describe('subredditHasStickiedPost', () => {
+	it('reads the first two hot posts instead of the redirecting about/sticky endpoint', async () => {
+		await subredditHasStickiedPost('testsub',)
+		expect(apiOauthGetJSON,).toHaveBeenCalledWith('/r/testsub/hot.json', {limit: '2',},)
+	})
+
+	it('is true when a leading hot post is stickied', async () => {
+		apiOauthGetJSON.mockResolvedValueOnce({
+			data: {children: [{data: {stickied: false,},}, {data: {stickied: true,},},],},
+		},)
+		await expect(subredditHasStickiedPost('testsub',),).resolves.toBe(true,)
+	})
+
+	it('is false when no leading hot post is stickied or the listing is malformed', async () => {
+		apiOauthGetJSON.mockResolvedValueOnce({data: {children: [{data: {stickied: false,},},],},},)
+		await expect(subredditHasStickiedPost('a',),).resolves.toBe(false,)
+		apiOauthGetJSON.mockResolvedValueOnce({},)
+		await expect(subredditHasStickiedPost('b',),).resolves.toBe(false,)
 	})
 })
