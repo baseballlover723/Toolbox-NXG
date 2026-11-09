@@ -28,7 +28,7 @@ import {createLifecycle,} from '../../../framework/lifecycle'
 import {type Module,} from '../../../framework/module'
 import {betterButtons, massModeration,} from '../../../framework/moduleIds'
 import {negativeTextFeedback,} from '../../../store/feedback'
-import {formatRelativeTime,} from '../../../util/data/time'
+import {formatRelativeTime, nowInSeconds,} from '../../../util/data/time'
 import createLogger from '../../../util/infra/logging'
 import {RedditPlatform,} from '../../../util/infra/platform'
 import {getModuleSettingAsync,} from '../../../util/persistence/settings'
@@ -87,9 +87,30 @@ function decrementQueueCounter (count: number,) {
 	}
 }
 
+/** Marks a queue item the mod log shows was approved or removed outside this page; see the CSS fade. */
+export const handledElsewhereClass = 'toolbox-modlog-handled-elsewhere'
+
+/**
+ * Mod log actors whose actions are how items get into the queue (filters, spam, admin removals),
+ * never a moderator handling it. Only a human moderator's action counts as "handled" on first sight.
+ */
+const automatedActors = new Set(['automoderator', 'reddit', 'anti-evil operations',],)
+
+/** Data attribute recording when an auto-refresh inserted an item (epoch seconds). */
+const insertedAtAttribute = 'data-toolbox-inserted-at'
+
+/**
+ * When an item first appeared on this page, in epoch seconds: its auto-refresh insertion time, or
+ * else when the page itself started loading (the queue listing was generated then).
+ */
+function itemShownAt (thing: Element,): number {
+	const inserted = Number(thing.getAttribute(insertedAtAttribute,),)
+	return Number.isFinite(inserted,) && inserted > 0 ? inserted : performance.timeOrigin / 1000
+}
+
 /**
  * Applies the visual treatment for a queue item that was actioned according to the mod log: marks it
- * processed, unchecks it, adds the approval/removal color class, and relabels the matching big-mod
+ * processed (and handled elsewhere, which fades it), unchecks it, adds the approval/removal color class, and relabels the matching big-mod
  * action button (approve/remove/spam) to "Approved/Removed/Spammed by <mod>" while leaving it - and
  * its sibling buttons - clickable so the item can still be re-actioned from the queue.
  * @param thing The queue `.thing` element.
@@ -98,7 +119,7 @@ function decrementQueueCounter (count: number,) {
  * @param mod Username of the moderator who performed the action.
  */
 function applyModlogActionToThing (thing: Element, family: ActionFamily, spam: boolean, mod: string,) {
-	thing.classList.add('toolbox-modlog-actioned',)
+	thing.classList.add('toolbox-modlog-actioned', handledElsewhereClass,)
 	const cb = getThingCheckbox(thing,)
 	if (cb) { cb.checked = false }
 	thing.classList.remove('flaired', 'spammed', 'removed', 'approved',)
@@ -391,6 +412,13 @@ export function createModtoolsHandlers (
 	function syncHiddenCount (): void {
 		const count = document.querySelectorAll('.thing.toolbox-mm-hidden',).length
 		controls?.setHiddenCount(count,)
+		syncHandledCount()
+	}
+
+	/** Counts the visible handled-elsewhere items and pushes the count to the toolbar's hide button. */
+	function syncHandledCount (): void {
+		const count = document.querySelectorAll(`.thing.${handledElsewhereClass}:not(.toolbox-mm-hidden)`,).length
+		controls?.setHandledCount(count,)
 	}
 
 	function provideQueueThingSelection (thing: Element,): void {
@@ -467,6 +495,13 @@ export function createModtoolsHandlers (
 					},)
 					getAllThingCheckboxes().forEach((cb,) => {
 						cb.checked = false
+					},)
+					syncHiddenCount()
+				}}
+				onHideHandled={() => {
+					// Never automatic: hiding shifts the page, so it waits for the mod to ask.
+					document.querySelectorAll(`.thing.${handledElsewhereClass}`,).forEach((el,) => {
+						el.classList.add('toolbox-mm-hidden',)
 					},)
 					syncHiddenCount()
 				}}
@@ -754,7 +789,9 @@ export function createModtoolsHandlers (
 		modlogSyncing = true
 		let resolved = 0
 		try {
-			type ModLogChild = {data?: {target_fullname?: string; action?: string; mod?: string}}
+			type ModLogChild = {
+				data?: {target_fullname?: string; action?: string; mod?: string; created_utc?: number}
+			}
 			let response: Page<ModLogChild>
 			try {
 				// postSite is the queue's subreddit, or '' on multi-sub queues - fall back to `mod`.
@@ -764,7 +801,10 @@ export function createModtoolsHandlers (
 			}
 
 			// Mod log is newest-first; keep only the most recent resolving action per target.
-			const actionsByFullname = new Map<string, {family: ActionFamily; spam: boolean; mod: string}>()
+			const actionsByFullname = new Map<
+				string,
+				{family: ActionFamily; spam: boolean; mod: string; createdUtc: number}
+			>()
 			for (const child of response.items) {
 				const data = child?.data
 				const fullname: string | undefined = data?.target_fullname
@@ -775,6 +815,7 @@ export function createModtoolsHandlers (
 					family,
 					spam: data?.action === 'spamlink' || data?.action === 'spamcomment',
 					mod: data?.mod ?? '',
+					createdUtc: data?.created_utc ?? 0,
 				},)
 			}
 
@@ -787,7 +828,13 @@ export function createModtoolsHandlers (
 				const baselined = thing.classList.contains('toolbox-modlog-baselined',)
 				thing.classList.add('toolbox-modlog-baselined',)
 				if (!entry) { return }
-				if (!baselined) {
+				// A human moderator's entry newer than the moment the item appeared here can't be why
+				// it's in the queue: another mod acted while (or just before) the listing loaded, so it's
+				// a real action even on first sight. Automated actors are excluded so a slow client clock
+				// can't turn a fresh AutoModerator filter into a false "handled".
+				const actedAfterShown = entry.createdUtc >= itemShownAt(thing,)
+					&& !automatedActors.has(entry.mod.toLowerCase(),)
+				if (!baselined && !actedAfterShown) {
 					// Pre-existing state the queue was already rendered with - record it so later runs
 					// skip the item, but leave its appearance and the modbar count alone. This is a
 					// separate marker from `toolbox-modlog-actioned`: the item is still in the queue and
@@ -799,7 +846,10 @@ export function createModtoolsHandlers (
 				applyModlogActionToThing(thing, entry.family, entry.spam, entry.mod,)
 				resolved += 1
 			},)
-			if (resolved > 0) { decrementQueueCounter(resolved,) }
+			if (resolved > 0) {
+				decrementQueueCounter(resolved,)
+				syncHandledCount()
+			}
 		} finally {
 			modlogSyncing = false
 		}
@@ -814,6 +864,7 @@ export function createModtoolsHandlers (
 			// current - Old Reddit's own updater never sees dynamically added items. Refresh once now
 			// so the timestamp is correct the moment the item appears.
 			thing.classList.add('toolbox-mm-inserted',)
+			thing.setAttribute(insertedAtAttribute, String(nowInSeconds(),),)
 			refreshLiveTimestamps(thing,)
 			// Highlight newly loaded items with a fade animation (see massmoderation.css)
 			thing.classList.add('toolbox-mm-new',)

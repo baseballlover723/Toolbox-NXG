@@ -95,6 +95,19 @@ body.toolbox-mm-active .menuarea {
 	color: var(--toolbox-text-body);
 }
 
+/* Approved or removed by another mod (or on another page): faded so it reads as already handled at a
+   glance. Fading never changes layout, unlike hiding, which waits for the "hide handled" button.
+   Hover restores it for reading or re-actioning. */
+.toolbox-modlog-handled-elsewhere {
+	opacity: 0.55;
+	transition: opacity 0.15s ease;
+}
+
+.toolbox-modlog-handled-elsewhere:hover,
+.toolbox-modlog-handled-elsewhere:focus-within {
+	opacity: 1;
+}
+
 /* Applied by appendNewItems() - pins auto-refresh items at the bottom of the queue */
 .toolbox-new-items-group {
 	margin-top: var(--toolbox-sp-6);

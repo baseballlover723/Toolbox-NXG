@@ -43,6 +43,12 @@ export interface ModtoolsToolbarControls {
 	 */
 	setHiddenCount: (n: number,) => void
 	/**
+	 * Updates the count of visible items the mod log shows were already handled elsewhere (by
+	 * another mod, or on another page); "hide handled" is enabled only when this is > 0.
+	 * @param n Number of visible handled-elsewhere items.
+	 */
+	setHandledCount: (n: number,) => void
+	/**
 	 * Resets the auto-refresh backoff and polls immediately. Call when an out-of-toolbar action
 	 * (e.g. a per-item pretty-button) is taken, so the queue reconciles right away.
 	 */
@@ -72,6 +78,8 @@ export interface ModtoolsToolbarProps {
 	onHideSelected: () => void
 	/** Called to unhide all previously-hidden items. */
 	onUnhideSelected: () => void
+	/** Called to hide every visible item the mod log shows was already handled elsewhere. */
+	onHideHandled: () => void
 	/** Called when the expand/collapse reports toggle changes. */
 	onToggleReports: (expanded: boolean,) => void
 	/**
@@ -123,6 +131,7 @@ export function ModtoolsToolbar ({
 	onSelectAll,
 	onHideSelected,
 	onUnhideSelected,
+	onHideHandled,
 	onToggleReports,
 	onActionButton,
 	onThresholdChange,
@@ -151,6 +160,7 @@ export function ModtoolsToolbar ({
 	const [selectAllIndeterminate, setSelectAllIndeterminate,] = useState(false,)
 	const [selectedCount, setSelectedCount,] = useState(0,)
 	const [hiddenCount, setHiddenCount,] = useState(0,)
+	const [handledCount, setHandledCount,] = useState(0,)
 
 	// Action state
 	const [pressed, setPressed,] = useState<string | null>(null,)
@@ -335,6 +345,8 @@ export function ModtoolsToolbar ({
 		if (!autoRefresh) { return }
 		const tick = setInterval(() => {
 			if (refreshingRef.current) { return }
+			// A background tab doesn't poll; it catches up the moment it's shown again (below).
+			if (document.hidden) { return }
 			if (countdownRef.current > 1) {
 				countdownRef.current -= 1
 				setRefreshCountdown(countdownRef.current,)
@@ -345,6 +357,17 @@ export function ModtoolsToolbar ({
 		return () => clearInterval(tick,)
 	}, [autoRefresh, resetAutoRefreshInterval, runAutoRefreshTick,],)
 
+	// Coming back to the tab resets the backoff and polls right away, so items other mods handled
+	// while it was in the background are caught up immediately instead of on the next countdown.
+	useEffect(() => {
+		if (!autoRefresh) { return }
+		const onVisibility = () => {
+			if (!document.hidden) { triggerAutoRefresh() }
+		}
+		document.addEventListener('visibilitychange', onVisibility,)
+		return () => document.removeEventListener('visibilitychange', onVisibility,)
+	}, [autoRefresh, triggerAutoRefresh,],)
+
 	// Expose imperative controls to parent
 	useMountEffect(() => {
 		onMount({
@@ -354,6 +377,7 @@ export function ModtoolsToolbar ({
 			},
 			setSelectedCount,
 			setHiddenCount,
+			setHandledCount,
 			triggerAutoRefresh,
 		},)
 	},)
@@ -537,6 +561,13 @@ export function ModtoolsToolbar ({
 					onClick={onUnhideSelected}
 				>
 					unhide all
+				</GeneralButton>
+				<GeneralButton
+					title="hide the items the mod log shows another mod (or you, elsewhere) already approved or removed"
+					disabled={handledCount === 0}
+					onClick={onHideHandled}
+				>
+					hide handled ({handledCount})
 				</GeneralButton>
 				<span className={css.actions}>
 					<GeneralButton

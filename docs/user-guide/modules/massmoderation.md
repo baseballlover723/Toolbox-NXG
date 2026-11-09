@@ -14,11 +14,13 @@ Mass Moderation is an old Reddit-only module. It activates on mod queue and unmo
 
 **Hide actioned items** — removes items from the listing after you take action on them, so the queue shrinks as you work through it.
 
+**Items handled elsewhere** — when the mod log shows an item was approved or removed by another moderator (or by you on another page), the queue recolors it, labels its button "Approved by …" or "Removed by …", unticks it, and fades it. That includes an item another mod handled just before the queue finished loading. These items are never hidden automatically, since that would shift the page under your cursor: click **hide handled** in the toolbar to clear them all at once, and **unhide all** to bring them back. The mod log is checked after each of your own actions and on every auto-refresh tick.
+
 **Group by subreddit** — groups queue items from the same subreddit together.
 
 **Group comments by submission** — when viewing a comment queue, groups each comment under its parent submission.
 
-**Auto-refresh** — periodically reloads queue items so new reports appear without a manual page refresh.
+**Auto-refresh** — periodically reloads queue items so new reports appear without a manual page refresh. It checks often while things are changing and backs off when they aren't, pauses while the tab is in the background, and checks straight away when you return to it.
 
 **Expand reports** — automatically expands the report details for every item when the page loads.
 

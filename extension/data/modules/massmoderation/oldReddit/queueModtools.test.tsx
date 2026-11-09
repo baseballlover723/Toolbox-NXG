@@ -100,6 +100,8 @@ describe('queue modtools auto-refresh', () => {
 	let autoRefreshTick: (() => Promise<void>) | undefined
 	let onActionButton: ((type: string,) => Promise<number>) | undefined
 	let onToggleReports: ((expanded: boolean,) => void) | undefined
+	let onHideHandled: (() => void) | undefined
+	const setHandledCount = vi.fn()
 
 	beforeEach(() => {
 		document.body.innerHTML = `
@@ -117,8 +119,10 @@ describe('queue modtools auto-refresh', () => {
 			autoRefreshTick = props.onAutoRefreshTick
 			onActionButton = props.onActionButton
 			onToggleReports = props.onToggleReports
+			onHideHandled = props.onHideHandled
 			props.onMount({
 				setHiddenCount: vi.fn(),
+				setHandledCount,
 				setSelectAll: vi.fn(),
 				setSelectedCount: vi.fn(),
 				triggerAutoRefresh: vi.fn(),
@@ -514,6 +518,71 @@ describe('queue modtools auto-refresh', () => {
 		const removeButton = document.querySelector('.big-mod-buttons .pretty-button.neutral',)!
 		expect(removeButton.textContent,).toBe('remove',)
 		expect(updateCounters,).not.toHaveBeenCalled()
+	})
+
+	/** A removal logged by `mod`, `secondsFromPageLoad` after the page started loading. */
+	function loggedRemoval (mod: string, secondsFromPageLoad: number,) {
+		return {
+			data: {
+				target_fullname: 't3_x',
+				action: 'removelink',
+				mod,
+				created_utc: performance.timeOrigin / 1000 + secondsFromPageLoad,
+			},
+		}
+	}
+
+	it('treats a human mod action logged after the page loaded as handled, even on first sight', async () => {
+		// The queue listing was generated just before another mod removed the item (#59).
+		setBigModQueueHtml()
+		getModLog.mockResolvedValue({items: [loggedRemoval('othermod', 2,),], cursor: null,},)
+		const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+		await handlers.syncModlogActions()
+
+		const thing = document.querySelector<HTMLElement>('[data-fullname="t3_x"]',)!
+		expect(thing.classList.contains('removed',),).toBe(true,)
+		expect(thing.classList.contains('toolbox-modlog-handled-elsewhere',),).toBe(true,)
+		// Faded, not hidden: hiding waits for the "hide handled" button so the page doesn't jump.
+		expect(thing.classList.contains('toolbox-mm-hidden',),).toBe(false,)
+		expect(setHandledCount,).toHaveBeenLastCalledWith(1,)
+	})
+
+	it('ignores automated actors logged after the page loaded on first sight', async () => {
+		// A slow client clock can make a fresh AutoModerator filter look newer than the page.
+		setBigModQueueHtml()
+		getModLog.mockResolvedValue({items: [loggedRemoval('AutoModerator', 2,),], cursor: null,},)
+		const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+		await handlers.syncModlogActions()
+
+		const thing = document.querySelector<HTMLElement>('[data-fullname="t3_x"]',)!
+		expect(thing.classList.contains('removed',),).toBe(false,)
+		expect(thing.classList.contains('toolbox-modlog-handled-elsewhere',),).toBe(false,)
+	})
+
+	it('leaves a human mod action logged before the page loaded alone on first sight', async () => {
+		setBigModQueueHtml()
+		getModLog.mockResolvedValue({items: [loggedRemoval('othermod', -600,),], cursor: null,},)
+		const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+		await handlers.syncModlogActions()
+
+		const thing = document.querySelector<HTMLElement>('[data-fullname="t3_x"]',)!
+		expect(thing.classList.contains('toolbox-modlog-handled-elsewhere',),).toBe(false,)
+	})
+
+	it('hides handled items only when the toolbar button asks', async () => {
+		setBigModQueueHtml()
+		getModLog.mockResolvedValue({items: [loggedRemoval('othermod', 2,),], cursor: null,},)
+		const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+		await handlers.syncModlogActions()
+
+		onHideHandled!()
+
+		const thing = document.querySelector<HTMLElement>('[data-fullname="t3_x"]',)!
+		expect(thing.classList.contains('toolbox-mm-hidden',),).toBe(true,)
+		expect(setHandledCount,).toHaveBeenLastCalledWith(0,)
 	})
 
 	it('toggles the reports-expanded class on the site table from the toolbar', () => {
