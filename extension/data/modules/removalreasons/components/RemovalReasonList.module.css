@@ -173,6 +173,48 @@
 	font-weight: bold;
 }
 
+/* An inline {highlight: text} reads as part of its sentence: no visible checkbox (it stays
+   focusable for the keyboard), just a dotted underline marking the text as clickable. The
+   doubled class lifts specificity over the inline-choice rules above. */
+.previewWrap :global(.toolbox-check-highlight.toolbox-radio-group-inline) {
+	display: inline;
+	margin: 0;
+}
+
+.previewWrap :global(.toolbox-check-highlight.toolbox-radio-group-inline .toolbox-radio-label) {
+	position: relative;
+	display: inline;
+	font-size: inherit;
+}
+
+.previewWrap :global(.toolbox-check-highlight.toolbox-radio-group-inline .toolbox-radio-input) {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.previewWrap :global(.toolbox-check-highlight.toolbox-radio-group-inline .toolbox-radio-text) {
+	text-decoration: underline dotted;
+	text-underline-offset: 3px;
+}
+
+/* Ticked: solid underline alongside the bold, so the state reads without the checkbox. */
+.previewWrap
+	:global(.toolbox-check-highlight.toolbox-radio-group-inline .toolbox-radio-input:checked + .toolbox-radio-text) {
+	text-decoration-style: solid;
+}
+
+.previewWrap
+	:global(.toolbox-check-highlight.toolbox-radio-group-inline
+		.toolbox-radio-input:focus-visible
+		+ .toolbox-radio-text) {
+	outline: 1px solid var(--toolbox-input-focus);
+	outline-offset: 1px;
+}
+
 /* {note: ...} is guidance for the moderator and is never sent, so it reads as an aside. */
 .previewWrap :global(.toolbox-reason-note) {
 	color: var(--toolbox-text-muted);
