@@ -42,6 +42,9 @@ function baseSearchParams (includeNsfw: boolean,): URLSearchParams {
 const ratioClassName = (ratio: number, rawCount: number,) =>
 	ratio >= 0.1 && rawCount > 4 ? (ratio >= 0.2 ? css.danger : css.warning) : ''
 
+/** Formats a number with the reader's locale digit grouping (e.g. `23784` -> `'23,784'`). */
+const formatCount = (value: number,) => value.toLocaleString()
+
 /** Formats a decimal ratio as a rounded percentage string (e.g. `0.253` -> `'25%'`). */
 const asPercentage = (ratio: number,) => `${Math.round(ratio * 100,)}%`
 
@@ -107,7 +110,7 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 				<div className={css.headerRow}>
 					<span>
 						<a href={link(`/user/${user}`,)} target="_blank" rel="noreferrer">{user}</a>{' '}
-						<span>({userInfo.submissionKarma} | {userInfo.commentKarma})</span>
+						<span>({formatCount(userInfo.submissionKarma,)} | {formatCount(userInfo.commentKarma,)})</span>
 					</span>
 					{!commentReportShown && (
 						<GeneralButton onClick={() => setCommentReportShown(true,)}>
@@ -259,7 +262,7 @@ export function HistoryPopup ({user, subreddit: currentSubreddit, initialPositio
 											</td>
 											<td>{count}</td>
 											<td>{asPercentage(ratio,)}</td>
-											<td>{karma}</td>
+											<td>{formatCount(karma,)}</td>
 											<td>{removed || ''}</td>
 										</tr>
 									)
