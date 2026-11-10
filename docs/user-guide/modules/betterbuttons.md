@@ -24,7 +24,7 @@ The module injects additional buttons and tweaks button behaviour throughout old
 
 **Remove (not spam) button on spam-removed items** — shows a "remove" button on spam-removed items, letting you convert the removal to a regular remove.
 
-**Sticky/unsticky buttons in post listings** — adds sticky and unsticky buttons directly on posts in listing views.
+**Sticky/unsticky buttons in post listings** — adds sticky controls to posts in listing views. A stickied post gets an "unsticky" link; any other post gets "sticky slot 1", plus "sticky slot 2" when the subreddit already has a sticky (Reddit only accepts slot 2 once slot 1 is taken). Stickying into an occupied slot replaces the post that held it.
 
 **Comment lock button** — adds a lock/unlock button to individual comments.
 

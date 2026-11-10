@@ -2,8 +2,9 @@
  * Reddit auth probe: compares cookie, bearer, and cookie+bearer auth against the endpoints Toolbox uses.
  *
  * Not part of the build. Paste into the extension's service worker console (chrome://extensions ->
- * Inspect views: service worker) while logged in as a moderator. Only GETs, plus one harmless POST
- * (unsave of a nonexistent id). Set `sub` below to a subreddit you moderate.
+ * Inspect views: service worker) while logged in as a moderator. Only GETs, plus two harmless POSTs
+ * (the read-only flairselector, and unsave of a nonexistent id). Set `sub` below to a subreddit you
+ * moderate. The second table printed is the verdict: any BROKEN row is an endpoint Toolbox cannot read.
  */
 /* global chrome, console, fetch, FormData */
 async function main () {
