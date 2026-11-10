@@ -131,6 +131,33 @@ export const getInfoBulk = async <T extends Record<string, unknown> = Record<str
 	return children as RedditThing<T>[]
 }
 
+/**
+ * Fetches the rendered body HTML of up to 100 submissions, keyed by fullname; posts with no body are left out.
+ *
+ * Requested without `raw_json` on purpose: Reddit then entity-encodes `selftext_html`, and the response
+ * sanitizer decodes it back into markup. With `raw_json` the field arrives as markup already, and the same
+ * sanitizer reduces it to plain text.
+ */
+export async function getSubmissionBodiesHtml (fullnames: string[],): Promise<Map<string, string>> {
+	const bodies = new Map<string, string>()
+	if (!fullnames.length) { return bodies }
+	const result = await apiOauthGetJSON<{data?: {children?: unknown[]}}>(
+		'/api/info.json',
+		{id: fullnames.join(',',),},
+	)
+	const children = result?.data?.children
+	if (!Array.isArray(children,)) { return bodies }
+	for (const child of children) {
+		if (typeof child !== 'object' || child === null || !('data' in child)) { continue }
+		const data: unknown = child.data
+		if (typeof data !== 'object' || data === null) { continue }
+		const name = 'name' in data ? data.name : undefined
+		const html = 'selftext_html' in data ? data.selftext_html : undefined
+		if (typeof name === 'string' && typeof html === 'string' && html) { bodies.set(name, html,) }
+	}
+	return bodies
+}
+
 const _getInfoQueue = createDeferredProcessQueue(
 	// {name: string} generic ensures thing.data.name is type-safe without a cast.
 	// /api/info.json always returns things with a fullname in data.name.

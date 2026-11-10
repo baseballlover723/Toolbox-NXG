@@ -48,6 +48,7 @@ import {getCounterState, updateCounters,} from '../../notifier/store'
 import {isTrainingCaptureActive,} from '../../shared/proposals/gateway'
 import {ModtoolsToolbar, type ModtoolsToolbarControls,} from '../components/ModtoolsToolbar'
 import type {MassModerationSettings,} from '../settings'
+import {createExpandoControls,} from './expandos'
 import {reportsExpandedClass,} from './expandReports'
 import {createSidebarSortHandlers,} from './queueSidebarSorting'
 import {appendNewItems, groupBySubreddit, sortThings, ungroupBySubreddit,} from './queueSorting'
@@ -305,35 +306,14 @@ export function createModtoolsHandlers (
 		}
 	},)
 
-	/**
-	 * Opens every collapsed expando box on the page, staggered one per second so a long queue
-	 * doesn't load all of its media at once. Clicking an expando checks the thing's checkbox on
-	 * old Reddit, so each click also re-clears the checkbox.
-	 */
-	function openAllExpandos (): void {
-		document.querySelectorAll('.expando-button.collapsed',).forEach((button, index,) => {
-			const checkBox = getThingCheckbox(getThingFromDescendant(button,)!,)
-			lifecycle.timeout(() => {
-				;(button as HTMLElement).click()
-				if (checkBox) { checkBox.checked = false }
-			}, index * 1000,)
-		},)
-	}
-
-	/** Closes every open expando box on the page, re-clearing each thing's checkbox. */
-	function closeAllExpandos (): void {
-		document.querySelectorAll('.expando-button.expanded',).forEach((button,) => {
-			const checkBox = getThingCheckbox(getThingFromDescendant(button,)!,)
-			;(button as HTMLElement).click()
-			if (checkBox) { checkBox.checked = false }
-		},)
-	}
+	const expandos = createExpandoControls()
+	lifecycle.mount(expandos.cleanup,)
 
 	// The expandos setting keeps expando boxes open by default, but Reddit always renders them
 	// collapsed; honor the setting here so the toolbar's initial "collapse all" label matches
 	// the actual page state.
 	if (initialExpandos) {
-		openAllExpandos()
+		expandos.openAll()
 	}
 
 	/**
@@ -608,9 +588,9 @@ export function createModtoolsHandlers (
 				}}
 				onOpenExpandos={(open,) => {
 					if (open) {
-						openAllExpandos()
+						expandos.openAll()
 					} else {
-						closeAllExpandos()
+						expandos.closeAll()
 					}
 					void module.set('expandos', open,)
 				}}

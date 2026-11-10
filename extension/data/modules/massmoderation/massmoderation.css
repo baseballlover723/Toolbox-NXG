@@ -43,6 +43,12 @@
 	/* stylelint-disable-next-line declaration-no-important -- overrides Reddit's .thing display to hide mass-moderated items */
 	display: none !important;
 }
+/* Applied by expandos.ts: collapse-all hides the expando itself, because Reddit's own collapse empties
+   it and every later expand reloads its media */
+.thing.toolbox-expando-soft-collapsed > .entry .expando {
+	/* stylelint-disable-next-line declaration-no-important -- beats the inline display:block Reddit's expand sets */
+	display: none !important;
+}
 .toolbox-reports-expanded .report-reasons {
 	display: block;
 }

@@ -12,6 +12,7 @@ import {
 	distinguishThing,
 	getInfo,
 	getInfoBulk,
+	getSubmissionBodiesHtml,
 	getThingInfo,
 	ignoreReports,
 	lock,
@@ -228,5 +229,30 @@ describe('info API', () => {
 			raw_json: '1',
 			id: 't1_abc,t3_def',
 		},)
+	})
+})
+
+describe('getSubmissionBodiesHtml', () => {
+	it('requests without raw_json, so the response sanitizer decodes the HTML instead of flattening it', async () => {
+		apiOauthGetJSON.mockResolvedValue({
+			data: {
+				children: [
+					{kind: 't3', data: {name: 't3_a', selftext_html: '<div class="md"><p>a</p></div>',},},
+					{kind: 't3', data: {name: 't3_b', selftext_html: null,},},
+					{kind: 't3', data: {name: 't3_c', selftext_html: '',},},
+				],
+			},
+		},)
+
+		const bodies = await getSubmissionBodiesHtml(['t3_a', 't3_b', 't3_c',],)
+
+		expect(apiOauthGetJSON,).toHaveBeenCalledWith('/api/info.json', {id: 't3_a,t3_b,t3_c',},)
+		expect([...bodies,],).toEqual([['t3_a', '<div class="md"><p>a</p></div>',],],)
+	})
+
+	it('makes no request for an empty list', async () => {
+		apiOauthGetJSON.mockReset()
+		await expect(getSubmissionBodiesHtml([],),).resolves.toEqual(new Map(),)
+		expect(apiOauthGetJSON,).not.toHaveBeenCalled()
 	})
 })

@@ -26,6 +26,8 @@ Mass Moderation is an old Reddit-only module. It activates on mod queue and unmo
 
 **Link to subreddit queue** — adds a link to each item's subreddit mod queue for quick drill-down.
 
+**Expand or collapse all** — the toolbar's **expand all** button opens every expando box on the page. Text posts load together in a single request; link and media posts open one per second, because Reddit leaves them empty when they're opened faster. **collapse all** hides them without discarding what's loaded, so expanding them again is instant and doesn't reload images or embeds.
+
 **Keep expandos open** — opens all expando boxes on queue pages by default.
 
 ## Settings
