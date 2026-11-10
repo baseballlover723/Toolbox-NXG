@@ -21,12 +21,12 @@ describe('resolveDisplayMode', () => {
 })
 
 describe('defaultRemovalBan', () => {
-	it('uses the Ban Macros temporary duration', () => {
+	it('uses the Ban settings temporary duration', () => {
 		expect(defaultRemovalBan({banMacros: {defaultBanPermanent: false, defaultBanDuration: 3,},},),)
 			.toEqual({permanent: false, days: 3,},)
 	})
 
-	it('starts permanent when Ban Macros default to permanent', () => {
+	it('starts permanent when Ban settings default to permanent', () => {
 		expect(defaultRemovalBan({banMacros: {defaultBanPermanent: true, defaultBanDuration: 0,},},),)
 			.toEqual({permanent: true, days: fallbackBanDays,},)
 	})

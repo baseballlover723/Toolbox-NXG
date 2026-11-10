@@ -25,7 +25,12 @@ interface Props {
 	 * Called with the validated defaults, the named macro list, and whether a ban message is required;
 	 * the parent is responsible for persisting all three.
 	 */
-	onSave: (banMacros: BanMacros, savedBanMacros: SavedBanMacro[], requireBanMessage: boolean,) => void
+	onSave: (
+		banMacros: BanMacros,
+		savedBanMacros: SavedBanMacro[],
+		requireBanMessage: boolean,
+		disableNativeNoteBan: boolean,
+	) => void
 }
 
 const maxBanNoteLength = maxBanMacroNote
@@ -49,6 +54,7 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 	)
 	const [savedBanMacros, setSavedBanMacros,] = useState<SavedBanMacro[]>(state.config.savedBanMacros ?? [],)
 	const [requireBanMessage, setRequireBanMessage,] = useState(state.config.requireBanMessage === true,)
+	const [disableNativeNoteBan, setDisableNativeNoteBan,] = useState(state.config.disableNativeNoteBan === true,)
 
 	function handleSave () {
 		if (!state.subreddit) { return }
@@ -68,11 +74,12 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 			},
 			savedBanMacros,
 			requireBanMessage,
+			disableNativeNoteBan,
 		)
 		if (invalidCount > 0) {
 			negativeTextFeedback(`${invalidCount} preset(s) out of range (1–999) were removed before saving.`,)
 		} else {
-			positiveTextFeedback('Ban macros are saved.',)
+			positiveTextFeedback('Ban settings are saved.',)
 		}
 	}
 
@@ -150,7 +157,18 @@ export function BanMacroTab ({state, saveRef, onSave,}: Props,) {
 				/>
 				<span className={css.fieldHint}>
 					The mod button, usernote and native note ban forms won&apos;t send a ban with an empty message. Only
-					checked when a ban is actually being issued. Toolbox NXG only.
+					checked when a ban is actually being issued.
+				</span>
+			</div>
+			<div className={css.field}>
+				<CheckboxInput
+					label="Don't offer a ban with native notes"
+					checked={disableNativeNoteBan}
+					onChange={(e,) => setDisableNativeNoteBan(e.target.checked,)}
+				/>
+				<span className={css.fieldHint}>
+					Hides the ban option the native note composer shows for the Ban and Permaban labels, for every mod;
+					those labels then add a note only. Usernote types control their own Auto-ban.
 				</span>
 			</div>
 			<div className={css.field}>

@@ -58,7 +58,7 @@ When leaving a usernote, you can optionally issue a ban at the same time — the
 
 ### Named ban macros
 
-Alongside the single default ban note and message, the Config overlay's **Ban macro** tab can hold any number of named ban macros, each with its own note, message, duration and, for permanent bans, an option to remove all the user's posts and comments. Every ban form (the Mod Button, the removal reasons ban section, the usernote ban option and the Native Mod Log composer) offers them in an **Apply ban macro...** picker. They're stored on the NXG config page only, so original Toolbox doesn't see them.
+Alongside the single default ban note and message, the Config overlay's **Ban settings** tab can hold any number of named ban macros, each with its own note, message, duration and, for permanent bans, an option to remove all the user's posts and comments. Every ban form (the Mod Button, the removal reasons ban section, the usernote ban option and the Native Mod Log composer) offers them in an **Apply ban macro...** picker. They're stored on the NXG config page only, so original Toolbox doesn't see them.
 
 ### Native Mod Log (formerly Mod Notes)
 

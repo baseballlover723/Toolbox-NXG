@@ -121,6 +121,7 @@ export const substitutionTokens: SubstitutionTokenInfo[] = [
 	{token: '{kind}', description: '"submission" or "comment", whichever was removed',},
 	{token: '{title}', description: 'Title of the post',},
 	{token: '{url}', description: 'Permalink to the removed post or comment',},
+	{token: '{permalink}', description: 'Same as {url}: permalink to the post or comment',},
 	{token: '{domain}', description: 'Domain the post links to',},
 	{token: '{mod}', description: 'Username of the moderator sending the removal',},
 	{token: '{body}', description: 'Body of the removed item, quoted as markdown (each line prefixed with "> ")',},

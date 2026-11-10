@@ -179,7 +179,7 @@ interface RemovalReasonsOverlayProps {
 	defaultNoteDestination?: NoteDestination
 	/**
 	 * Where the "Issue a ban" form starts (permanent or a number of days), from the subreddit's
-	 * Ban Macros defaults. Overridden by a note type's ban duration and by {@link seededFromIntent}.
+	 * Ban settings defaults. Overridden by a note type's ban duration and by {@link seededFromIntent}.
 	 */
 	defaultBan?: RemovalBanDefault
 	/**

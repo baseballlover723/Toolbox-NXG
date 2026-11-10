@@ -16,7 +16,7 @@ export const defaultBanMacroDays = 7
 
 /** The substitution tokens supported in ban macro note and message templates. */
 export const banMacroTokens = pickSubstitutionTokens(
-	['{author}', '{subreddit}', '{kind}', '{title}', '{url}', '{mod}', '{body}',],
+	['{author}', '{subreddit}', '{kind}', '{title}', '{url}', '{permalink}', '{mod}', '{body}',],
 )
 
 /**
@@ -76,7 +76,7 @@ export function resolveBanMacro (macro: SavedBanMacro, tokenInfo: Record<string,
 }
 
 /** The token names ban note and message templates can use (see `banMacroTokens`). */
-export const banTokenNames = ['author', 'subreddit', 'kind', 'title', 'url', 'mod', 'body',] as const
+export const banTokenNames = ['author', 'subreddit', 'kind', 'title', 'url', 'permalink', 'mod', 'body',] as const
 
 /** Token values a ban form knows regardless of what it was opened from. */
 export interface BanTokenBase {
@@ -90,15 +90,16 @@ export interface BanTokenThing {
 	kind?: string | undefined
 	title?: string | undefined
 	url?: string | undefined
+	permalink?: string | undefined
 	body?: string | undefined
 }
 
 /**
  * Builds the token values a ban form can substitute: author, subreddit and mod, plus kind, title,
- * url and body from the post or comment the form was opened from, when there is one. Empty values
- * are left out rather than substituted, so a token with nothing behind it (a comment's title, or any
- * item token when no item is in scope) stays visible for {@link unresolvedBanTokens} to flag instead
- * of silently vanishing from the message.
+ * url (also as permalink) and body from the post or comment the form was opened from, when there is
+ * one. Empty values are left out rather than substituted, so a token with nothing behind it (a
+ * comment's title, or any item token when no item is in scope) stays visible for
+ * {@link unresolvedBanTokens} to flag instead of silently vanishing from the message.
  * @param base Values always known to the form.
  * @param thing The item the form was opened from, if any.
  */
@@ -109,6 +110,8 @@ export function banTokenInfo (base: BanTokenBase, thing?: BanTokenThing | undefi
 		kind: thing?.kind,
 		title: thing?.title,
 		url: thing?.url,
+		// Removal reasons and mod macros accept {permalink}; ban forms take it as an alias of {url}.
+		permalink: thing?.permalink || thing?.url,
 		body: thing?.body,
 	}
 	for (const [key, value,] of Object.entries(candidates,)) {
@@ -127,7 +130,7 @@ export function unresolvedBanTokens (text: string,): string[] {
 	return banTokenNames.filter((name,) => lower.includes(`{${name}}`,)).map((name,) => `{${name}}`)
 }
 
-/** The subreddit-wide ban defaults (Config > Ban macro) a ban form starts from. */
+/** The subreddit-wide ban defaults (Config > Ban settings) a ban form starts from. */
 export interface BanDefaultsSource {
 	banNote?: string | undefined
 	banMessage?: string | undefined

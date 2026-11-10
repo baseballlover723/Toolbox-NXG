@@ -109,7 +109,7 @@ export interface AddUserNotePopupProps {
 	 * the post or comment the popup was opened from when there is one.
 	 */
 	banTokenInfo?: Record<string, string>
-	/** The subreddit's default ban message (Config > Ban macro), tokens resolved; the ban starts from it. */
+	/** The subreddit's default ban message (Config > Ban settings), tokens resolved; the ban starts from it. */
 	defaultBanMessage?: string
 	/** Whether this subreddit requires a message on every ban (only checked when banning). */
 	requireBanMessage?: boolean

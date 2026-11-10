@@ -283,10 +283,10 @@ export interface RemovalBanDefault {
 }
 
 /**
- * Returns where the removal pane's ban form should start, from the subreddit's Ban Macros
- * defaults (Config > Ban Macros), so the team sets one ban default for both the mod button
+ * Returns where the removal pane's ban form should start, from the subreddit's ban
+ * defaults (Config > Ban settings), so the team sets one ban default for both the mod button
  * and removals. "Permanent by default" is read the same way the mod button reads it: on
- * unless explicitly turned off. A subreddit with no Ban Macros at all starts temporary.
+ * unless explicitly turned off. A subreddit with no ban defaults at all starts temporary.
  * @param config The acting subreddit's config, or undefined when it couldn't be read.
  */
 export function defaultRemovalBan (

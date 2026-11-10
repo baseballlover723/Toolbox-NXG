@@ -292,14 +292,15 @@ function buildConfigTabs (
 			),
 		},
 		{
-			title: 'Ban macros',
-			tooltip: 'Default ban note and message, plus named ban macros to pick from in every ban form.',
+			title: 'Ban settings',
+			tooltip: 'Ban defaults and rules for every ban form, plus named ban macros to pick from.',
 			contentNode: <BanMacroTab
 				state={state}
 				saveRef={save.banMacro}
-				onSave={(banMacros, savedBanMacros, requireBanMessage,) => {
+				onSave={(banMacros, savedBanMacros, requireBanMessage, disableNativeNoteBan,) => {
 					state.config.banMacros = banMacros
 					state.config.requireBanMessage = requireBanMessage
+					state.config.disableNativeNoteBan = disableNativeNoteBan
 					if (savedBanMacros.length) {
 						state.config.savedBanMacros = savedBanMacros
 					} else {

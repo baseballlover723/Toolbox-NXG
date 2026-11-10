@@ -361,6 +361,15 @@ describe('normalizeConfig', () => {
 		expect(garbage.requireBanMessage,).toBe(false,)
 	})
 
+	it('normalizes disableNativeNoteBan to a strict boolean, off by default', () => {
+		const on: unknown = {disableNativeNoteBan: true,}
+		const garbage: unknown = {disableNativeNoteBan: 'yes',}
+		normalizeConfig(on,)
+		normalizeConfig(garbage,)
+		expect(on.disableNativeNoteBan,).toBe(true,)
+		expect(garbage.disableNativeNoteBan,).toBe(false,)
+	})
+
 	it('drops savedBanMacros when it is not a non-empty list', () => {
 		const configData: unknown = {savedBanMacros: 'nope',}
 

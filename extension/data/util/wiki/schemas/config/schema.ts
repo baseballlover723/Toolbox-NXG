@@ -88,6 +88,12 @@ export interface ToolboxConfig {
 	 */
 	requireBanMessage?: boolean
 	/**
+	 * When true, the native note composer never offers to ban alongside a Ban or Permaban note, for
+	 * every mod: the label is recorded as a note only. Defaults to false. NXG-only: stripped from the
+	 * legacy v1 mirror.
+	 */
+	disableNativeNoteBan?: boolean
+	/**
 	 * When true, retired (tombstoned) usernote shard pages left behind by shard
 	 * splits are exposed as raw-editor tabs in the config overlay, alongside the
 	 * active shards. Defaults to false (only active shards shown). NXG-only: this
@@ -556,6 +562,8 @@ export function normalizeConfig (configInput: unknown,): asserts configInput is 
 
 	// Ban message requirement: a strict boolean, off unless explicitly true.
 	config.requireBanMessage = config.requireBanMessage === true
+	// Native note ban opt-out: a strict boolean, off unless explicitly true.
+	config.disableNativeNoteBan = config.disableNativeNoteBan === true
 
 	// trainingMods: keep only non-empty strings; anything else -> empty list.
 	config.trainingMods = Array.isArray(config.trainingMods,)

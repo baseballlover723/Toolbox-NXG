@@ -260,6 +260,7 @@ describe('encodeClassicConfig native reason sync', () => {
 
 		expect('savedBanMacros' in encodeClassicConfig(config,),).toBe(false,)
 		expect('requireBanMessage' in encodeClassicConfig(v2Config({requireBanMessage: true,},),),).toBe(false,)
+		expect('disableNativeNoteBan' in encodeClassicConfig(v2Config({disableNativeNoteBan: true,},),),).toBe(false,)
 		expect(config.savedBanMacros,).toHaveLength(1,)
 	})
 })

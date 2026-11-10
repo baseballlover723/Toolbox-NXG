@@ -841,7 +841,7 @@ export function createRemovalReasonsHandlers ({
 			usernoteRequire,
 			defaultNoteDestination,
 			// The acting subreddit's own ban default (not a `getfrom` source's): ban length is
-			// the moderating team's policy, and Ban Macros already holds it for the mod button.
+			// the moderating team's policy, and the Ban settings tab already holds it for the mod button.
 			defaultBan: defaultRemovalBan(reqConfig,),
 			nativeNotesAvailable,
 			savedBanMacros: reqConfig?.savedBanMacros ?? [],

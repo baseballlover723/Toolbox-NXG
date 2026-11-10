@@ -24,12 +24,14 @@ export async function getSavedBanMacros (subreddit: string,): Promise<SavedBanMa
 
 /** What a ban form needs from the subreddit config, read in one pass. */
 export interface BanFormSettings {
-	/** The subreddit-wide ban defaults (Config > Ban macro), or null when it has none. */
+	/** The subreddit-wide ban defaults (Config > Ban settings), or null when it has none. */
 	defaults: BanDefaultsSource | null
 	/** The named ban macros offered in the picker. */
 	savedBanMacros: SavedBanMacro[]
 	/** Whether a ban issued from a ban form must carry a message. */
 	requireBanMessage: boolean
+	/** Whether the native note composer is barred from offering a ban with a Ban or Permaban note. */
+	disableNativeNoteBan: boolean
 }
 
 /**
@@ -46,9 +48,10 @@ export async function getBanFormSettings (subreddit: string,): Promise<BanFormSe
 			defaults: defaults && typeof defaults === 'object' ? defaults : null,
 			savedBanMacros: config?.savedBanMacros ?? [],
 			requireBanMessage: config?.requireBanMessage === true,
+			disableNativeNoteBan: config?.disableNativeNoteBan === true,
 		}
 	} catch (error: unknown) {
 		log.error(`Failed to load ban settings for /r/${subreddit}:`, error,)
-		return {defaults: null, savedBanMacros: [], requireBanMessage: false,}
+		return {defaults: null, savedBanMacros: [], requireBanMessage: false, disableNativeNoteBan: false,}
 	}
 }

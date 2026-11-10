@@ -32,6 +32,8 @@ export interface NativeModLogPopupProps {
 	banDefaults?: ResolvedBanDefaults | undefined
 	/** Whether this subreddit requires a message on every ban. */
 	requireBanMessage?: boolean
+	/** Whether this subreddit has turned off banning from native notes. */
+	banDisabled?: boolean
 	/** Where to position the draggable popup on initial render. */
 	initialPosition: {top: number; left: number}
 	onClose: () => void
@@ -47,6 +49,7 @@ export function NativeModLogPopup ({
 	banTokenInfo,
 	banDefaults,
 	requireBanMessage = false,
+	banDisabled = false,
 	initialPosition,
 	onClose,
 }: NativeModLogPopupProps,) {
@@ -99,6 +102,7 @@ export function NativeModLogPopup ({
 						{...(banTokenInfo ? {banTokenInfo,} : {})}
 						banDefaults={banDefaults}
 						requireBanMessage={requireBanMessage}
+						banDisabled={banDisabled}
 						onSaved={onClose}
 					/>
 				}

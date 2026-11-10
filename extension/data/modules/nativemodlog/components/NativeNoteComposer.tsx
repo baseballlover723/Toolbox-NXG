@@ -34,10 +34,12 @@ export interface NativeNoteComposerProps {
 	 * the post or comment the composer was opened from when there is one.
 	 */
 	banTokenInfo?: Record<string, string>
-	/** The subreddit's ban defaults (Config > Ban macro), resolved; the ban fields start from these. */
+	/** The subreddit's ban defaults (Config > Ban settings), resolved; the ban fields start from these. */
 	banDefaults?: ResolvedBanDefaults | undefined
 	/** Whether this subreddit requires a message on every ban (only checked when banning). */
 	requireBanMessage?: boolean
+	/** When true, the subreddit has turned off banning from native notes: Ban and Permaban add a note only. */
+	banDisabled?: boolean
 	/** Called after the note (and any ban) has been saved. */
 	onSaved: () => void
 }
@@ -58,6 +60,7 @@ export function NativeNoteComposer ({
 	banTokenInfo = {author: user, subreddit,},
 	banDefaults,
 	requireBanMessage = false,
+	banDisabled = false,
 	onSaved,
 }: NativeNoteComposerProps,) {
 	// Whether choosing Ban / Permaban turns the ban option on (a personal setting, on by default).
@@ -86,7 +89,9 @@ export function NativeNoteComposer ({
 		setBanMessage(defaultBanMessage,)
 	}, [selectedLabel, banWithBanLabel, defaultBanDays, defaultBanMessage,],)
 
-	const showBanFields = isBanLabel(selectedLabel,) && triggerBan && !targetIsMod
+	// Whether the chosen label offers a ban at all; the subreddit can turn this off for every mod.
+	const offersBan = isBanLabel(selectedLabel,) && !banDisabled
+	const showBanFields = offersBan && triggerBan && !targetIsMod
 
 	async function handleSave () {
 		const text = noteText.trim()
@@ -94,7 +99,7 @@ export function NativeNoteComposer ({
 			setError('Note text is required',)
 			return
 		}
-		const banning = triggerBan && !targetIsMod && isBanLabel(selectedLabel,)
+		const banning = offersBan && triggerBan && !targetIsMod
 		if (banning && requireBanMessage && !banMessage.trim()) {
 			setError(`/r/${subreddit} requires a ban message`,)
 			return
@@ -198,7 +203,7 @@ export function NativeNoteComposer ({
 			)}
 			{showBanFields && <BanTokenWarning text={banMessage} />}
 			<div className={css.composerFooter}>
-				{selectedLabel === 'PERMA_BAN' && (
+				{offersBan && selectedLabel === 'PERMA_BAN' && (
 					<label className={css.banRow}>
 						<input
 							type="checkbox"
@@ -210,7 +215,7 @@ export function NativeNoteComposer ({
 						<span>Issue Permanent Ban{targetIsMod ? ' (user is a mod)' : ''}</span>
 					</label>
 				)}
-				{selectedLabel === 'BAN' && (
+				{offersBan && selectedLabel === 'BAN' && (
 					<label className={css.banRow}>
 						<input
 							type="checkbox"

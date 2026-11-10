@@ -81,6 +81,8 @@ export function encodeClassicConfig (
 	delete classic.savedBanMacros
 	// NXG-only ban message requirement; 6.x never enforces it.
 	delete classic.requireBanMessage
+	// NXG-only native note ban opt-out; 6.x has no native note composer.
+	delete classic.disableNativeNoteBan
 
 	// NXG-only report→reason mapping; 6.x has no concept of it, so keep it off the
 	// legacy mirror entirely.

@@ -202,6 +202,19 @@ describe('NativeNoteComposer', () => {
 		expect(proposeOrBan,).not.toHaveBeenCalled()
 	})
 
+	it('offers no ban for Ban or Permaban when the subreddit turns native note bans off', async () => {
+		createModNote.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({defaultLabel: 'PERMA_BAN', banDisabled: true,},)
+
+		expect(host.textContent,).not.toContain('Issue Permanent Ban',)
+		expect(host.querySelector('input[type="checkbox"]',),).toBeNull()
+		setNoteText(host, 'note only',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(createModNote,).toHaveBeenCalled()
+		expect(proposeOrBan,).not.toHaveBeenCalled()
+	})
+
 	it('refuses an empty ban message when the subreddit requires one', async () => {
 		const {host,} = renderComposer({defaultLabel: 'PERMA_BAN', requireBanMessage: true,},)
 

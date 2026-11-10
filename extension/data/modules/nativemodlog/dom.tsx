@@ -68,6 +68,7 @@ export function createNativeModLogDisplay (
 			banTokenInfo: tokens,
 			banDefaults: resolveBanDefaults(banSettings.defaults, tokens,),
 			requireBanMessage: banSettings.requireBanMessage,
+			banDisabled: banSettings.disableNativeNoteBan,
 			initialPosition: {top: positions.topPosition, left: positions.leftPosition,},
 		},)
 	}

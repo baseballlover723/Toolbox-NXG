@@ -2,6 +2,8 @@
 
 import {describe, expect, it,} from 'vitest'
 
+import {replaceTokens,} from '../../../util/data/string'
+
 import {
 	banTokenInfo,
 	clampBanDays,
@@ -75,8 +77,21 @@ describe('banTokenInfo', () => {
 			mod: 'bob',
 			kind: 'comment',
 			url: 'https://x',
+			permalink: 'https://x',
 			body: 'hi',
 		},)
+	})
+
+	it('fills {permalink} in a ban message the same as {url}', () => {
+		const info = banTokenInfo({author: 'alice', subreddit: 'pics', mod: 'bob',}, {
+			url: 'https://x',
+			permalink: 'https://p',
+		},)
+		expect(replaceTokens(info, 'see {permalink}',),).toBe('see https://p',)
+		expect(unresolvedBanTokens(replaceTokens(info, 'see {permalink}',),),).toEqual([],)
+		expect(banTokenInfo({author: 'a', subreddit: 's', mod: 'm',}, {url: 'https://x',},).permalink,).toBe(
+			'https://x',
+		)
 	})
 
 	it('has no item tokens without an item', () => {
@@ -87,7 +102,9 @@ describe('banTokenInfo', () => {
 
 describe('unresolvedBanTokens', () => {
 	it('names the tokens still written out, in declaration order', () => {
-		expect(unresolvedBanTokens('see {URL} and {title} for {author}',),).toEqual(['{author}', '{title}', '{url}',],)
+		expect(unresolvedBanTokens('see {URL} and {title} for {author} at {permalink}',),).toEqual(
+			['{author}', '{title}', '{url}', '{permalink}',],
+		)
 		expect(unresolvedBanTokens('all filled in',),).toEqual([],)
 	})
 })
