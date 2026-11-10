@@ -392,6 +392,12 @@
 	max-width: 100%;
 }
 
+/* A textarea in a reason body is inline, so by default it sits on the text baseline: a list bullet
+   lines up with its bottom edge and the box extends upward. Top-align it so it grows downward. */
+.reasonContent textarea {
+	vertical-align: top;
+}
+
 .deliverySettings {
 	display: flex;
 	flex-direction: column;

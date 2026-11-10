@@ -230,6 +230,12 @@
 	padding-left: var(--toolbox-sp-3);
 }
 
+/* Same as the removal overlay: top-align inline textareas so a bullet sits at the top and the box
+   grows downward rather than up from the text baseline. */
+.previewWrap textarea {
+	vertical-align: top;
+}
+
 /* A required field left unfilled on a blocked send. */
 .previewWrap :global(.toolbox-field-missing) {
 	outline: 1px solid var(--toolbox-error-border);
