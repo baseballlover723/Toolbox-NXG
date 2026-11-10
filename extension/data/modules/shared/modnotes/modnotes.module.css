@@ -3,7 +3,8 @@
 }
 
 .noteTable :is(th, td) {
-	padding: var(--toolbox-sp-6) var(--toolbox-sp-8);
+	/* 6.x's 2px by 4px: anything roomier adds up quickly down a long list of notes */
+	padding: var(--toolbox-sp-2) var(--toolbox-sp-4);
 	border: solid 1px var(--toolbox-input-border);
 	vertical-align: top;
 }
