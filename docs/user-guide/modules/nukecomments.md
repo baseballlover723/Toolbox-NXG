@@ -20,6 +20,8 @@ Distinguished comments from moderators and admins are skipped by default.
 
 **Nuke button placement** — the nuke button can appear either next to the username or below the comment body.
 
+**Nuke from a context popup** — with the button next to the username, it also appears on every comment in a context popup, on any page. From the queue, you can open a reported comment's context and nuke from wherever the conversation went wrong, without leaving the queue. The popup doesn't refresh afterwards; reopen it to see the result.
+
 ## Settings
 
 | Setting                           | Default | Description                                                                             |

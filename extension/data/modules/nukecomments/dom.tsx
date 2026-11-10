@@ -18,6 +18,12 @@ import type {NukeCommentsSettings,} from './settings'
 const log = createLogger('CommentNuke',)
 
 /**
+ * The Comments module's context popup. Its comments carry their own comment, post and subreddit IDs
+ * and the nuke popup fetches the thread itself, so nuking from there works on any page.
+ */
+const contextPopupSelector = '.context-button-popup'
+
+/**
  * Renders a button that opens the {@link NukeCommentsPopup} for the given comment chain.
  * Only one popup can be open at a time; clicking while one is open shows a warning.
  */
@@ -75,7 +81,8 @@ function NukeButton (
 /**
  * Registers the nuke button at the appropriate UI locations based on the current settings.
  * The button appears either under each comment's action row or next to the author's username,
- * depending on `showNextToUser`.
+ * depending on `showNextToUser`. Next to the username it also appears in comment context popups, on
+ * any page.
  *
  * @returns A cleanup function that unregisters both renderers.
  */
@@ -111,9 +118,9 @@ export function createNukeCommentsHandlers (
 	const unregisterAuthor = renderAtLocation(
 		'authorActions',
 		{id: 'nukecomments.author', order: 50,},
-		({context,},) => {
+		({context, target,},) => {
 			if (!showNextToUser) { return null }
-			if (!isOnCommentsPage()) { return null }
+			if (!isOnCommentsPage() && !target.closest(contextPopupSelector,)) { return null }
 			const {thingId, postId, subreddit,} = context
 			if (!thingId?.startsWith('t1_',) || !postId || !subreddit) { return null }
 			return (
