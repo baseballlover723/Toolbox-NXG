@@ -24,6 +24,7 @@ import {clearCache,} from './util/persistence/cache'
 import {doSettingsUpdates,} from './util/persistence/settingsMigrations'
 import {setupMessageBridge,} from './util/reddit/events'
 import {watchForURLChanges,} from './util/reddit/pageContext'
+import {syncDarkClass,} from './util/ui/colorScheme'
 import {delegate, documentInteractive,} from './util/ui/dom'
 import {reactRenderer,} from './util/ui/reactMount'
 
@@ -119,14 +120,9 @@ async function startToolbox () {
 	document.documentElement.classList.add(...toolboxVersionClassNames,)
 	document.body.classList.add(...toolboxVersionClassNames,)
 
-	// On old Reddit the page stays light regardless of OS theme, so only follow
-	// prefers-color-scheme on shreddit where Reddit itself honours it.
-	if (!isOldReddit) {
-		const darkMq = window.matchMedia('(prefers-color-scheme: dark)',)
-		const syncOsDark = () => document.documentElement.classList.toggle('toolbox-os-dark', darkMq.matches,)
-		syncOsDark()
-		darkMq.addEventListener('change', syncOsDark,)
-	}
+	// On old Reddit the page stays light regardless of OS theme. On shreddit, follow
+	// Reddit's own theme, which a moderator can set independently of the OS.
+	if (!isOldReddit) { syncDarkClass() }
 
 	// Add icon font
 	const fontStyle = document.createElement('style',)

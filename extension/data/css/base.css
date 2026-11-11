@@ -346,8 +346,9 @@ body.toolbox[toolbox-warning]::before {
     which is a light-DOM ancestor of every shadow host we create) automatically propagates
     the dark values into all shadow roots without any :host-context tricks.
 
-    .toolbox-os-dark is applied by init.ts via matchMedia('prefers-color-scheme: dark')
-    so all three triggers share a single variable block.
+    .toolbox-os-dark is applied on shreddit by util/ui/colorScheme.ts, following Reddit's
+    theme-dark/theme-light class and falling back to prefers-color-scheme when neither is
+    set, so all three triggers share a single variable block.
 
 ========================
 */
