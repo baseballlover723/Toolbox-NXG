@@ -94,3 +94,7 @@
 	box-sizing: border-box;
 	padding: var(--toolbox-sp-2) var(--toolbox-sp-4);
 }
+
+.banDaysHint {
+	color: var(--toolbox-text-muted);
+}

@@ -52,7 +52,8 @@ export const settings = defineSettings(
 			type: 'text',
 			default: '',
 			advanced: true,
-			description: 'Regex to automatically extract a ban duration (in days) from the mod note',
+			description:
+				'Read the ban duration from the note: a regular expression whose first capture group is the days (Ban label only)',
 		},
 		{
 			id: 'showAiSummaries',

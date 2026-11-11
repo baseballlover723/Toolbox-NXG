@@ -49,6 +49,27 @@ function renderComposer (props: Partial<React.ComponentProps<typeof NativeNoteCo
 	return {host, onSaved,}
 }
 
+function noteInput (host: HTMLElement,) {
+	return host.querySelector<HTMLInputElement>('input[placeholder="Add a note..."]',)!
+}
+
+function setBanDays (host: HTMLElement, value: string,) {
+	const input = host.querySelector<HTMLInputElement>('input[type="number"]',)!
+	act(() => {
+		const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input,), 'value',)?.set
+		valueSetter?.call(input, value,)
+		input.dispatchEvent(new InputEvent('input', {bubbles: true, data: value,},),)
+	},)
+}
+
+function applyFirstMacro (host: HTMLElement,) {
+	const select = host.querySelector<HTMLSelectElement>('select[aria-label="Apply ban macro"]',)!
+	act(() => {
+		select.value = '0'
+		select.dispatchEvent(new Event('change', {bubbles: true,},),)
+	},)
+}
+
 function setNoteText (host: HTMLElement, value: string,) {
 	const input = host.querySelector<HTMLInputElement>('input[placeholder="Add a note..."]',)!
 	act(() => {
@@ -283,12 +304,12 @@ describe('NativeNoteComposer', () => {
 
 			setNoteText(host, '5d Toxicity',)
 
-			expect(host.querySelector('sup',),).toBeNull()
+			expect(host.textContent,).toContain('(from note)',)
 			await click(findButton(host, 'Save for /r/testsub',),)
 
 			expect(proposeOrBan,).toHaveBeenCalledWith(
 				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
-				{permanent: false, days: 5, note: '5d Toxicity', message: '',},
+				{permanent: false, days: 5, note: '5d Toxicity', message: '', context: 't1_abc',},
 			)
 		})
 
@@ -304,12 +325,12 @@ describe('NativeNoteComposer', () => {
 			setNoteText(host, '5d Toxicity',)
 			setNoteText(host, 'No duration specified',)
 
-			expect(host.querySelector('sup',),).toBeNull()
+			expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
 			await click(findButton(host, 'Save for /r/testsub',),)
 
 			expect(proposeOrBan,).toHaveBeenCalledWith(
 				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
-				{permanent: false, days: 3, note: 'No duration specified', message: '',},
+				{permanent: false, days: 3, note: 'No duration specified', message: '', context: 't1_abc',},
 			)
 		})
 
@@ -323,26 +344,26 @@ describe('NativeNoteComposer', () => {
 
 			setNoteText(host, '5d Toxicity',)
 
-			expect(host.querySelector('sup',),).toBeNull()
+			expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
 			await click(findButton(host, 'Save for /r/testsub',),)
 
 			expect(proposeOrBan,).toHaveBeenCalledWith(
 				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
-				{permanent: false, days: 3, note: '5d Toxicity', message: '',},
+				{permanent: false, days: 3, note: '5d Toxicity', message: '', context: 't1_abc',},
 			)
 		})
 
 		it.each([
 			{note: '0d zero duration', days: '0',},
 			{note: '1000d excessive duration', days: '1000',},
-		],)('flags invalid ban duration for $note"', async ({note, days,},) => {
+		],)('flags invalid ban duration for $note', async ({note, days,},) => {
 			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
 			const {host,} = renderComposer({defaultLabel: 'BAN',},)
 
 			setNoteText(host, note,)
 
 			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe(days,)
-			expect(host.querySelector('sup',)?.textContent,).toBe('* Invalid ban duration',)
+			expect(host.textContent,).toContain('(must be a whole number of days from 1 to 999)',)
 			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
 
 			await click(findButton(host, 'Save for /r/testsub',),)
@@ -359,19 +380,242 @@ describe('NativeNoteComposer', () => {
 
 			setNoteText(host, '1000d excessive duration',)
 			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe('1000',)
-			expect(host.querySelector('sup',)?.textContent,).toBe('* Invalid ban duration',)
+			expect(host.textContent,).toContain('(must be a whole number of days from 1 to 999)',)
 			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
 
 			setNoteText(host, '5d Toxicity',)
 
-			expect(host.querySelector('sup',),).toBeNull()
+			expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
 			await click(findButton(host, 'Save for /r/testsub',),)
 
 			expect(proposeOrBan,).toHaveBeenCalledWith(
 				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
-				{permanent: false, days: 5, note: '5d Toxicity', message: '',},
+				{permanent: false, days: 5, note: '5d Toxicity', message: '', context: 't1_abc',},
 			)
 		})
+
+		it('does not break the composer when the pattern is not a valid regex', async () => {
+			banNoteDuration.value = String.raw`^(\d+d`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '5d Toxicity',)
+
+			expect(host.textContent,).toContain('(duration pattern is invalid)',)
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 7, note: '5d Toxicity',},),
+			)
+		})
+
+		it('lets the note be saved again once it no longer matches an invalid length', () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '1000d excessive duration',)
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+			setNoteText(host, 'excessive duration',)
+
+			expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+		})
+
+		it('does not block saving when the ban is turned off', () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '1000d excessive duration',)
+			const toggle = host.querySelector<HTMLInputElement>('input[type="checkbox"]',)!
+			act(() => toggle.click())
+
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+		})
+
+		it('does not block saving a note under another label', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			createModNote.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '1000d excessive duration',)
+			await click(findButton(host, 'Abuse Warning',),)
+
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+		})
+
+		it('does not block saving when the target is a moderator', () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			const {host,} = renderComposer({defaultLabel: 'BAN', targetIsMod: true,},)
+
+			setNoteText(host, '1000d excessive duration',)
+
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+		})
+
+		it('rewrites the length in the note when the mod types other days', async () => {
+			banNoteDuration.value = String.raw`^\s*([\d.,]+)\s*d\b`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '5d spam',)
+			setBanDays(host, '57',)
+
+			expect(noteInput(host,).value,).toBe('57d spam',)
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 57, note: '57d spam',},),
+			)
+		})
+
+		it('fixes an invalid length in the note when the mod types valid days', () => {
+			banNoteDuration.value = String.raw`^\s*([\d.,]+)\s*d\b`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '1.5d test',)
+			setBanDays(host, '2',)
+
+			expect(noteInput(host,).value,).toBe('2d test',)
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+		})
+
+		it('follows the note again when the mod edits the length in it', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '5d Toxicity',)
+			setBanDays(host, '14',)
+			setNoteText(host, '3d Toxicity',)
+
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 3, note: '3d Toxicity',},),
+			)
+		})
+
+		it('keeps days the mod typed while the note gives no length', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setBanDays(host, '14',)
+			setNoteText(host, 'Toxicity',)
+
+			expect(noteInput(host,).value,).toBe('Toxicity',)
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 14, note: 'Toxicity',},),
+			)
+		})
+
+		it('rewrites the length in the note when a ban macro sets the days', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({
+				defaultLabel: 'BAN',
+				savedBanMacros: [{title: 'Spam', note: 'n', message: 'm', permanent: false, days: 30,},],
+			},)
+
+			setNoteText(host, '5d spammer',)
+			applyFirstMacro(host,)
+
+			expect(noteInput(host,).value,).toBe('30d spammer',)
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 30, note: '30d spammer',},),
+			)
+		})
+
+		it('keeps days from a ban macro while the note gives no length', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({
+				defaultLabel: 'BAN',
+				savedBanMacros: [{title: 'Spam', note: 'n', message: 'm', permanent: false, days: 30,},],
+			},)
+
+			applyFirstMacro(host,)
+			setNoteText(host, 'spammer',)
+
+			await click(findButton(host, 'Save for /r/testsub',),)
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({days: 30, note: 'spammer',},),
+			)
+		})
+
+		it('says when a typed note gave no length and the default is used', () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			expect(host.textContent,).not.toContain('(default, not from note)',)
+			setNoteText(host, '1.5d test',)
+
+			expect(host.textContent,).toContain('(default, not from note)',)
+			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe('7',)
+		})
+
+		it('does not claim the default is used once the mod has typed days', () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\b`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setBanDays(host, '14',)
+			setNoteText(host, 'test',)
+
+			expect(host.textContent,).not.toContain('(default, not from note)',)
+			expect(host.textContent,).not.toContain('(from note)',)
+		})
+
+		describe(String.raw`documented pattern ^\s*([\d.,]+)\s*d\b`, () => {
+			const documentedPattern = String.raw`^\s*([\d.,]+)\s*d\b`
+
+			it.each([
+				{note: '5d spam', days: 5,},
+				{note: '5 d spam', days: 5,},
+				{note: '  30D spam', days: 30,},
+			],)('reads $days days from "$note"', ({note, days,},) => {
+				banNoteDuration.value = documentedPattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, note,)
+
+				expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe(String(days,),)
+				expect(host.textContent,).toContain('(from note)',)
+			},)
+
+			it.each(['1.5d test', '1,5d test', '0d test', '1000d test',],)(
+				'flags "%s" instead of using the default',
+				(note,) => {
+					banNoteDuration.value = documentedPattern
+					const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+					setNoteText(host, note,)
+
+					expect(host.textContent,).toContain('(must be a whole number of days from 1 to 999)',)
+					expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+				},
+			)
+
+			it('uses the default for a note with no duration, and says so', () => {
+				banNoteDuration.value = documentedPattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, 'spam',)
+
+				expect(host.textContent,).toContain('(default, not from note)',)
+				expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+			})
+		},)
 
 		describe(String.raw`^\s*(\d+)d\s+ Regex tests`, () => {
 			it.each([
@@ -397,7 +641,7 @@ describe('NativeNoteComposer', () => {
 
 				setNoteText(host, note,)
 
-				expect(host.querySelector('sup',),).toBeNull()
+				expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
 				await click(findButton(host, 'Save for /r/testsub',),)
 
 				expect(proposeOrBan,).toHaveBeenCalledWith(
@@ -407,7 +651,7 @@ describe('NativeNoteComposer', () => {
 						itemKind: 'user',
 						link: 'https://www.reddit.com/user/alice',
 					},
-					{permanent: false, days: 3, note, message: '',},
+					{permanent: false, days: 3, note, message: '', context: 't1_abc',},
 				)
 			},)
 		},)
