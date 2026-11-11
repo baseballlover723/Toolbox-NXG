@@ -1,0 +1,110 @@
+/* Anchored under the toolbar's "select..." button; positioned by the toolbar, above the queue items */
+.panel {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	margin-top: var(--toolbox-sp-2);
+	z-index: 501;
+	min-width: 420px;
+	max-width: 640px;
+	padding: var(--toolbox-sp-4);
+	background-color: var(--toolbox-bg);
+	color: var(--toolbox-text-body);
+	border: 1px solid var(--toolbox-border-color);
+	border-radius: var(--toolbox-radius-sm);
+	box-shadow: var(--toolbox-shadow-md);
+	line-height: normal;
+	display: flex;
+	flex-direction: column;
+	gap: var(--toolbox-sp-3);
+}
+
+/* Two-option segmented switch at the top of the panel */
+.modeSwitch {
+	display: inline-flex;
+	align-self: flex-start;
+	border: 1px solid var(--toolbox-button-border);
+	border-radius: var(--toolbox-radius-sm);
+	overflow: hidden;
+}
+
+.modeOption {
+	background-color: var(--toolbox-button-bg);
+	color: var(--toolbox-button-text);
+	border: 0;
+	padding: var(--toolbox-sp-2) var(--toolbox-sp-4);
+	cursor: pointer;
+	font: inherit;
+}
+
+.modeOption + .modeOption {
+	border-left: 1px solid var(--toolbox-button-border);
+}
+
+.modeOption:hover {
+	background-color: var(--toolbox-button-hover-bg);
+}
+
+/* Declared after :hover so the chosen mode keeps its color under the pointer */
+.modeActive,
+.modeActive:hover {
+	background-color: var(--toolbox-accent-color);
+	color: var(--toolbox-action-text);
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 7em 1fr;
+	align-items: baseline;
+	gap: var(--toolbox-sp-3);
+}
+
+.rowLabel {
+	color: var(--toolbox-text-muted);
+	text-align: right;
+}
+
+.rowControls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--toolbox-sp-2) var(--toolbox-sp-5);
+}
+
+.text {
+	flex: 1 1 12em;
+	min-width: 0;
+}
+
+.number {
+	width: 4em;
+	margin-left: var(--toolbox-sp-2);
+}
+
+.numberLabel {
+	white-space: nowrap;
+}
+
+/* "not" toggles sit at the end of their row, muted so they read as a modifier */
+.negate {
+	accent-color: var(--toolbox-error-color);
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--toolbox-sp-3);
+	border-top: 1px solid var(--toolbox-divider-color);
+	padding-top: var(--toolbox-sp-3);
+}
+
+.count {
+	font-weight: bold;
+}
+
+.footerActions {
+	display: inline-flex;
+	gap: var(--toolbox-sp-2);
+	margin-left: auto;
+}

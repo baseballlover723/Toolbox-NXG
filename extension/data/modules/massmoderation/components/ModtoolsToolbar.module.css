@@ -181,3 +181,45 @@ button:is(.negative, .positive, .neutral).pressed {
 	margin-left: var(--toolbox-sp-3);
 	white-space: nowrap;
 }
+
+/* Positioning context for the select panel, which hangs below the "select..." button */
+.selectAnchor {
+	position: relative;
+	display: inline-block;
+}
+
+/* "select..." while its panel is open */
+.selectOpen {
+	font-weight: bold;
+}
+
+/* Shown while a standing "show only matching" filter narrows the queue */
+.filterChip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--toolbox-sp-2);
+	max-width: 28em;
+	padding: var(--toolbox-sp-1) var(--toolbox-sp-2) var(--toolbox-sp-1) var(--toolbox-sp-4);
+	background-color: var(--toolbox-highlight-bg);
+	border: 1px solid var(--toolbox-accent-color);
+	border-radius: var(--toolbox-radius-pill);
+}
+
+.filterChipText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.filterChipClear {
+	background: none;
+	border: 0;
+	padding: 0 var(--toolbox-sp-2);
+	color: var(--toolbox-text-muted);
+	cursor: pointer;
+	font: inherit;
+}
+
+.filterChipClear:hover {
+	color: var(--toolbox-text-body);
+}

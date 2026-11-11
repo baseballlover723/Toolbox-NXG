@@ -43,6 +43,17 @@
 	/* stylelint-disable-next-line declaration-no-important -- overrides Reddit's .thing display to hide mass-moderated items */
 	display: none !important;
 }
+/* Kept apart from .toolbox-mm-hidden so "unhide all" and the hidden count only cover items hidden
+   by hand or by a rule, never the ones the standing "show only matching" filter excludes */
+.thing.toolbox-mm-filtered {
+	/* stylelint-disable-next-line declaration-no-important -- overrides Reddit's .thing display, as above */
+	display: none !important;
+}
+/* Items matching the select panel's criteria while it is open */
+.thing.toolbox-mm-filter-preview {
+	outline: 2px solid var(--toolbox-accent-color);
+	outline-offset: -2px;
+}
 /* Applied by expandos.ts: collapse-all hides the expando itself, because Reddit's own collapse empties
    it and every later expand reloads its media */
 .thing.toolbox-expando-soft-collapsed > .entry .expando {
@@ -80,7 +91,7 @@ body.toolbox-mm-active .menuarea {
 	margin-bottom: var(--toolbox-sp-6);
 }
 /* Hide a subreddit group entirely when all of its items are filtered/hidden */
-.toolbox-sub-group:not(:has(.thing:not(.toolbox-mm-hidden))) {
+.toolbox-sub-group:not(:has(.thing:not(.toolbox-mm-hidden, .toolbox-mm-filtered))) {
 	display: none;
 }
 .toolbox-sub-group-header {

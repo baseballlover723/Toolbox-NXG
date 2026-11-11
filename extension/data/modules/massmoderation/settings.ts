@@ -120,6 +120,22 @@ export const settings = defineSettings(
 			description: 'Auto-refresh queue items by default.',
 			oldReddit: true,
 		},
+		{
+			// What the queue toolbar's select panel does on apply; remembered from the last use.
+			id: 'selectFilterMode',
+			sharedPolicy: 'raw',
+			type: 'selector',
+			values: ['filter', 'select',] as const,
+			default: 'filter',
+			hidden: true,
+		},
+		{
+			// The select panel's last applied criteria, as JSON. No sharedPolicy: it can hold usernames.
+			id: 'selectFilterLast',
+			type: 'text',
+			default: '',
+			hidden: true,
+		},
 	] as const,
 )
 

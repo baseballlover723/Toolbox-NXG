@@ -78,6 +78,7 @@ const negativeTextFeedback = vi.hoisted(() => vi.fn())
 vi.mock('../../../store/feedback', () => ({negativeTextFeedback, positiveTextFeedback: vi.fn(),}),)
 
 import {removeThing,} from '../../../api/resources/things'
+import {emptyCriteria, type SelectFilterCriteria,} from '../schema'
 import {createModtoolsHandlers,} from './queueModtools'
 
 const settings: MassModerationSettings = {
@@ -94,6 +95,8 @@ const settings: MassModerationSettings = {
 	sortLocked: false,
 	groupBySubreddit: false,
 	autoRefresh: true,
+	selectFilterMode: 'filter',
+	selectFilterLast: '',
 }
 
 describe('queue modtools auto-refresh', () => {
@@ -102,6 +105,16 @@ describe('queue modtools auto-refresh', () => {
 	let onToggleReports: ((expanded: boolean,) => void) | undefined
 	let onHideHandled: (() => void) | undefined
 	const setHandledCount = vi.fn()
+	// The toolbar's select/filter callbacks, captured from its props.
+	let toolbar: {
+		onFilterApply: (criteria: SelectFilterCriteria,) => void
+		onFilterClear: () => void
+		onSelectMatching: (criteria: SelectFilterCriteria, verb: string,) => void
+		onSelectFilterPreview: (
+			criteria: SelectFilterCriteria | null,
+			mode: string,
+		) => {matched: number; total: number}
+	}
 
 	beforeEach(() => {
 		document.body.innerHTML = `
@@ -120,6 +133,7 @@ describe('queue modtools auto-refresh', () => {
 			onActionButton = props.onActionButton
 			onToggleReports = props.onToggleReports
 			onHideHandled = props.onHideHandled
+			toolbar = props
 			props.onMount({
 				setHiddenCount: vi.fn(),
 				setHandledCount,
@@ -604,5 +618,172 @@ describe('queue modtools auto-refresh', () => {
 
 		// Left behind, this keeps reddit's own .menuarea sort bar hidden with no toolbar to replace it.
 		expect(document.body.classList.contains('toolbox-mm-active',),).toBe(false,)
+	})
+	describe('select panel', () => {
+		const commentsOnly = (): SelectFilterCriteria => ({...emptyCriteria(), types: ['comment',],})
+
+		function setMixedQueue () {
+			document.body.innerHTML = `
+				<div id="siteTable" class="sitetable">
+					<div class="thing link self" data-fullname="t3_post" data-subreddit="test" data-author="alice">
+						<input type="checkbox" class="toolbox-mm-checkbox" checked>
+					</div>
+					<div class="thing comment" data-fullname="t1_one" data-subreddit="test" data-author="bob">
+						<input type="checkbox" class="toolbox-mm-checkbox">
+					</div>
+					<div class="thing comment" data-fullname="t1_two" data-subreddit="test" data-author="carol">
+						<input type="checkbox" class="toolbox-mm-checkbox">
+					</div>
+				</div>
+			`
+		}
+
+		const item = (fullname: string,) => document.querySelector<HTMLElement>(`[data-fullname="${fullname}"]`,)!
+		const checkbox = (fullname: string,) => item(fullname,).querySelector<HTMLInputElement>('input',)!
+
+		it('hides and unchecks the items a filter excludes, and clearing it shows them again', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+			toolbar.onFilterApply(commentsOnly(),)
+
+			expect(item('t3_post',).classList.contains('toolbox-mm-filtered',),).toBe(true,)
+			expect(checkbox('t3_post',).checked,).toBe(false,)
+			expect(item('t1_one',).classList.contains('toolbox-mm-filtered',),).toBe(false,)
+			// The filter is separate from manual hiding, so "unhide all" doesn't undo it.
+			expect(item('t3_post',).classList.contains('toolbox-mm-hidden',),).toBe(false,)
+
+			toolbar.onFilterClear()
+
+			expect(document.querySelector('.toolbox-mm-filtered',),).toBeNull()
+		})
+
+		it('remembers the applied criteria', () => {
+			setMixedQueue()
+			const set = vi.fn()
+			createModtoolsHandlers({set,} as unknown as Module, settings,)
+
+			toolbar.onFilterApply(commentsOnly(),)
+
+			expect(set,).toHaveBeenCalledWith('selectFilterLast', JSON.stringify(commentsOnly(),),)
+		})
+
+		it('applies the standing filter to items an auto-refresh inserts', async () => {
+			setMixedQueue()
+			vi.stubGlobal(
+				'fetch',
+				vi.fn().mockResolvedValue({
+					ok: true,
+					text: async () => `
+					<div id="siteTable" class="sitetable">
+						<div class="thing link self" data-fullname="t3_newpost" data-subreddit="test"></div>
+						<div class="thing comment" data-fullname="t1_newcomment" data-subreddit="test"></div>
+					</div>
+				`,
+				},),
+			)
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			toolbar.onFilterApply(commentsOnly(),)
+
+			await autoRefreshTick?.()
+
+			expect(item('t3_newpost',).classList.contains('toolbox-mm-filtered',),).toBe(true,)
+			expect(item('t1_newcomment',).classList.contains('toolbox-mm-filtered',),).toBe(false,)
+		})
+
+		it('never bulk-actions an item the filter hides, even if it is still checked', async () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			toolbar.onFilterApply(commentsOnly(),)
+			// Re-check the filtered post behind the filter's back.
+			checkbox('t3_post',).checked = true
+			checkbox('t1_one',).checked = true
+
+			await onActionButton?.('neutral',)
+
+			expect(removeThing,).toHaveBeenCalledOnce()
+			expect(removeThing,).toHaveBeenCalledWith('t1_one', false,)
+		})
+
+		it('replaces, adds to, and removes from the selection', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			const bob = {...emptyCriteria(), users: {value: 'bob', negate: false,},}
+
+			toolbar.onSelectMatching(commentsOnly(), 'replace',)
+			expect([checkbox('t3_post',).checked, checkbox('t1_one',).checked, checkbox('t1_two',).checked,],)
+				.toEqual([false, true, true,],)
+
+			toolbar.onSelectMatching(bob, 'deselect',)
+			expect([checkbox('t3_post',).checked, checkbox('t1_one',).checked, checkbox('t1_two',).checked,],)
+				.toEqual([false, false, true,],)
+
+			toolbar.onSelectMatching({...emptyCriteria(), types: ['textPost',],}, 'add',)
+			expect([checkbox('t3_post',).checked, checkbox('t1_one',).checked, checkbox('t1_two',).checked,],)
+				.toEqual([true, false, true,],)
+		})
+
+		it('does not select items the filter hides', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			toolbar.onFilterApply(commentsOnly(),)
+
+			toolbar.onSelectMatching({...emptyCriteria(), users: {value: 'alice, bob', negate: false,},}, 'replace',)
+
+			expect(checkbox('t3_post',).checked,).toBe(false,)
+			expect(checkbox('t1_one',).checked,).toBe(true,)
+		})
+
+		it('outlines and counts matches while previewing, and clears the outline on close', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+			expect(toolbar.onSelectFilterPreview(commentsOnly(), 'filter',),).toEqual({matched: 2, total: 3,},)
+			expect(document.querySelectorAll('.toolbox-mm-filter-preview',).length,).toBe(2,)
+
+			toolbar.onSelectFilterPreview(null, 'filter',)
+			expect(document.querySelector('.toolbox-mm-filter-preview',),).toBeNull()
+		})
+
+		it('previews a selection against only the items the filter leaves visible', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			toolbar.onFilterApply(commentsOnly(),)
+
+			expect(toolbar.onSelectFilterPreview(emptyCriteria(), 'select',).total,).toBe(2,)
+			expect(toolbar.onSelectFilterPreview(emptyCriteria(), 'filter',).total,).toBe(3,)
+		})
+
+		it('outlines nothing while no criteria are set', () => {
+			setMixedQueue()
+			createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+
+			expect(toolbar.onSelectFilterPreview(emptyCriteria(), 'filter',),).toEqual({matched: 0, total: 3,},)
+			expect(document.querySelector('.toolbox-mm-filter-preview',),).toBeNull()
+		})
+
+		it('does not select an item from a synthetic click on its entry, such as opening an expando', () => {
+			setMixedQueue()
+			const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			const entry = document.createElement('div',)
+			item('t1_one',).append(entry,)
+			const event = new MouseEvent('click', {bubbles: true,},)
+			Object.defineProperty(event, 'target', {value: entry,},)
+
+			handlers.handleThingEntry(entry, event,)
+
+			expect(checkbox('t1_one',).checked,).toBe(false,)
+		})
+
+		it('removes its classes on cleanup', async () => {
+			setMixedQueue()
+			const handlers = createModtoolsHandlers({set: vi.fn(),} as unknown as Module, settings,)
+			toolbar.onFilterApply(commentsOnly(),)
+			toolbar.onSelectFilterPreview(commentsOnly(), 'filter',)
+
+			await handlers.cleanup()
+
+			expect(document.querySelector('.toolbox-mm-filtered, .toolbox-mm-filter-preview',),).toBeNull()
+		})
 	})
 })

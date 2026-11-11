@@ -14,6 +14,23 @@ The toolbar stays pinned to the top of the window as you scroll. If RES pins the
 
 **Sort and filter** — sort queue items by age, edited time, removal time, score, report count, or author username. Items with fewer reports than the reports threshold, or a score above the score threshold, can be hidden.
 
+**Select or filter by criteria** — the **select...** button (Alt+L) opens a panel for picking out items by:
+
+- **Type:** text posts, link posts, comments, posts with flair.
+- **State:** spam-filtered, shadow-banned, handled by another mod, or approved, removed, spammed or reports ignored on this page.
+- **Users, domains and subreddits:** comma-separated lists. Users and subreddits match exactly; a domain also matches its subdomains, so `youtube.com` covers `m.youtube.com`.
+- **Text:** title, flair or report text contains a phrase.
+- **Numbers:** at least N reports, score above or below a value, or older or newer than a number of hours. Items whose score is hidden never match a score rule.
+
+Ticking several boxes in one row matches any of them; filling in several rows requires all of them. Each row has a **not** box that flips it, for example "users not alice, bob". Matching ignores case. While the panel is open, the matching items are outlined and a count shows how many match.
+
+The panel has two modes; it remembers which you used last, and the criteria you last applied:
+
+- **Show only matching** (the default) hides everything else. Items that arrive on auto-refresh are filtered too. A chip in the toolbar shows the filter is on; click its ✕ to clear it. The filter lasts until you leave or reload the page, and **unhide all** doesn't undo it.
+- **Select matching** ticks the matching items. **select** replaces the current selection, **add** adds to it, and **deselect** unticks the matching items.
+
+Items the filter hides are unticked and are never selected or included in a bulk action, so a filter followed by select-all only acts on what you can see. The posts and comments toggle still works on its own, and the filter applies on top of it.
+
 **Hide actioned items** — removes items from the listing after you take action on them, so the queue shrinks as you work through it.
 
 **Items handled elsewhere** — when the mod log shows an item was approved or removed by another moderator (or by you on another page), the queue recolors it, labels its button "Approved by …" or "Removed by …", unticks it, and fades it. That includes an item another mod handled just before the queue finished loading. These items are never hidden automatically, since that would shift the page under your cursor: click **hide handled** in the toolbar to clear them all at once, and **unhide all** to bring them back. The mod log is checked after each of your own actions and on every auto-refresh tick.

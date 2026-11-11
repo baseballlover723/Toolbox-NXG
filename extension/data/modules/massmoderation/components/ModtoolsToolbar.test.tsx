@@ -11,6 +11,7 @@ vi.mock('webextension-polyfill', () => ({
 	},
 }),)
 
+import {emptyCriteria,} from '../schema'
 import {ModtoolsToolbar, type ModtoolsToolbarControls, type ModtoolsToolbarProps,} from './ModtoolsToolbar'
 ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -45,6 +46,13 @@ function defaultProps (overrides: Partial<ModtoolsToolbarProps>,): ModtoolsToolb
 		onAutoRefreshChange: vi.fn(),
 		onAutoRefreshTick: vi.fn().mockResolvedValue(false,),
 		onContentTypeFilter: vi.fn(),
+		initialSelectFilterMode: 'filter',
+		initialSelectFilterCriteria: emptyCriteria(),
+		onSelectFilterPreview: vi.fn(() => ({matched: 0, total: 0,})),
+		onSelectFilterModeChange: vi.fn(),
+		onFilterApply: vi.fn(),
+		onFilterClear: vi.fn(),
+		onSelectMatching: vi.fn(),
 		...overrides,
 	}
 }
@@ -295,5 +303,121 @@ describe('ModtoolsToolbar selection controls', () => {
 			buttonByText('spam selected',).dispatchEvent(new MouseEvent('click', {bubbles: true,},),)
 		},)
 		expect(onActionButton,).toHaveBeenCalledWith('negative',)
+	})
+})
+
+describe('ModtoolsToolbar select panel', () => {
+	afterEach(() => {
+		act(() => {
+			roots.forEach((root,) => root.unmount())
+		},)
+		roots.length = 0
+		document.body.innerHTML = ''
+	},)
+
+	/** Clicks an element inside act(). */
+	function click (element: Element,) {
+		act(() => {
+			element.dispatchEvent(new MouseEvent('click', {bubbles: true,},),)
+		},)
+	}
+
+	/** Types into a text input inside act(), going through React's value tracker. */
+	function type (input: HTMLInputElement, value: string,) {
+		act(() => {
+			Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value',)!.set!.call(input, value,)
+			input.dispatchEvent(new Event('input', {bubbles: true,},),)
+		},)
+	}
+
+	const usersInput = () => document.querySelector<HTMLInputElement>('input[aria-label="users"]',)!
+
+	it('previews while editing and clears the preview when closed', () => {
+		const onSelectFilterPreview = vi.fn(() => ({matched: 2, total: 5,}))
+		renderToolbar({onSelectFilterPreview,},)
+
+		click(buttonByText('select...',),)
+		type(usersInput(), 'alice',)
+
+		expect(onSelectFilterPreview,).toHaveBeenLastCalledWith(
+			expect.objectContaining({users: {value: 'alice', negate: false,},},),
+			'filter',
+		)
+		expect(document.body.textContent,).toContain('2 of 5 match',)
+
+		click(buttonByText('close',),)
+		expect(onSelectFilterPreview,).toHaveBeenLastCalledWith(null, 'filter',)
+		expect(document.querySelector('[role="dialog"]',),).toBeNull()
+	})
+
+	it('cannot apply with no criteria set', () => {
+		renderToolbar({},)
+		click(buttonByText('select...',),)
+
+		// Two "show only matching" buttons exist: the mode switch and the apply button.
+		const apply = Array.from(document.querySelectorAll<HTMLButtonElement>('button',),)
+			.filter((button,) => button.textContent === 'show only matching')
+			.find((button,) => button.getAttribute('role',) !== 'radio')!
+		expect(apply.disabled,).toBe(true,)
+		expect(document.body.textContent,).toContain('no criteria set',)
+	})
+
+	it('applies a standing filter and shows a chip that clears it', () => {
+		const onFilterApply = vi.fn()
+		const onFilterClear = vi.fn()
+		renderToolbar({onFilterApply, onFilterClear,},)
+
+		click(buttonByText('select...',),)
+		type(usersInput(), 'alice',)
+		act(() => {
+			usersInput().dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true,},),)
+		},)
+
+		expect(onFilterApply,).toHaveBeenCalledWith(
+			expect.objectContaining({users: {value: 'alice', negate: false,},},),
+		)
+		expect(document.body.textContent,).toContain('filter: user alice',)
+
+		click(document.querySelector('button[aria-label="clear filter"]',)!,)
+		expect(onFilterClear,).toHaveBeenCalledOnce()
+		expect(document.body.textContent,).not.toContain('filter: user alice',)
+	})
+
+	it('switches to select mode, remembers it, and offers select, add and deselect', () => {
+		const onSelectFilterModeChange = vi.fn()
+		const onSelectMatching = vi.fn()
+		renderToolbar({
+			onSelectFilterModeChange,
+			onSelectMatching,
+			initialSelectFilterCriteria: {...emptyCriteria(), types: ['comment',],},
+		},)
+
+		click(buttonByText('select...',),)
+		click(document.querySelector('button[role="radio"][aria-checked="false"]',)!,)
+		expect(onSelectFilterModeChange,).toHaveBeenCalledWith('select',)
+
+		click(buttonByText('add',),)
+		expect(onSelectMatching,).toHaveBeenCalledWith(expect.objectContaining({types: ['comment',],},), 'add',)
+	})
+
+	it('stays open through synthetic clicks, such as Toolbox opening expandos', () => {
+		renderToolbar({},)
+		click(buttonByText('select...',),)
+
+		// dispatchEvent clicks are untrusted, like the expando clicks "expand all" sends.
+		click(document.body,)
+
+		expect(document.querySelector('[role="dialog"]',),).not.toBeNull()
+	})
+
+	it('closes on Escape', () => {
+		renderToolbar({},)
+		click(buttonByText('select...',),)
+
+		act(() => {
+			usersInput().dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true,},),)
+		},)
+
+		expect(document.querySelector('[role="dialog"]',),).toBeNull()
 	})
 })

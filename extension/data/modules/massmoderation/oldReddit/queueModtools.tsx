@@ -47,11 +47,20 @@ import {notifyNewThings,} from '../../../util/ui/listener'
 import {getCounterState, updateCounters,} from '../../notifier/store'
 import {isTrainingCaptureActive,} from '../../shared/proposals/gateway'
 import {ModtoolsToolbar, type ModtoolsToolbarControls,} from '../components/ModtoolsToolbar'
+import {
+	isEmptyCriteria,
+	type MatchCount,
+	parseStoredCriteria,
+	type SelectFilterCriteria,
+	type SelectFilterMode,
+	type SelectVerb,
+} from '../schema'
 import type {MassModerationSettings,} from '../settings'
 import {createExpandoControls,} from './expandos'
 import {reportsExpandedClass,} from './expandReports'
 import {createSidebarSortHandlers,} from './queueSidebarSorting'
 import {appendNewItems, groupBySubreddit, sortThings, ungroupBySubreddit,} from './queueSorting'
+import {handledElsewhereClass, thingMatches,} from './selectFilter'
 
 const log = createLogger(massModeration,)
 
@@ -88,8 +97,21 @@ function decrementQueueCounter (count: number,) {
 	}
 }
 
-/** Marks a queue item the mod log shows was approved or removed outside this page; see the CSS fade. */
-export const handledElsewhereClass = 'toolbox-modlog-handled-elsewhere'
+/** Hides a queue item that the standing "show only matching" filter excludes; see massmoderation.css. */
+const filteredClass = 'toolbox-mm-filtered'
+
+/** Outlines a queue item that matches the select panel's criteria while the panel is open. */
+const filterPreviewClass = 'toolbox-mm-filter-preview'
+
+/** Whether a thing is a queue item (a post or comment) rather than some other `.thing`. */
+function isQueueItem (thing: Element,): boolean {
+	return thing.matches('.link, .comment',)
+}
+
+/** Whether a queue item is hidden by hand, by a threshold or content-type rule, or by the filter. */
+function isHiddenItem (thing: Element,): boolean {
+	return thing.classList.contains('toolbox-mm-hidden',) || thing.classList.contains(filteredClass,)
+}
 
 /**
  * Mod log actors whose actions are how items get into the queue (filters, spam, admin removals),
@@ -223,6 +245,8 @@ export function createModtoolsHandlers (
 		sortLocked: initialSortLocked,
 		groupBySubreddit: initialGroupBySubreddit,
 		autoRefresh: initialAutoRefresh,
+		selectFilterMode,
+		selectFilterLast,
 	}: MassModerationSettings,
 ) {
 	let listingOrder: string = reportsOrder
@@ -233,6 +257,8 @@ export function createModtoolsHandlers (
 	let sortLocked = initialSortLocked
 	let isGroupedBySubreddit = initialGroupBySubreddit
 	let contentTypeFilter: 'all' | 'posts' | 'comments' = 'all'
+	// The standing "show only matching" filter; lasts for this page view only.
+	let activeFilter: SelectFilterCriteria | null = null
 	let controls: ModtoolsToolbarControls | null = null
 	const slotCleanups: Array<() => void> = []
 	// Owns this factory's timers, the shift-click listener, and the rate_limit restore.
@@ -355,6 +381,76 @@ export function createModtoolsHandlers (
 	}
 
 	/**
+	 * Applies the standing filter to queue items: hides those it excludes and unchecks them, so a bulk
+	 * action can never reach an item the mod can't see. With no filter active, shows every item again.
+	 */
+	function applyActiveFilter (thingList: Element[],): void {
+		const now = Date.now()
+		for (const thing of thingList) {
+			if (!isQueueItem(thing,)) { continue }
+			const excluded = activeFilter !== null && !thingMatches(thing, activeFilter, now,)
+			thing.classList.toggle(filteredClass, excluded,)
+			if (excluded) {
+				const cb = getThingCheckbox(thing,)
+				if (cb) { cb.checked = false }
+			}
+		}
+	}
+
+	/**
+	 * Outlines the queue items matching the criteria and counts them. A filter preview tests every item
+	 * not hidden by hand or by a rule, since applying replaces any current filter; a select preview tests
+	 * only the items on screen, since only those can be selected. `null` clears the outline.
+	 */
+	function previewSelectFilter (criteria: SelectFilterCriteria | null, mode: SelectFilterMode,): MatchCount {
+		document.querySelectorAll(`.${filterPreviewClass}`,).forEach((el,) => el.classList.remove(filterPreviewClass,))
+		if (!criteria) { return {matched: 0, total: 0,} }
+		const now = Date.now()
+		const candidates = getThings().filter((thing,) =>
+			isQueueItem(thing,)
+			&& !thing.classList.contains('toolbox-mm-hidden',)
+			&& (mode === 'filter' || !thing.classList.contains(filteredClass,))
+		)
+		// With nothing set every item would match, and outlining the whole queue just looks broken.
+		if (isEmptyCriteria(criteria,)) { return {matched: 0, total: candidates.length,} }
+		let matched = 0
+		for (const thing of candidates) {
+			if (!thingMatches(thing, criteria, now,)) { continue }
+			matched += 1
+			thing.classList.add(filterPreviewClass,)
+		}
+		return {matched, total: candidates.length,}
+	}
+
+	/** Checks or unchecks the visible queue items matching the criteria. */
+	function selectMatching (criteria: SelectFilterCriteria, verb: SelectVerb,): void {
+		const now = Date.now()
+		for (const thing of getThings()) {
+			if (!isQueueItem(thing,) || isHiddenItem(thing,)) { continue }
+			const cb = getThingCheckbox(thing,)
+			if (!cb) { continue }
+			const matches = thingMatches(thing, criteria, now,)
+			if (verb === 'replace') {
+				cb.checked = matches
+			} else if (matches) {
+				cb.checked = verb === 'add'
+			}
+		}
+		syncSelectionState()
+	}
+
+	/** Remembers the last applied criteria so the panel opens with them next time. */
+	function rememberCriteria (criteria: SelectFilterCriteria,): void {
+		void module.set('selectFilterLast', JSON.stringify(criteria,),)
+	}
+
+	lifecycle.mount(() => {
+		document.querySelectorAll(`.${filteredClass}, .${filterPreviewClass}`,).forEach((el,) => {
+			el.classList.remove(filteredClass, filterPreviewClass,)
+		},)
+	},)
+
+	/**
 	 * Reflects a single-item action taken on this page: deselects the item, decrements the modbar
 	 * count when the action resolves it out of the queue, then hides it (hide-after-action) or
 	 * recolors it to match the action.
@@ -397,7 +493,9 @@ export function createModtoolsHandlers (
 
 	/** Counts the visible handled-elsewhere items and pushes the count to the toolbar's hide button. */
 	function syncHandledCount (): void {
-		const count = document.querySelectorAll(`.thing.${handledElsewhereClass}:not(.toolbox-mm-hidden)`,).length
+		const count = document.querySelectorAll(
+			`.thing.${handledElsewhereClass}:not(.toolbox-mm-hidden):not(.${filteredClass})`,
+		).length
 		controls?.setHandledCount(count,)
 	}
 
@@ -447,6 +545,29 @@ export function createModtoolsHandlers (
 				initialSortLocked={initialSortLocked}
 				initialGroupBySubreddit={initialGroupBySubreddit}
 				initialAutoRefresh={initialAutoRefresh}
+				initialSelectFilterMode={selectFilterMode}
+				initialSelectFilterCriteria={parseStoredCriteria(selectFilterLast,)}
+				onSelectFilterPreview={previewSelectFilter}
+				onSelectFilterModeChange={(mode,) => {
+					void module.set('selectFilterMode', mode,)
+				}}
+				onFilterApply={(criteria,) => {
+					activeFilter = criteria
+					rememberCriteria(criteria,)
+					applyActiveFilter(getThings(),)
+					syncSelectionState()
+					syncHandledCount()
+				}}
+				onFilterClear={() => {
+					activeFilter = null
+					applyActiveFilter(getThings(),)
+					syncSelectionState()
+					syncHandledCount()
+				}}
+				onSelectMatching={(criteria, verb,) => {
+					rememberCriteria(criteria,)
+					selectMatching(criteria, verb,)
+				}}
 				onMount={(c,) => {
 					controls = c
 				}}
@@ -500,7 +621,7 @@ export function createModtoolsHandlers (
 					const ignore = type === 'ignore'
 					const actioned = Array.from(
 						document.querySelectorAll<HTMLElement>(
-							'.thing:not(.toolbox-mm-hidden) .toolbox-mm-checkbox:checked',
+							`.thing:not(.toolbox-mm-hidden):not(.${filteredClass}) .toolbox-mm-checkbox:checked`,
 						),
 					)
 						.map((cb,) => cb.closest('.thing',))
@@ -878,6 +999,9 @@ export function createModtoolsHandlers (
 			},)
 		},)
 		applyHidingRules(thingsArr,)
+		// New arrivals obey the standing filter too: it only changes what's shown, so it's safe to apply
+		// to items the mod hasn't seen yet (unlike selecting them, which a bulk action could then hit).
+		applyActiveFilter(thingsArr,)
 		if (linkToQueues && queueUrl) { thingsArr.forEach((element,) => replaceSubLinks(element,)) }
 		removeUnmoddable()
 	}
@@ -906,7 +1030,10 @@ export function createModtoolsHandlers (
 
 		/** Selects the item when the user clicks anywhere on a thing's entry row. */
 		handleThingEntry (entryEl: Element, event: MouseEvent,) {
-			if ((event.target as Element).closest('a, button, input, textarea, img',)) { return }
+			// Only a mod's own click selects: Toolbox opens expandos by clicking them, and those
+			// synthetic clicks land on the entry too.
+			if (!event.isTrusted) { return }
+			if ((event.target as Element).closest('a, button, input, textarea, img, .expando-button',)) { return }
 			if ((event.target as Element).classList?.contains('toolbox-react-shadow-host',)) { return }
 			log.debug('thing selected.',)
 			getThingCheckbox(getThingFromDescendant(entryEl,)!,)?.click()

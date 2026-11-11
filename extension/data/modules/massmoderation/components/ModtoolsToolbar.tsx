@@ -7,8 +7,16 @@ import {GeneralButton,} from '../../../shared/controls/GeneralButton'
 import {reactAlert,} from '../../../shared/controls/ReactAlert'
 import {useMountEffect,} from '../../../util/ui/hooks'
 import {classes,} from '../../../util/ui/reactMount'
-
+import {
+	describeCriteria,
+	emptyCriteria,
+	type MatchCount,
+	type SelectFilterCriteria,
+	type SelectFilterMode,
+	type SelectVerb,
+} from '../schema'
 import css from './ModtoolsToolbar.module.css'
+import {SelectFilterPanel,} from './SelectFilterPanel'
 
 /** Alt key used to cycle through sort options; avoids existing Alt+A/G/H/I/R/S/U bindings. */
 const SORT_CYCLE_KEY = 'o'
@@ -114,6 +122,23 @@ export interface ModtoolsToolbarProps {
 	onAutoRefreshTick: () => Promise<boolean>
 	/** Called when the content-type filter cycles (all / posts / comments). */
 	onContentTypeFilter: (type: 'all' | 'posts' | 'comments',) => void
+	/** What the select panel does on apply, as last used. */
+	initialSelectFilterMode: SelectFilterMode
+	/** The select panel's last applied criteria. */
+	initialSelectFilterCriteria: SelectFilterCriteria
+	/**
+	 * Called while the select panel is open, on every edit: the parent outlines the matching items and
+	 * returns how many match. Called with `null` when the panel closes, to clear the outline.
+	 */
+	onSelectFilterPreview: (criteria: SelectFilterCriteria | null, mode: SelectFilterMode,) => MatchCount
+	/** Called when the mod switches the panel's mode; the parent should persist it. */
+	onSelectFilterModeChange: (mode: SelectFilterMode,) => void
+	/** Called to show only the items matching the criteria, as a standing filter. */
+	onFilterApply: (criteria: SelectFilterCriteria,) => void
+	/** Called to clear the standing filter. */
+	onFilterClear: () => void
+	/** Called to change the checkbox selection by the criteria. */
+	onSelectMatching: (criteria: SelectFilterCriteria, verb: SelectVerb,) => void
 }
 
 export function ModtoolsToolbar ({
@@ -144,6 +169,13 @@ export function ModtoolsToolbar ({
 	onAutoRefreshChange,
 	onAutoRefreshTick,
 	onContentTypeFilter,
+	initialSelectFilterMode,
+	initialSelectFilterCriteria,
+	onSelectFilterPreview,
+	onSelectFilterModeChange,
+	onFilterApply,
+	onFilterClear,
+	onSelectMatching,
 }: ModtoolsToolbarProps,) {
 	// Sort state
 	const [sortOrder, setSortOrder,] = useState(initialSortOrder,)
@@ -177,6 +209,14 @@ export function ModtoolsToolbar ({
 	const [contentType, setContentType,] = useState<'all' | 'posts' | 'comments'>('all',)
 	const [shiftRemoveFeedback, setShiftRemoveFeedback,] = useState(false,)
 
+	// Select/filter panel state. The standing filter lasts for this page view only.
+	const [selectPanelOpen, setSelectPanelOpen,] = useState(false,)
+	const [selectCriteria, setSelectCriteria,] = useState(initialSelectFilterCriteria,)
+	const [selectMode, setSelectMode,] = useState(initialSelectFilterMode,)
+	const [matchCount, setMatchCount,] = useState<MatchCount>({matched: 0, total: 0,},)
+	const [activeFilter, setActiveFilter,] = useState<SelectFilterCriteria | null>(null,)
+	const onSelectFilterPreviewRef = useRef(onSelectFilterPreview,)
+
 	const menuRef = useRef<HTMLDivElement>(null,)
 	const selectAllRef = useRef<HTMLInputElement>(null,)
 	const dropdownRef = useRef<HTMLDivElement>(null,)
@@ -208,6 +248,33 @@ export function ModtoolsToolbar ({
 	useEffect(() => {
 		autoRefreshRef.current = autoRefresh
 	}, [autoRefresh,],)
+	useEffect(() => {
+		onSelectFilterPreviewRef.current = onSelectFilterPreview
+	}, [onSelectFilterPreview,],)
+
+	// Live preview while the select panel is open; closing it clears the outline.
+	useEffect(() => {
+		if (!selectPanelOpen) { return }
+		setMatchCount(onSelectFilterPreviewRef.current(selectCriteria, selectMode,),)
+	}, [selectPanelOpen, selectCriteria, selectMode,],)
+	useEffect(() => {
+		if (!selectPanelOpen) { return }
+		return () => {
+			onSelectFilterPreviewRef.current(null, selectMode,)
+		}
+	}, [selectPanelOpen, selectMode,],)
+
+	// Close the select panel on any outside click (the panel and its button stop propagation)
+	useEffect(() => {
+		if (!selectPanelOpen) { return }
+		// Only a real click closes it: Toolbox opens expandos by clicking them (staggered, one a
+		// second), and those synthetic clicks reach the document too.
+		const close = (event: MouseEvent,) => {
+			if (event.isTrusted) { setSelectPanelOpen(false,) }
+		}
+		document.addEventListener('click', close,)
+		return () => document.removeEventListener('click', close,)
+	}, [selectPanelOpen,],)
 	useEffect(() => () => {
 		mountedRef.current = false
 	}, [],)
@@ -230,7 +297,10 @@ export function ModtoolsToolbar ({
 	// Close sort dropdown on any outside click
 	useEffect(() => {
 		if (!dropdownOpen) { return }
-		const close = () => setDropdownOpen(false,)
+		// Ignores Toolbox's own synthetic expando clicks, like the select panel above.
+		const close = (event: MouseEvent,) => {
+			if (event.isTrusted) { setDropdownOpen(false,) }
+		}
 		document.addEventListener('click', close,)
 		return () => document.removeEventListener('click', close,)
 	}, [dropdownOpen,],)
@@ -524,6 +594,62 @@ export function ModtoolsToolbar ({
 				>
 					invert
 				</GeneralButton>
+				<span className={css.selectAnchor}>
+					<GeneralButton
+						accessKey="L"
+						title="filter the queue or select items by type, user, reports and more (Alt+L)"
+						aria-expanded={selectPanelOpen}
+						aria-haspopup="dialog"
+						className={selectPanelOpen ? css.selectOpen : undefined}
+						onClick={(event,) => {
+							event.stopPropagation()
+							setSelectPanelOpen((open,) => !open)
+						}}
+					>
+						select...
+					</GeneralButton>
+					{selectPanelOpen && (
+						<SelectFilterPanel
+							criteria={selectCriteria}
+							onCriteriaChange={setSelectCriteria}
+							mode={selectMode}
+							onModeChange={(mode,) => {
+								setSelectMode(mode,)
+								onSelectFilterModeChange(mode,)
+							}}
+							matchCount={matchCount}
+							viewingspam={viewingspam}
+							onFilter={() => {
+								setActiveFilter(selectCriteria,)
+								onFilterApply(selectCriteria,)
+								setSelectPanelOpen(false,)
+							}}
+							onSelect={(verb,) => {
+								onSelectMatching(selectCriteria, verb,)
+								setSelectPanelOpen(false,)
+							}}
+							onReset={() => setSelectCriteria(emptyCriteria(),)}
+							onClose={() => setSelectPanelOpen(false,)}
+						/>
+					)}
+				</span>
+				{activeFilter && (
+					<span className={css.filterChip} title={`showing only: ${describeCriteria(activeFilter,)}`}>
+						<span className={css.filterChipText}>filter: {describeCriteria(activeFilter,)}</span>
+						<button
+							type="button"
+							className={css.filterChipClear}
+							aria-label="clear filter"
+							title="clear filter"
+							onClick={() => {
+								setActiveFilter(null,)
+								onFilterClear()
+							}}
+						>
+							✕
+						</button>
+					</span>
+				)}
 				<GeneralButton
 					title="expand or collapse all expando boxes"
 					onClick={handleExpandosClick}
