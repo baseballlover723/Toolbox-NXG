@@ -1,6 +1,6 @@
 /** Tests for getSiteTable. */
 
-import {afterEach, describe, expect, it,} from 'vitest'
+import {afterEach, describe, expect, it, vi,} from 'vitest'
 import {
 	getContentContainer,
 	getContentMenuarea,
@@ -8,6 +8,7 @@ import {
 	getCurrentSubredditName,
 	getMenuarea,
 	getNestedCommentDistinguishToggles,
+	getPinnedHeaderBottom,
 	getQueueEmptyMessage,
 	getQueueTabMenu,
 	getSidebarTitlebox,
@@ -167,5 +168,43 @@ describe('getNestedCommentDistinguishToggles', () => {
 
 	it('returns empty when no nested listing exists', () => {
 		expect(getNestedCommentDistinguishToggles(),).toHaveLength(0,)
+	})
+})
+
+describe('getPinnedHeaderBottom', () => {
+	afterEach(() => {
+		document.body.innerHTML = ''
+		vi.restoreAllMocks()
+	},)
+
+	/** Adds a header element with the given position and viewport rect. */
+	function header (id: string, position: string, top: number, bottom: number,) {
+		const element = document.createElement('div',)
+		element.id = id
+		element.style.position = position
+		vi.spyOn(element, 'getBoundingClientRect',).mockReturnValue({top, bottom,} as DOMRect,)
+		document.body.append(element,)
+	}
+
+	it('is 0 when no header is pinned', () => {
+		header('sr-header-area', 'static', 0, 18,)
+		expect(getPinnedHeaderBottom(),).toBe(0,)
+	})
+
+	it('reaches the bottom of a subreddit bar pinned by RES', () => {
+		header('sr-header-area', 'fixed', 0, 18,)
+		expect(getPinnedHeaderBottom(),).toBe(18,)
+	})
+
+	it('takes the lowest of several pinned header elements', () => {
+		header('sr-header-area', 'fixed', 0, 18,)
+		header('header', 'fixed', 0, 70,)
+		expect(getPinnedHeaderBottom(),).toBe(70,)
+	})
+
+	it('ignores a fixed header that is not docked at the top of the viewport', () => {
+		header('header', 'fixed', -80, -10,)
+		header('sr-header-area', 'fixed', 40, 58,)
+		expect(getPinnedHeaderBottom(),).toBe(0,)
 	})
 })

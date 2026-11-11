@@ -64,3 +64,28 @@ export function getNestedCommentDistinguishToggles (): Element[] {
 		document.querySelectorAll('.sitetable.nestedlisting>.comment>.entry .buttons .toggle',),
 	)
 }
+
+/**
+ * The old Reddit header elements RES can pin to the top of the viewport (Appearance ->
+ * betterReddit -> pinHeader): the subreddit bar, the user bar, or the whole header.
+ */
+const pinnableHeaderSelectors = ['#sr-header-area', '#header-bottom-right', '#header',]
+
+/**
+ * Returns how far down the viewport a pinned header reaches, in pixels: the bottom edge of
+ * the lowest header element that is fixed to the top of the viewport, or 0 when none is.
+ * Measured rather than inferred from RES's `pinHeader-*` classes, so every pin mode (and a
+ * header whose height changes) is covered, and a pinned header RES has scrolled out of view
+ * doesn't count.
+ */
+export function getPinnedHeaderBottom (): number {
+	let bottom = 0
+	for (const selector of pinnableHeaderSelectors) {
+		const element = document.querySelector(selector,)
+		if (!element || getComputedStyle(element,).position !== 'fixed') { continue }
+		const rect = element.getBoundingClientRect()
+		// Only a header docked at the top edge pushes content down; allow a pixel of rounding.
+		if (rect.top <= 1 && rect.bottom > 0) { bottom = Math.max(bottom, rect.bottom,) }
+	}
+	return bottom
+}

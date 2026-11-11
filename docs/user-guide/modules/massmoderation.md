@@ -8,6 +8,8 @@ Mass Moderation adds queue management tools to old Reddit moderation pages, lett
 
 Mass Moderation is an old Reddit-only module. It activates on mod queue and unmoderated pages and adds a toolbar of controls above the listing. Items can be sorted and filtered without reloading, and auto-refresh keeps the queue up to date.
 
+The toolbar stays pinned to the top of the window as you scroll. If RES pins the subreddit bar, user bar or header (Appearance → betterReddit), the toolbar sits just below it instead of being covered.
+
 ## Features
 
 **Sort and filter** — sort queue items by age, edited time, removal time, score, report count, or author username. Items with fewer reports than the reports threshold, or a score above the score threshold, can be hidden.

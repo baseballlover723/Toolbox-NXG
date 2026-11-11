@@ -2,6 +2,7 @@
 
 import {useCallback, useEffect, useLayoutEffect, useRef, useState,} from 'react'
 
+import {getPinnedHeaderBottom,} from '../../../dom/oldReddit/page'
 import {GeneralButton,} from '../../../shared/controls/GeneralButton'
 import {reactAlert,} from '../../../shared/controls/ReactAlert'
 import {useMountEffect,} from '../../../util/ui/hooks'
@@ -268,13 +269,16 @@ export function ModtoolsToolbar ({
 		let animFrame: number | null = null
 		const handleScroll = () => {
 			if (animFrame) { cancelAnimationFrame(animFrame,) }
-			const position = window.scrollY > stickyOffsetTop ? 'fixed' : 'relative'
+			// A header pinned by RES covers the top of the viewport, so the toolbar docks
+			// below it, and pins as soon as it would otherwise slide underneath it.
+			const headerBottom = getPinnedHeaderBottom()
+			const position = window.scrollY + headerBottom > stickyOffsetTop ? 'fixed' : 'relative'
 			animFrame = requestAnimationFrame(() => {
 				Object.assign(menu.style, {
 					'left': position === 'fixed' ? `${stickyOffsetLeft}px` : '0',
 					'right': position === 'fixed' ? `${rightPosition}px` : '0',
 					'margin-right': position === 'fixed' ? '0' : `${rightPosition}px`,
-					'top': '0',
+					'top': position === 'fixed' ? `${headerBottom}px` : '0',
 					position,
 				},)
 				duplicate.style.display = position === 'fixed' ? 'block' : 'none'
