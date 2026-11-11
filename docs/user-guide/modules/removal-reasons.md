@@ -42,9 +42,17 @@ Removal reasons are configured per-subreddit in the Config overlay (**Edit remov
 
 **Fall back to Reddit's removal reasons** — in subreddits with no toolbox reasons at all, offer Reddit's native ones rather than nothing (see [Falling back to Reddit's removal reasons](#falling-back-to-reddits-removal-reasons)).
 
-**Leave a note for the user** — record the removal as a [Toolbox usernote](usernotes.md) or, while the [Native Mod Log](native-mod-log.md) module is enabled, as a Reddit mod note. **Default note destination** picks which one is selected first; with Native Mod Log turned off, the choice is hidden and the note is always a Toolbox note.
+**Leave a note for the user** — record the removal as a [Toolbox usernote](usernotes.md) or, while the [Native Mod Log](native-mod-log.md) module is enabled, as a Reddit mod note. **Default note destination** picks which one is selected first; with Native Mod Log turned off, the choice is hidden and the note is always a Toolbox note. A reason can fill the note in for you (see [Default notes](#default-notes)).
 
 **Issue a ban** — ban the author as part of the removal. The ban starts from the subreddit's default in the **Ban settings** tab of the [Config](config.md) overlay, the same default the Mod Button's ban form uses: permanent when **Permanent ban by default** is ticked, otherwise the default duration (7 days when none is set). A subreddit with no ban macros starts at a 7-day temporary ban. Choosing a usernote type that carries its own ban duration replaces that starting value. A permanent ban can also **remove all posts & comments** the user made in the subreddit, as the Mod Button's ban form can. By default a note saying so is added to the ban message; untick **Tell the user their posts & comments were removed** to leave it off for that removal. Like other bulk actions it isn't available in training mode, though a captured removal keeps both choices and a reviewer's accept carries them out.
+
+## Default notes
+
+Each removal reason can carry its own note, so picking the reason fills in the note for you. To set one up, open the [Config](config.md) overlay's **Edit removal reasons** tab, click **Edit** on the reason, and fill in **Default usernote (optional)** below the flair fields. You can also pick a note type there.
+
+When you then select that reason in the removal dialog, **Leave a note for this user** is ticked and the note box holds the reason's default note, with its note type selected. You can still change the text before sending; once you have, selecting or deselecting other reasons won't overwrite it, though deselecting every reason clears it. With several reasons selected, their default notes are joined with commas in the order the reasons appear. A reason with no default note doesn't tick the box, so removing with only those reasons leaves no note unless you tick it yourself.
+
+**Default note destination** (in the settings below) decides only whether that note is written as a Toolbox usernote or a Reddit mod note. It doesn't add a note to removals by itself.
 
 ## Removal reason format
 
