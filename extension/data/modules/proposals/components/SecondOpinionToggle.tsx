@@ -14,10 +14,17 @@ import {useSyncExternalStore,} from 'react'
 import {FlatListAction,} from '../../../shared/controls/FlatListAction'
 import {useIsMod,} from '../../../shared/controls/useIsMod'
 import {positiveTextFeedback,} from '../../../store/feedback'
+import {isOldReddit,} from '../../../util/infra/platform'
 import {classes,} from '../../../util/ui/reactMount'
 import {isMarkedForReview, subscribeReviewMode, toggleReviewMode,} from '../../shared/proposals/reviewMode'
 import css from './SecondOpinionToggle.module.css'
 import {useItemProposalCount,} from './useItemProposalCount'
+
+/**
+ * The toggle's label. Old Reddit's own action links are all lowercase ("permalink",
+ * "save", "report"), so it matches them there; shreddit capitalizes its actions.
+ */
+const label = isOldReddit ? 'second opinion' : 'Second opinion'
 
 /** Props for the inline second-opinion toggle. */
 interface Props {
@@ -60,7 +67,7 @@ export function SecondOpinionToggle ({subreddit, itemId,}: Props,) {
 				: 'Arm: capture your next action on this item for another moderator to review'}
 			onClick={onToggle}
 		>
-			{armed ? 'Second opinion: on' : 'Second opinion'}
+			{armed ? `${label}: on` : label}
 		</FlatListAction>
 	)
 }
