@@ -153,6 +153,11 @@ export interface FrozenRemovalBan {
 	note: string
 	/** Also remove all the user's posts and comments in the subreddit (permanent bans only); omitted when off. */
 	removeAll?: boolean
+	/**
+	 * With `removeAll`, leave the "your posts and comments were removed" notice off the ban
+	 * message; omitted when the notice is sent, so older proposals replay with it.
+	 */
+	removeAllSilent?: boolean
 }
 
 /**

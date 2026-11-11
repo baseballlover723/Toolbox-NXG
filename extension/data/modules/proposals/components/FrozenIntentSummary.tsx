@@ -131,7 +131,11 @@ function RemovalReasonSummary (
 					<Effect
 						label="Ban"
 						value={`${intent.ban.permanent ? 'Permanent' : `${intent.ban.days}d`}${
-							intent.ban.removeAll ? ', removing all posts & comments' : ''
+							intent.ban.removeAll
+								? `, removing all posts & comments${
+									intent.ban.removeAllSilent ? ' without telling the user' : ''
+								}`
+								: ''
 						}${intent.ban.note ? ` - ${intent.ban.note}` : ''}`}
 					/>
 				)}

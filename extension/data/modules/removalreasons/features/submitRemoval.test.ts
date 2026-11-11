@@ -296,6 +296,17 @@ describe('submitRemoval ban with remove-all', () => {
 		expect(banUser.mock.invocationCallOrder[0],).toBeLessThan(removeAllUserContent.mock.invocationCallOrder[0]!,)
 	})
 
+	it('leaves the notice off the ban message when told to stay quiet, but still clears the content', async () => {
+		removeAllUserContent.mockResolvedValue('done',)
+
+		const result = await submitRemoval(banParams({banRemoveAllSilent: true,},), () => {},)
+
+		expect(result.ok,).toBe(true,)
+		const {banMessage,} = banUser.mock.calls[0]![0] as {banMessage: string}
+		expect(banMessage,).not.toContain('have been removed',)
+		expect(removeAllUserContent,).toHaveBeenCalledWith('testsub', 'testuser',)
+	})
+
 	it('reports an error when remove-all is refused', async () => {
 		removeAllUserContent.mockResolvedValue('refused',)
 

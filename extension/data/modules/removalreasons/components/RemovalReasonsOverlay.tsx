@@ -141,7 +141,7 @@ export interface RemovalReasonsOverlayPreseed {
 		includeMessage?: boolean
 	}
 	/** Ban to issue (presence ⇒ issue a ban). */
-	ban?: {permanent: boolean; days: number; note: string; removeAll?: boolean}
+	ban?: {permanent: boolean; days: number; note: string; removeAll?: boolean; removeAllSilent?: boolean}
 }
 
 /** Props for the RemovalReasonsOverlay component. */
@@ -550,6 +550,8 @@ export function RemovalReasonsOverlay ({
 	const [banNote, setBanNote,] = useState(seededFromIntent?.ban?.note ?? '',)
 	// Only sent with a permanent ban; kept while toggling so re-ticking Permanent restores it.
 	const [banRemoveAll, setBanRemoveAll,] = useState(!!seededFromIntent?.ban?.removeAll,)
+	// Telling the user is the default; going quiet is chosen per removal and never remembered.
+	const [banRemoveAllNotify, setBanRemoveAllNotify,] = useState(!seededFromIntent?.ban?.removeAllSilent,)
 
 	const reasonContentRefs = useRef<Map<string, HTMLDivElement>>(new Map(),)
 	const sensors = useSensors(
@@ -978,6 +980,7 @@ export function RemovalReasonsOverlay ({
 			banDays,
 			banNote,
 			...(banPermanent && banRemoveAll ? {banRemoveAll: true,} : {}),
+			...(banPermanent && banRemoveAll && !banRemoveAllNotify ? {banRemoveAllSilent: true,} : {}),
 			...(nativeReasonIds.length ? {nativeReasonIds,} : {}),
 		}
 		return {params, selection,}
@@ -1504,9 +1507,17 @@ export function RemovalReasonsOverlay ({
 						{banPermanent && (
 							<CheckboxInput
 								label="Remove all posts & comments from this subreddit"
-								title="Removes the user's other posts and comments here after the ban, and adds a note saying so to the ban message"
+								title="Removes the user's other posts and comments here after the ban"
 								checked={banRemoveAll}
 								onChange={(event,) => setBanRemoveAll(event.target.checked,)}
+							/>
+						)}
+						{banPermanent && banRemoveAll && (
+							<CheckboxInput
+								label="Tell the user their posts & comments were removed"
+								title="Adds a note saying so to the ban message; untick to remove them without saying anything"
+								checked={banRemoveAllNotify}
+								onChange={(event,) => setBanRemoveAllNotify(event.target.checked,)}
 							/>
 						)}
 						{!banPermanent && (

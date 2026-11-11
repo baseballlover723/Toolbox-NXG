@@ -129,6 +129,8 @@ export function ModButtonPopup ({
 	const [showCustomDuration, setShowCustomDuration,] = useState(false,)
 	const [banDurationPresets, setBanDurationPresets,] = useState<number[]>(DEFAULT_BAN_PRESETS,)
 	const [removeAll, setRemoveAll,] = useState(false,)
+	// On by default and per popup, so going quiet is a choice made for each user, never a standing one.
+	const [removeAllNotify, setRemoveAllNotify,] = useState(true,)
 	const [savedBanMacros, setSavedBanMacros,] = useState<SavedBanMacro[]>([],)
 
 	// Mute duration (3, 7, or 28 days)
@@ -539,7 +541,7 @@ export function ModButtonPopup ({
 		switch (actionType) {
 			case 'ban':
 			case 'change ban': {
-				const messageToSend = (removeAll && banPermanent)
+				const messageToSend = (removeAll && banPermanent && removeAllNotify)
 					? banMessage + removeAllBanNotice
 					: banMessage
 				await actions.ban({
@@ -616,7 +618,7 @@ export function ModButtonPopup ({
 		}
 	}
 
-	const effectiveMaxMessage = (removeAll && banPermanent)
+	const effectiveMaxMessage = (removeAll && banPermanent && removeAllNotify)
 		? maxBanMessageLength - removeAllBanNotice.length
 		: maxBanMessageLength
 
@@ -1021,6 +1023,7 @@ export function ModButtonPopup ({
 							showCustomDuration={showCustomDuration}
 							banDurationPresets={banDurationPresets}
 							removeAll={removeAll}
+							removeAllNotify={removeAllNotify}
 							effectiveMaxMessage={effectiveMaxMessage}
 							notesSuggestError={notesSuggestError}
 							showFromNotes={!!activeSub}
@@ -1041,6 +1044,7 @@ export function ModButtonPopup ({
 								setRemoveAll(false,)
 							}}
 							onRemoveAllChange={setRemoveAll}
+							onRemoveAllNotifyChange={setRemoveAllNotify}
 							savedBanMacros={savedBanMacros}
 							onApplyBanMacro={applySavedBanMacro}
 						/>

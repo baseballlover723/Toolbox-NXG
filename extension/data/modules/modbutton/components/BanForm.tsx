@@ -24,6 +24,8 @@ interface BanFormProps {
 	showCustomDuration: boolean
 	banDurationPresets: number[]
 	removeAll: boolean
+	/** Whether the ban message tells the user their content was removed (only used with `removeAll`). */
+	removeAllNotify: boolean
 	/** Max ban-message length after accounting for the appended removal notice. */
 	effectiveMaxMessage: number
 	/** Error shown under the note field when the usernotes suggestion fails. */
@@ -35,6 +37,7 @@ interface BanFormProps {
 	onSelectPermanent: () => void
 	onSelectCustom: () => void
 	onRemoveAllChange: (checked: boolean,) => void
+	onRemoveAllNotifyChange: (checked: boolean,) => void
 	/** The subreddit's named ban macros; the picker is hidden when empty. */
 	savedBanMacros: SavedBanMacro[]
 	/** Fills the form from the chosen named macro. */
@@ -53,6 +56,7 @@ export function BanForm ({
 	showCustomDuration,
 	banDurationPresets,
 	removeAll,
+	removeAllNotify,
 	effectiveMaxMessage,
 	notesSuggestError,
 	showFromNotes,
@@ -61,6 +65,7 @@ export function BanForm ({
 	onSelectPermanent,
 	onSelectCustom,
 	onRemoveAllChange,
+	onRemoveAllNotifyChange,
 	savedBanMacros,
 	onApplyBanMacro,
 }: BanFormProps,) {
@@ -168,6 +173,13 @@ export function BanForm ({
 						onChange={(e,) => onRemoveAllChange(e.target.checked,)}
 					/>
 					{removeAll && (
+						<CheckboxInput
+							label="Tell the user their posts & comments were removed"
+							checked={removeAllNotify}
+							onChange={(e,) => onRemoveAllNotifyChange(e.target.checked,)}
+						/>
+					)}
+					{removeAll && removeAllNotify && (
 						<p className={css.removalNotice}>
 							The following will be appended to the ban message: &ldquo;{removeAllBanNotice
 								.trim()}&rdquo;

@@ -134,6 +134,8 @@ export interface SubmitRemovalParams {
 	banNote: string
 	/** With a permanent ban, also remove all the user's posts and comments in the subreddit. */
 	banRemoveAll?: boolean
+	/** With `banRemoveAll`, leave the "your posts and comments were removed" notice off the ban message. */
+	banRemoveAllSilent?: boolean
 	/**
 	 * Reddit native removal-reason ids to register in the mod log after the item is
 	 * removed. Present only in native-reasons fallback mode; empty/absent for Toolbox
@@ -193,7 +195,7 @@ export async function submitRemoval (
 	} = params
 	// Remove-all rides on a permanent ban only, matching the mod button.
 	const removeAll = issueBan && banPermanent && params.banRemoveAll === true
-	const banNotice = removeAll ? removeAllBanNotice : ''
+	const banNotice = removeAll && params.banRemoveAllSilent !== true ? removeAllBanNotice : ''
 
 	try {
 		await removeThing(data.fullname, params.spam ?? false,)

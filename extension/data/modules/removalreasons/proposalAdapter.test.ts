@@ -101,6 +101,18 @@ describe('freezeRemovalParams', () => {
 		)
 			.toBe(true,)
 		expect(freezeRemovalParams(makeParams({issueBan: true, banRemoveAll: true,},),).ban?.removeAll,).toBeUndefined()
+		// A quiet remove-all is recorded; the default (notice sent) leaves the field off.
+		expect(
+			freezeRemovalParams(
+				makeParams({issueBan: true, banPermanent: true, banRemoveAll: true, banRemoveAllSilent: true,},),
+			).ban,
+		)
+			.toMatchObject({removeAll: true, removeAllSilent: true,},)
+		expect(
+			freezeRemovalParams(makeParams({issueBan: true, banPermanent: true, banRemoveAll: true,},),).ban
+				?.removeAllSilent,
+		)
+			.toBeUndefined()
 		expect(intent.reasonAsSub,).toBe(true,)
 		expect(intent.actionLockThread,).toBe(true,)
 		expect('reasonSticky' in intent,).toBe(false,)
@@ -212,6 +224,24 @@ describe('replayRemovalProposal', () => {
 		expect(received!.reasonAsSub,).toBe(true,)
 		expect(received!.issueBan,).toBe(true,)
 		expect(received!.subredditColors,).toHaveLength(1,)
+	})
+
+	it('replays a quiet remove-all as quiet, and an older remove-all with the notice', async () => {
+		const received: SubmitRemovalParams[] = []
+		submitRemoval.mockImplementation(async (params: SubmitRemovalParams,) => {
+			received.push(params,)
+			return {ok: true,}
+		},)
+		const quiet = makeIntent({
+			ban: {permanent: true, days: 0, note: 'n', removeAll: true, removeAllSilent: true,},
+		},)
+		const older = makeIntent({ban: {permanent: true, days: 0, note: 'n', removeAll: true,},},)
+		await replayRemovalProposal('sub', makeProposal(quiet,), quiet,)
+		await replayRemovalProposal('sub', makeProposal(older,), older,)
+
+		expect(received[0]!.banRemoveAllSilent,).toBe(true,)
+		expect(received[1]!.banRemoveAll,).toBe(true,)
+		expect(received[1]!.banRemoveAllSilent,).toBeUndefined()
 	})
 
 	it('applies a reviewer reasonText override (accept-with-edit), keeping the rest of the intent', async () => {
