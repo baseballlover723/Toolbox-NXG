@@ -124,6 +124,9 @@ export function NativeNoteComposer ({
 						days: banDays,
 						note: text,
 						message: banMessage,
+						// Ties the ban to the item the note is attached to, so Reddit links it
+						// in the ban message the way a ban from the Mod Button does.
+						...(contextID ? {context: contextID,} : {}),
 					},
 				)
 			}

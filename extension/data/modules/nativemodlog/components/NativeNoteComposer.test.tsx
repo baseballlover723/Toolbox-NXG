@@ -126,6 +126,20 @@ describe('NativeNoteComposer', () => {
 
 		expect(proposeOrBan,).toHaveBeenCalledWith(
 			{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
+			{permanent: false, days: 7, note: 'repeat offender', message: '', context: 't1_abc',},
+		)
+	})
+
+	it('bans without a linked item when the note has no context', async () => {
+		createModNote.mockResolvedValue(undefined,)
+		proposeOrBan.mockResolvedValue(undefined,)
+		const {host,} = renderComposer({defaultLabel: 'BAN', contextID: undefined,},)
+
+		setNoteText(host, 'repeat offender',)
+		await click(findButton(host, 'Save for /r/testsub',),)
+
+		expect(proposeOrBan,).toHaveBeenCalledWith(
+			{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
 			{permanent: false, days: 7, note: 'repeat offender', message: '',},
 		)
 	})
@@ -155,7 +169,7 @@ describe('NativeNoteComposer', () => {
 
 		expect(proposeOrBan,).toHaveBeenCalledWith(
 			expect.anything(),
-			{permanent: false, days: 30, note: 'spammer', message: 'Bye alice from testmod',},
+			{permanent: false, days: 30, note: 'spammer', message: 'Bye alice from testmod', context: 't1_abc',},
 		)
 	})
 
@@ -185,7 +199,13 @@ describe('NativeNoteComposer', () => {
 
 		expect(proposeOrBan,).toHaveBeenCalledWith(
 			expect.anything(),
-			{permanent: false, days: 3, note: 'repeat offender', message: 'You are banned from r/testsub',},
+			{
+				permanent: false,
+				days: 3,
+				note: 'repeat offender',
+				message: 'You are banned from r/testsub',
+				context: 't1_abc',
+			},
 		)
 	})
 
