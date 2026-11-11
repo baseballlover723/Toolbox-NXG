@@ -976,6 +976,36 @@ describe('createRemovalReasonsHandlers', () => {
 		})
 	})
 
+	describe('removal option', () => {
+		/** Old Reddit remove-click on a post whose subreddit config has the given removal settings. */
+		async function clickRemoveWithSettings (removalReasons: Record<string, unknown>,) {
+			getConfig.mockResolvedValue({removalReasons: {reasons: [{text: 'r', title: 'r',},], ...removalReasons,},},)
+			document.body.innerHTML = `
+                <div class="thing link" data-fullname="t3_post" data-subreddit="testsub">
+                    <span class="remove-button">
+                        <button class="togglebutton">remove</button>
+                    </span>
+                </div>
+            `
+			const event = makeClick(document.querySelector('.togglebutton',)!,)
+			await createRemovalReasonsHandlers(handlerSettings,).handleClick(event,)
+		}
+
+		it('leaves it out when the subreddit never set one, so the mod\'s own settings apply', async () => {
+			await clickRemoveWithSettings({},)
+
+			const props = showRemovalReasonsOverlay.mock.calls[0]![0]
+			expect(props.data,).not.toHaveProperty('removalOption',)
+		})
+
+		it('passes a chosen option through', async () => {
+			await clickRemoveWithSettings({removalOption: 'force',},)
+
+			const props = showRemovalReasonsOverlay.mock.calls[0]![0]
+			expect(props.data.removalOption,).toBe('force',)
+		})
+	})
+
 	describe('native reasons fallback', () => {
 		/** Old Reddit remove-click on a post whose subreddit has no Toolbox reasons. */
 		async function clickRemoveWithoutToolboxReasons (settings: RemovalReasonsSettings,) {

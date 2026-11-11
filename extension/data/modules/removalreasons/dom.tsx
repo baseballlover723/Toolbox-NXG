@@ -100,7 +100,11 @@ function buildOverlayData (baseData: OverlayBaseData, response: RemovalReasonsCo
 		...(response.footerScope ? {footerScope: response.footerScope,} : {}),
 		logSub: response.logsub ?? '',
 		logTitle: (response.logtitle ?? '') || defaultLogTitle,
-		removalOption: response.removalOption ?? '',
+		// Left out when the subreddit never chose one: the overlay reads a missing option as
+		// "leave it up to each mod", as 6.x does. Defaulting it to '' made the overlay apply
+		// the subreddit's reply settings instead, so a mod's own settings (reply as ModTeam,
+		// sticky, reply type) were silently ignored on every such subreddit.
+		...(response.removalOption ? {removalOption: response.removalOption,} : {}),
 		typeReply: response.typeReply ?? '',
 		typeStickied: response.typeStickied ?? false,
 		typeCommentAsSubreddit: response.typeCommentAsSubreddit ?? false,
