@@ -211,6 +211,19 @@ describe('canonicalizeChoiceBlocks', () => {
 		expect(canonicalizeChoiceBlocks(canonical,),).toBe(canonical,)
 	})
 
+	it('keeps the indentation of a line after a blank line, so list continuations survive', () => {
+		// Indented paragraphs continue the list item above; an indented `- ` is a sub-list.
+		const text = '- All fanart must {highlight: have a source}.\n\n  {highlight: Non-original} must.\n\n'
+			+ '  [Read the rules](https://x) first.\n\n - {highlight: sub item}'
+		expect(canonicalizeChoiceBlocks(text,),).toBe(text,)
+	})
+
+	it('collapses a gap holding whitespace-only lines to one blank line', () => {
+		expect(canonicalizeChoiceBlocks('Heading  \n\n \t\n\n{choice#r}\n- a\n- b\n\n  Body',),).toBe(
+			'Heading\n\n{choice#r}\n- a\n- b\n\n  Body',
+		)
+	})
+
 	it('leaves text with no choice block untouched', () => {
 		const text = 'Just {input: why} and a\n\n\ntriple gap'
 		expect(canonicalizeChoiceBlocks(text,),).toBe(text,)

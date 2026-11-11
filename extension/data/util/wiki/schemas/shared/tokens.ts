@@ -603,12 +603,13 @@ export function canonicalizeChoiceBlocks (text: string,): string {
 			out += serializeToken(segment.token,)
 		}
 	}
-	// Collapse every blank-line gap (2+ newlines, plus any horizontal whitespace
-	// hugging it) to a single blank line. Touching only 2+ newline runs leaves
-	// single-newline markdown hard breaks intact, and the spaces around a
-	// paragraph break are insignificant - so this just tidies the seams the
-	// block splicing above left behind.
-	return out.replace(/[ \t]*\n{2,}[ \t]*/g, '\n\n',).replace(/^\n+/, '',).replace(/\n+$/, '',)
+	// Collapse every blank-line gap (a run of empty or whitespace-only lines, plus any
+	// trailing whitespace before it) to a single blank line, tidying the seams the block
+	// splicing above left behind. Touching only runs of 2+ newlines leaves single-newline
+	// markdown hard breaks intact. The indentation of the line after the gap is kept: it
+	// is significant in markdown (it makes a paragraph or sub-list part of the list item
+	// above, or a code block), and stripping it broke indented list continuations.
+	return out.replace(/[ \t]*\n(?:[ \t]*\n)+/g, '\n\n',).replace(/^\n+/, '',).replace(/\n+$/, '',)
 }
 
 /**
@@ -872,7 +873,10 @@ export function inlineSelectDefinitions (text: string, selects: LegacySelectDefi
 		const id = SLUG_RE.test(definition.name,) ? definition.name : undefined
 		const block = choiceBlock(id, options,)
 		const withPrompt = definition.prompt ? `${definition.prompt}\n\n${block}` : block
-		const reference = new RegExp(`\\{select\\s*:\\s*${escapeRegExp(definition.name,)}\\s*\\}`, 'g',)
+		// The spaces either side of the reference separated it from the sentence it sat in;
+		// once the block is on lines of its own they would only dangle at the cut, so they
+		// are consumed with the reference.
+		const reference = new RegExp(`[ \\t]*\\{select\\s*:\\s*${escapeRegExp(definition.name,)}\\s*\\}[ \\t]*`, 'g',)
 		out = out.replace(reference, `\n\n${withPrompt}\n\n`,)
 	}
 	return out
