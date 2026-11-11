@@ -79,6 +79,7 @@ These become fill-in fields in the removal dialog:
 | `{textarea: placeholder}`             | Multi-line text field                                                                                                |
 | `{choice}` above a `-` list           | Pick one: the chosen option is sent                                                                                  |
 | `{choice: option 1 \| option 2}`      | Pick one, inside a sentence or a link's text                                                                         |
+| `{dropdown}` / `{dropdown: a \| b}`   | The same as `{choice}`, but shown as a dropdown instead of radio buttons, which suits a long list                    |
 | `{multi}` above a `- [ ]` list        | Tick any number: only the ticked items are sent, as a list                                                           |
 | `{highlight}` above a `- [ ]` list    | Tick any number: every item is sent as a list, the ticked ones in bold                                               |
 | `{check: text}` / `{highlight: text}` | One tick box inside a line: `check` sends the text only when ticked, `highlight` always sends it, bolded when ticked |

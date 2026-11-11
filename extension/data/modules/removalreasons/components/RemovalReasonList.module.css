@@ -117,6 +117,10 @@
 	margin: var(--toolbox-sp-4) 0;
 }
 
+.previewWrap :global(.toolbox-reason-select-block) {
+	margin: var(--toolbox-sp-4) 0;
+}
+
 .previewWrap :global(.toolbox-radio-group-prompt) {
 	color: var(--toolbox-text-body);
 	font-weight: bold;

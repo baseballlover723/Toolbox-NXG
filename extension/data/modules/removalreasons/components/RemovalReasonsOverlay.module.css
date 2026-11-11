@@ -590,6 +590,12 @@
 	margin: var(--toolbox-sp-4) 0;
 }
 
+/* A {dropdown} block on a line of its own, spaced like the radio group a {choice} block gets */
+.reasonContent :global(.toolbox-reason-select-block),
+.reasonPreview :global(.toolbox-reason-select-block) {
+	margin: var(--toolbox-sp-4) 0;
+}
+
 .reasonContent :global(.toolbox-radio-group-prompt),
 .reasonPreview :global(.toolbox-radio-group-prompt) {
 	color: var(--toolbox-text-body);

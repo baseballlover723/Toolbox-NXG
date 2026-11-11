@@ -70,7 +70,7 @@ export function nativeMacroTokens (data: RemovalReasonsData,): Record<string, st
  * `findLiteralFieldMarker` in `tokens.ts` covers a block marker that no control was
  * rendered for, and the overlay warns about that separately.
  */
-const toolboxBareTokens = new Set<string>(['choice', 'multi', 'highlight', ...linkTokenNames,],)
+const toolboxBareTokens = new Set<string>(['choice', 'dropdown', 'multi', 'highlight', ...linkTokenNames,],)
 
 /**
  * Finds `{macro}` references in reason text that nothing will substitute, so the overlay can

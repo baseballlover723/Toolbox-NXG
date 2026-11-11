@@ -359,7 +359,8 @@ function ReasonForm ({
 								<span>
 									A {'{choice}'} on its own line, followed by a {'- '}{' '}
 									list, becomes a pick-one control. Inside a sentence, write{' '}
-									{'{choice: option 1 | option 2}'} instead. For tick boxes, put {'{multi}'}{' '}
+									{'{choice: option 1 | option 2}'} instead. Write {'{dropdown}'} in place of{' '}
+									{'{choice}'} to show the options as a dropdown. For tick boxes, put {'{multi}'}{' '}
 									(sends the ticked items) or {'{highlight}'}{' '}
 									(sends every item, ticked ones in bold) above a {'- [ ] '} list. Add {'!'}{' '}
 									to make a field required ({'{input!: why}'}, {'{choice!}'}), and use{' '}

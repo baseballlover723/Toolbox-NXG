@@ -54,6 +54,28 @@ describe('renderReasonHtml', () => {
 		expect(html,).toContain('value="first"',)
 	})
 
+	it('converts a {dropdown} block to a <select> carrying the id, first option selected', () => {
+		const html = renderReasonHtml(
+			parser,
+			'Pick one:\n\n{dropdown#pick!}\n- first\n- [second](https://example.com)',
+		)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		const select = doc.querySelector<HTMLSelectElement>('select#pick',)!
+		expect(select.classList.contains('toolbox-field-required',),).toBe(true,)
+		expect(doc.querySelector('input[type="radio"]',),).toBeNull()
+		const options = Array.from(select.options,)
+		// The option shows a link's text, but its value is the full text that gets sent.
+		expect(options.map((option,) => option.textContent),).toEqual(['first', 'second',],)
+		expect(options.map((option,) => option.value),).toEqual(['first', '[second](https://example.com)',],)
+		expect(select.value,).toBe('first',)
+	})
+
+	it('renders an inline {dropdown} inside its paragraph', () => {
+		const html = renderReasonHtml(parser, 'This is a {dropdown#kind: repost | duplicate} post.',)
+		const doc = new DOMParser().parseFromString(html, 'text/html',)
+		expect(doc.querySelector('p select#kind',),).not.toBeNull()
+	})
+
 	it('converts a {highlight} block to a checkbox group seeded from its [x] ticks', () => {
 		const html = renderReasonHtml(parser, '{highlight#rules}\n- [ ] first\n- [x] second',)
 		const doc = new DOMParser().parseFromString(html, 'text/html',)

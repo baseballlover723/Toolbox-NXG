@@ -135,19 +135,20 @@ Domain tags and usernote type colors were previously stored here as `domainTags:
 
 v2 reason text embeds fill-in fields as brace tokens (v1 used limited HTML; see [Schema Changes](../migration/schema-changes.md#brace-tokens) for the full syntax and conversion rules):
 
-| Token                                                      | Field                                                                                        |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `{input: placeholder}`                                     | Single-line text field, inline                                                               |
-| `{textarea: placeholder}`                                  | Multi-line text field, inline                                                                |
-| `{choice}` + a `-` list below it                           | Pick-one field as a block: the marker on its own line, each list item an option              |
-| `{choice: option 1 \| option 2}`                           | Pick-one field inside a line (mid-sentence or as a link's text); `\|` for a literal pipe     |
-| `{multi}` + a `- [ ]` list below it                        | Tick-box field as a block: sends only the ticked items, as a `-` list                        |
-| `{highlight}` + a `- [ ]` list below it                    | Tick-box field as a block: sends every item as a `-` list, ticked ones in bold               |
-| `{check: text}` / `{highlight: text}`                      | One tick box inside a line: `check` sends the text if ticked, `highlight` bolds it if ticked |
-| `[x]` instead of `[ ]`                                     | Starts a tick box ticked (`- [x] item`, `{check: [x] text}`)                                 |
-| `{note: text}`                                             | Guidance shown to the moderator in the overlay; never sent                                   |
-| `!` after the kind or id (`{input!: …}`, `{choice#rule!}`) | Required field: the overlay won't send until it is filled, picked, or ticked                 |
-| `#id` after the kind (`{choice#rule}`)                     | Optional slug-safe id (`[\w-]+`) that keeps the entered or chosen value between opens        |
+| Token                                                      | Field                                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `{input: placeholder}`                                     | Single-line text field, inline                                                                |
+| `{textarea: placeholder}`                                  | Multi-line text field, inline                                                                 |
+| `{choice}` + a `-` list below it                           | Pick-one field as a block: the marker on its own line, each list item an option               |
+| `{choice: option 1 \| option 2}`                           | Pick-one field inside a line (mid-sentence or as a link's text); `\|` for a literal pipe      |
+| `{dropdown}` / `{dropdown: a \| b}`                        | Pick-one field exactly like `{choice}` in either form, shown as a dropdown, not radio buttons |
+| `{multi}` + a `- [ ]` list below it                        | Tick-box field as a block: sends only the ticked items, as a `-` list                         |
+| `{highlight}` + a `- [ ]` list below it                    | Tick-box field as a block: sends every item as a `-` list, ticked ones in bold                |
+| `{check: text}` / `{highlight: text}`                      | One tick box inside a line: `check` sends the text if ticked, `highlight` bolds it if ticked  |
+| `[x]` instead of `[ ]`                                     | Starts a tick box ticked (`- [x] item`, `{check: [x] text}`)                                  |
+| `{note: text}`                                             | Guidance shown to the moderator in the overlay; never sent                                    |
+| `!` after the kind or id (`{input!: …}`, `{choice#rule!}`) | Required field: the overlay won't send until it is filled, picked, or ticked                  |
+| `#id` after the kind (`{choice#rule}`)                     | Optional slug-safe id (`[\w-]+`) that keeps the entered or chosen value between opens         |
 
 Older v2 pages stored pick-one fields as a `selects` array on the reason, referenced from the text as `{select:name}`. Normalization folds each definition into the text as a `{choice}` block and drops the field; it is never written.
 
@@ -343,7 +344,7 @@ Each token may carry an optional stable id used to persist the entered or chosen
 The codec for both directions lives in `extension/data/util/wiki/schemas/shared/tokens.ts`. Conversion notes:
 
 - `<br>` becomes a paragraph break (`\n\n`); the v1 mirror keeps plain newlines, which 6.x handles fine.
-- A `<select>` on a line of its own becomes a `{choice}` block; one that shares its line with other text becomes an inline `{choice: ...}` in the same place. Both down-convert to a `<select>` where they stand.
+- A `<select>` on a line of its own becomes a `{choice}` block; one that shares its line with other text becomes an inline `{choice: ...}` in the same place. Both down-convert to a `<select>` where they stand. A `{dropdown}` down-converts to the same `<select>` with a `data-tbx-dropdown="1"` attribute, which 6.x ignores, and reads back as a `{dropdown}`; a `<select>` without it reads back as a `{choice}`.
 - A legacy `<option value="x">label</option>` keeps `x` (the value is what 6.x inserted into the removal message); the label is dropped.
 - The older v2 `selects` array (referenced as `{select:name}`) is folded into the text as `{choice}` blocks on normalize and never written.
 - A `{note: text}` down-converts to `<input id="tbx-note" placeholder="text">` and reads back as a note; a required `!` becomes a `required="required"` attribute and reads back from one (with or without a value).

@@ -12,6 +12,7 @@
  * - `{textarea: placeholder text}` - a multi-line text field
  * - `{choice}` / `{choice#id}` followed by a markdown list - a pick-one field
  * - `{choice: a | b}` / `{choice#id: a | b}` - a pick-one field inside a line
+ * - `{dropdown}` / `{dropdown: a | b}` - the same pick-one field, shown as a dropdown
  *
  * Inputs and textareas are inline: everything they need is in the token. A
  * choice comes in two forms. The inline form lists its options in the token,
@@ -29,6 +30,13 @@
  *     - Rule 2
  *
  *     ...normal body text after the blank line...
+ *
+ * `{dropdown}` is a choice in every respect - same forms, ids, required mark and
+ * options - except that the overlay shows it as a dropdown instead of radio buttons,
+ * which suits a long option list. It parses to a `choice` token with `dropdown` set,
+ * so everything that handles a choice handles it too. On the v1 mirror it is the same
+ * `<select>` with a `data-tbx-dropdown` attribute (ignored by 6.x), which brings it
+ * back as a dropdown; a `<select>` without it comes back as a `{choice}`.
  *
  * The list may also be separated from the marker by blank lines, which is how
  * markdown lists are usually written; the block is canonicalized back to the
@@ -199,6 +207,11 @@ export interface InteractiveToken {
 	 * line rather than as a block of its own.
 	 */
 	inline?: true
+	/**
+	 * Set on a `choice` written as `{dropdown}`: the overlay shows it as a dropdown rather
+	 * than radio buttons. Nothing else about the choice changes.
+	 */
+	dropdown?: true
 }
 
 /** A piece of reason text: either literal text or an interactive token. */
@@ -214,7 +227,7 @@ export type ReasonSegment =
  * Content cannot contain `}` - serialization sanitizes braces out of user-facing text so
  * every serialized token re-parses.
  */
-const INLINE_TOKEN_RE = /\{(input|textarea|choice|check|highlight|note)(?:#([\w-]+))?(!)?\s*:([^}]*)\}/gi
+const INLINE_TOKEN_RE = /\{(input|textarea|choice|dropdown|check|highlight|note)(?:#([\w-]+))?(!)?\s*:([^}]*)\}/gi
 
 /**
  * Matches the optional leading tick box of inline tick-box content (`[x] text`); group 1
@@ -225,7 +238,7 @@ const INLINE_TOKEN_RE = /\{(input|textarea|choice|check|highlight|note)(?:#([\w-
 const INLINE_TICK_RE = /^\[([ xX])\](?:[^\S\r\n]+|$)/
 
 /** Cheap pre-check: whether text could hold any choice or tick-box field at all. */
-const FIELD_HINT_RE = /\{(?:choice|multi|highlight|check)/i
+const FIELD_HINT_RE = /\{(?:choice|dropdown|multi|highlight|check)/i
 
 /** Splits on a `|` that is not backslash-escaped. */
 const OPTION_SEPARATOR_RE = /(?<!\\)\|/
@@ -253,7 +266,7 @@ function escapeInlineOption (option: string,): string {
  * space rather than just space/tab, so a non-breaking space pasted in from a rich-text
  * editor doesn't quietly stop the line being a marker.
  */
-const BLOCK_MARKER_RE = /^[^\S\r\n]*\{(choice|multi|highlight)(?:#([\w-]+))?(!)?\}[^\S\r\n]*\r?$/
+const BLOCK_MARKER_RE = /^[^\S\r\n]*\{(choice|dropdown|multi|highlight)(?:#([\w-]+))?(!)?\}[^\S\r\n]*\r?$/
 
 /**
  * Matches a markdown list item line; group 1 is the option text (trailing whitespace
@@ -276,7 +289,12 @@ const TASK_ITEM_RE = /^[^\S\r\n]*(?:[-*+]|\d+[.)])[^\S\r\n]+\[([ xX])\][^\S\r\n]
 const BLANK_LINE_RE = /^[^\S\r\n]*\r?$/
 
 /** Matches a block marker anywhere in a line, for spotting one that did not become a token. */
-const BLOCK_MARKER_ANYWHERE_RE = /\{(choice|multi|highlight)(?:#[\w-]+)?!?\}/
+const BLOCK_MARKER_ANYWHERE_RE = /\{(choice|dropdown|multi|highlight)(?:#[\w-]+)?!?\}/
+
+/** The block kind a marker keyword stands for: `dropdown` is a `choice` shown as a dropdown. */
+function blockKindOf (keyword: string,): BlockFieldKind {
+	return keyword === 'dropdown' ? 'choice' : keyword as BlockFieldKind
+}
 
 /**
  * Whether a line is a list item of the style the given block kind takes: task-list
@@ -317,7 +335,7 @@ function sanitizeSingleLine (text: string,): string {
  * running text add those.
  */
 function fieldBlock (
-	kind: BlockFieldKind,
+	kind: BlockFieldKind | 'dropdown',
 	id: string | undefined,
 	options: string[],
 	checked?: boolean[],
@@ -325,7 +343,7 @@ function fieldBlock (
 ): string {
 	const marker = `{${kind}${id ? `#${id}` : ''}${required ? '!' : ''}}`
 	const lines = options.map((option, index,) => {
-		const box = kind === 'choice' ? '' : `${checked?.[index] ? '[x]' : '[ ]'} `
+		const box = kind === 'choice' || kind === 'dropdown' ? '' : `${checked?.[index] ? '[x]' : '[ ]'} `
 		return `- ${box}${collapseToLine(option,)}`
 	},)
 	return [marker, ...lines,].join('\n',)
@@ -357,10 +375,11 @@ export function serializeToken (token: InteractiveToken,): string {
 	// The id and the required mark sit together between the kind and the colon.
 	const idPart = `${token.id ? `#${token.id}` : ''}${token.required ? '!' : ''}`
 	if (token.kind === 'choice') {
+		const keyword = token.dropdown ? 'dropdown' : 'choice'
 		if (token.inline) {
-			return `{choice${idPart}: ${token.options.map(escapeInlineOption,).join(' | ',)}}`
+			return `{${keyword}${idPart}: ${token.options.map(escapeInlineOption,).join(' | ',)}}`
 		}
-		return fieldBlock('choice', token.id, token.options, undefined, token.required,)
+		return fieldBlock(keyword, token.id, token.options, undefined, token.required,)
 	}
 	if (isToggleKind(token.kind,)) {
 		if (token.inline) { return inlineToggleText(token, idPart,) }
@@ -421,9 +440,10 @@ function parseSourcedSegments (text: string,): SourcedSegment[] {
 			const [, keyword, id, bang, content,] = match
 			const lowerKeyword = keyword!.toLowerCase()
 			let token: InteractiveToken | null
-			if (lowerKeyword === 'choice') {
+			if (lowerKeyword === 'choice' || lowerKeyword === 'dropdown') {
 				const options = splitInlineOptions(content!,)
 				token = options.length > 0 ? {kind: 'choice', placeholder: '', options, inline: true,} : null
+				if (token && lowerKeyword === 'dropdown') { token.dropdown = true }
 			} else if (lowerKeyword === 'check' || lowerKeyword === 'highlight') {
 				token = parseInlineToggle(lowerKeyword === 'check' ? 'multi' : 'highlight', content!,)
 			} else if (lowerKeyword === 'note') {
@@ -457,7 +477,7 @@ function parseSourcedSegments (text: string,): SourcedSegment[] {
 		const nextLineStart = nl === -1 ? n : nl + 1
 		const marker = BLOCK_MARKER_RE.exec(text.slice(i, lineEnd,),)
 		if (marker) {
-			const kind = marker[1] as BlockFieldKind
+			const kind = blockKindOf(marker[1]!,)
 			const options: string[] = []
 			const checked: boolean[] = []
 			let scan = nextLineStart
@@ -495,6 +515,7 @@ function parseSourcedSegments (text: string,): SourcedSegment[] {
 				const token: InteractiveToken = kind === 'choice'
 					? {kind, placeholder: '', options,}
 					: {kind, placeholder: '', options, checked,}
+				if (marker[1] === 'dropdown') { token.dropdown = true }
 				if (marker[2]) { token.id = marker[2] }
 				if (marker[3]) { token.required = true }
 				// Exclude the last option line's trailing newline so it stays with the
@@ -530,6 +551,8 @@ export type LiteralFieldProblem =
 export interface LiteralField {
 	kind: BlockFieldKind
 	problem: LiteralFieldProblem
+	/** Set when the marker was written `{dropdown}`, so a warning can quote it as written. */
+	dropdown?: true
 }
 
 /**
@@ -555,17 +578,19 @@ export function findLiteralFieldMarker (text: string,): LiteralField | null {
 		const line = lines[i]!
 		const anywhere = BLOCK_MARKER_ANYWHERE_RE.exec(line,)
 		if (!anywhere) { continue }
-		const kind = anywhere[1] as BlockFieldKind
+		const kind = blockKindOf(anywhere[1]!,)
+		const report = (problem: LiteralFieldProblem,): LiteralField =>
+			anywhere[1] === 'dropdown' ? {kind, problem, dropdown: true,} : {kind, problem,}
 		// A marker with other text on its line never starts a block, whatever follows it,
 		// so it has to move to a line of its own before a list can help.
-		if (!BLOCK_MARKER_RE.test(line,)) { return {kind, problem: 'inline',} }
+		if (!BLOCK_MARKER_RE.test(line,)) { return report('inline',) }
 		let scan = i + 1
 		while (scan < lines.length && BLANK_LINE_RE.test(lines[scan]!,)) { scan++ }
 		const first = lines[scan]
-		if (first === undefined) { return {kind, problem: 'no-options',} }
+		if (first === undefined) { return report('no-options',) }
 		if (!isBlockItem(kind, first,)) {
 			const otherStyle = kind === 'choice' ? TASK_ITEM_RE.test(first,) : CHOICE_OPTION_RE.test(first,)
-			return {kind, problem: otherStyle ? 'wrong-list' : 'no-options',}
+			return report(otherStyle ? 'wrong-list' : 'no-options',)
 		}
 		// A real block: step over its list, so an item whose own text mentions a marker
 		// isn't read as a second, broken one.
@@ -770,7 +795,8 @@ function toggleChoiceOptions (kind: ToggleKind, text: string, ticked: boolean,):
  * token it stands for, or `null`. The option listed first decides the starting tick.
  */
 function toggleFromChoice (token: InteractiveToken,): InteractiveToken | null {
-	if (token.kind !== 'choice' || !token.inline || token.options.length !== 2) { return null }
+	// A dropdown was chosen as one on purpose, so it is never read as a disguised tick box.
+	if (token.kind !== 'choice' || token.dropdown || !token.inline || token.options.length !== 2) { return null }
 	const [first, second,] = token.options.map((option,) => option.trim()) as [string, string,]
 	let toggle: InteractiveToken | null = null
 	const make = (kind: ToggleKind, text: string, ticked: boolean,): InteractiveToken => ({
@@ -896,6 +922,13 @@ function getAttr (tag: string, name: string,): string | undefined {
 	return value.replace(/&quot;/g, '"',).replace(/&amp;/g, '&',)
 }
 
+/**
+ * The attribute that marks a `<select>` on the v1 mirror as a `{dropdown}` rather than a
+ * `{choice}`. 6.x ignores it but keeps it, as it does `required`; it is written with a
+ * value because SnuOwnd drops valueless attributes.
+ */
+const legacyDropdownAttr = 'data-tbx-dropdown'
+
 /** A legacy `<select>` parsed into a choice token, plus its `label` prompt if it had one. */
 interface ParsedLegacySelect {
 	token: InteractiveToken
@@ -943,6 +976,7 @@ function parseLegacySelect (selectHtml: string,): ParsedLegacySelect {
 	const token: InteractiveToken = {kind: 'choice', placeholder: '', options,}
 	if (id) { token.id = id }
 	if (hasBooleanAttr(openTag, 'required',)) { token.required = true }
+	if (hasBooleanAttr(openTag, legacyDropdownAttr,)) { token.dropdown = true }
 	const prompt = getAttr(openTag, 'label',)
 	return prompt ? {token, prompt,} : {token,}
 }
@@ -1097,7 +1131,7 @@ export function tokenToLegacyHtml (token: InteractiveToken,): string {
 		}</select>`
 	switch (token.kind) {
 		case 'choice':
-			return selectHtml(idAttr, token.options,)
+			return selectHtml(token.dropdown ? `${idAttr} ${legacyDropdownAttr}="1"` : idAttr, token.options,)
 		case 'multi':
 		case 'highlight': {
 			// 6.x has no tick box, so each item becomes a `<select>` offering its two

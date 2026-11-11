@@ -2,8 +2,9 @@
 
 import {describe, expect, it,} from 'vitest'
 
+import {purifyObject,} from '../../../data/purify'
 import {encodeClassicConfig,} from './codec'
-import type {ToolboxConfig,} from './schema'
+import {normalizeConfig, type ToolboxConfig,} from './schema'
 
 /** Builds a minimal normalized v2 config with the given overrides. */
 function v2Config (overrides: Partial<ToolboxConfig> = {},): ToolboxConfig {
@@ -77,6 +78,20 @@ describe('encodeClassicConfig', () => {
 			'Pick:\n\n<select id="rule"><option>Rule 1</option><option>Rule 2</option></select>\n\n'
 				+ 'explain <input placeholder="why">',
 		)
+	})
+
+	it('brings a {dropdown} back as a dropdown after the mirror is read and sanitized', () => {
+		const text = 'Pick:\n\n{dropdown#rule!}\n- Rule 1\n- Rule 2\n\nAfter'
+		const config = v2Config({
+			removalReasons: {reasons: [{text, title: '', flairText: '', flairCSS: '', flairTemplateID: '',},],},
+		},)
+
+		// The same path a mirror takes when it is read back: JSON, sanitized, then normalized.
+		const mirror: unknown = JSON.parse(JSON.stringify(encodeClassicConfig(config,),),)
+		purifyObject(mirror,)
+		normalizeConfig(mirror,)
+
+		expect(mirror.removalReasons.reasons[0]!.text,).toBe(text,)
 	})
 
 	it('strips stable ids and NXG layout metadata', () => {

@@ -150,6 +150,47 @@ export function choiceTokenToRadioGroup (
 }
 
 /**
+ * Renders a `{dropdown}` (a choice with `dropdown` set) as a `<select>`. The `<select>`
+ * carries the id itself, so unlike the radio group it needs no hidden input: the overlay
+ * reads its value directly, the way it read 6.x's own `<select>` fields. Options are
+ * plain text, since an `<option>` can't hold markup; a markdown link shows as its text,
+ * and the option's full text is still what gets sent.
+ * @param parser SnuOwnd parser instance, for reducing option markdown to its visible text.
+ * @param token The parsed choice token.
+ * @param anonId Stable id to use when the choice has no explicit `#id` (see
+ *   {@link choiceTokenToRadioGroup}).
+ * @returns HTML string containing a `.toolbox-reason-select` element.
+ */
+export function choiceTokenToDropdown (
+	parser: ReturnType<typeof getRemovalReasonParser>,
+	token: InteractiveToken,
+	anonId: string,
+): string {
+	const doc = new DOMParser().parseFromString('', 'text/html',)
+	const select = doc.createElement('select',)
+	select.id = token.id || anonId
+	select.className = [
+		'toolbox-reason-select',
+		...token.required ? ['toolbox-field-required',] : [],
+	].join(' ',)
+	token.options.forEach((option, optionIdx,) => {
+		const element = doc.createElement('option',)
+		element.value = option
+		const label = doc.createElement('span',)
+		label.innerHTML = renderLabelMarkdown(parser, option,)
+		element.textContent = label.textContent || option
+		if (optionIdx === 0) { element.setAttribute('selected', '',) }
+		select.appendChild(element,)
+	},)
+	// A block dropdown sits on a line of its own, as the radio group does.
+	if (token.inline) { return select.outerHTML }
+	const wrapper = doc.createElement('div',)
+	wrapper.className = 'toolbox-reason-select-block'
+	wrapper.appendChild(select,)
+	return wrapper.outerHTML
+}
+
+/**
  * Renders a tick-box token (`{multi}` / `{highlight}` block, or an inline `{check: ...}` /
  * `{highlight: ...}`) as a group of checkboxes, one per item, starting from the template's
  * `[x]` ticks. It reuses the radio group's classes so it shares that layout and the card's
@@ -257,7 +298,7 @@ function unwrapLinksAroundChoices (html: string,): string {
 	const doc = new DOMParser().parseFromString(html, 'text/html',)
 	let changed = false
 	doc.body.querySelectorAll('a',).forEach((anchor,) => {
-		if (!anchor.querySelector('.toolbox-radio-group-inline',)) { return }
+		if (!anchor.querySelector('.toolbox-radio-group-inline, .toolbox-reason-select',)) { return }
 		const span = doc.createElement('span',)
 		span.className = 'toolbox-choice-link'
 		const href = anchor.getAttribute('href',)
@@ -274,7 +315,7 @@ function unwrapLinksAroundChoices (html: string,): string {
  * The text is first normalized to token form (legacy limited-HTML configs are
  * up-converted on the fly), then split into segments: `{choice}` blocks become
  * radio groups, inline `{choice: ...}` tokens become inline radio groups inside
- * their paragraph, `{input: ...}`/`{textarea: ...}` tokens become inline form
+ * their paragraph, `{dropdown}` choices of either form become `<select>`s, `{input: ...}`/`{textarea: ...}` tokens become inline form
  * elements carried through the markdown render via the parser's element
  * whitelist, and everything else renders as markdown.
  * @param parser SnuOwnd parser instance.
@@ -321,8 +362,9 @@ export function renderReasonHtml (
 	// The control for a choice or tick-box token, with the next stable fallback id.
 	const renderControl = (token: InteractiveToken,) => {
 		const anonId = `${idPrefix}-${anonChoiceIndex++}`
-		return isToggleKind(token.kind,)
-			? toggleTokenToCheckboxGroup(parser, token, anonId,)
+		if (isToggleKind(token.kind,)) { return toggleTokenToCheckboxGroup(parser, token, anonId,) }
+		return token.dropdown
+			? choiceTokenToDropdown(parser, token, anonId,)
 			: choiceTokenToRadioGroup(parser, token, anonId,)
 	}
 
@@ -382,7 +424,7 @@ export interface LiteralFieldDescription {
  * @param field The marker and problem `findLiteralFieldMarker` reported.
  */
 export function describeLiteralField (field: LiteralField,): LiteralFieldDescription {
-	const marker = `{${field.kind}}`
+	const marker = `{${field.dropdown ? 'dropdown' : field.kind}}`
 	const isChoice = field.kind === 'choice'
 	const name = `${isChoice ? 'pick-one' : 'tick-box'} ${marker}`
 	const list = isChoice ? 'option list' : '"- [ ]" checklist'

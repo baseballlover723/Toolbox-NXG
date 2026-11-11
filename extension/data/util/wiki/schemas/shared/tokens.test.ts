@@ -809,3 +809,75 @@ describe('required fields', () => {
 		)
 	})
 })
+
+describe('{dropdown}', () => {
+	it('parses a block as a choice shown as a dropdown, keeping id and required mark', () => {
+		const [segment,] = parseReasonSegments('{dropdown#rule!}\n- Rule 1\n- Rule 2',)
+		expect(segment,).toEqual({
+			type: 'token',
+			token: {
+				kind: 'choice',
+				placeholder: '',
+				options: ['Rule 1', 'Rule 2',],
+				dropdown: true,
+				id: 'rule',
+				required: true,
+			},
+		},)
+	})
+
+	it('parses the inline form', () => {
+		const segments = parseReasonSegments('This is a {dropdown: repost | duplicate}.',)
+		expect(segments[1],).toEqual({
+			type: 'token',
+			token: {kind: 'choice', placeholder: '', options: ['repost', 'duplicate',], inline: true, dropdown: true,},
+		},)
+	})
+
+	it('serializes back to the dropdown keyword in both forms', () => {
+		expect(serializeToken({kind: 'choice', placeholder: '', options: ['a', 'b',], dropdown: true, id: 'x',},),)
+			.toBe('{dropdown#x}\n- a\n- b',)
+		expect(serializeToken({kind: 'choice', placeholder: '', options: ['a', 'b',], dropdown: true, inline: true,},),)
+			.toBe('{dropdown: a | b}',)
+	})
+
+	it('survives canonicalization as a dropdown', () => {
+		expect(canonicalizeChoiceBlocks('Pick:\n{dropdown}\n\n- a\n- b\nAfter',),).toBe(
+			'Pick:\n\n{dropdown}\n- a\n- b\n\nAfter',
+		)
+	})
+
+	it('round-trips through the v1 mirror as a marked <select>', () => {
+		const html = tokensToHtmlFields('Pick:\n\n{dropdown#rule}\n- a\n- b\n\nAfter',)
+		expect(html,).toContain('<select id="rule" data-tbx-dropdown="1">',)
+		expect(canonicalizeChoiceBlocks(htmlFieldsToTokens(html,),),).toBe(
+			'Pick:\n\n{dropdown#rule}\n- a\n- b\n\nAfter',
+		)
+	})
+
+	it('keeps an unmarked <select> a {choice}', () => {
+		expect(
+			canonicalizeChoiceBlocks(
+				htmlFieldsToTokens('<select id="rule"><option>a</option><option>b</option></select>',),
+			),
+		)
+			.toBe('{choice#rule}\n- a\n- b',)
+	})
+
+	it('is never promoted to a tick box', () => {
+		expect(promoteLegacyToggles('Keep {dropdown: | extra text} as is',),).toBe(
+			'Keep {dropdown: | extra text} as is',
+		)
+	})
+
+	it('reports a broken marker as a dropdown', () => {
+		expect(findLiteralFieldMarker('{dropdown}\nno list here',),)
+			.toEqual({kind: 'choice', problem: 'no-options', dropdown: true,},)
+	})
+
+	it('substitutes and checks required like a choice', () => {
+		const text = '{dropdown!}\n- \n- picked'
+		expect(substituteTokenValues(text, ['picked',],),).toBe('picked',)
+		expect(findUnfilledRequired(text, ['',],),).toEqual([0,],)
+	})
+})
