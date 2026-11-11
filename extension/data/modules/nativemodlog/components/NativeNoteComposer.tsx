@@ -49,6 +49,11 @@ function isBanLabel (label: string | undefined,): label is 'BAN' | 'PERMA_BAN' {
 	return label === 'BAN' || label === 'PERMA_BAN'
 }
 
+/** Checks if the ban duration is valid */
+function validBanDuration (days: number,): boolean {
+	return days >= 1 && days <= 999
+}
+
 /** Renders the label chips, note input, and ban controls for a new native mod note. */
 export function NativeNoteComposer ({
 	subreddit,
@@ -75,6 +80,7 @@ export function NativeNoteComposer ({
 	const [error, setError,] = useState<string | undefined>()
 	const [triggerBan, setTriggerBan,] = useState(banWithBanLabel,)
 	const [banDays, setBanDays,] = useState(defaultBanDays,)
+	const [invalidBanDays, setInvalidBanDays,] = useState(false,)
 	const [banNoteDurationRegex, setBanNoteDurationRegex,] = useState<RegExp | undefined>()
 	const [banMessage, setBanMessage,] = useState(defaultBanMessage,)
 
@@ -99,7 +105,13 @@ export function NativeNoteComposer ({
 	useEffect(() => {
 		if (selectedLabel !== 'BAN' || !banNoteDurationRegex) { return }
 		const match = banNoteDurationRegex?.exec(noteText,)
-		setBanDays(match ? Number(match[1],) : defaultBanDays,)
+		if (match) {
+			const banDaysNumb = Number(match[1],)
+			setInvalidBanDays(!validBanDuration(banDaysNumb,),)
+			setBanDays(banDaysNumb,)
+		} else {
+			setBanDays(defaultBanDays,)
+		}
 	}, [selectedLabel, banNoteDurationRegex, noteText, defaultBanDays,],)
 
 	async function handleSave () {
@@ -236,28 +248,44 @@ export function NativeNoteComposer ({
 							disabled={saving || targetIsMod}
 							onChange={(event,) => setTriggerBan(event.target.checked,)}
 						/>
-						<span>Issue Ban{targetIsMod ? ' (user is a mod)' : ' for'}</span>
-						{!targetIsMod && (
-							<>
-								<input
-									type="number"
-									className={`${css.banDaysInput} toolbox-input`}
-									min={1}
-									max={999}
-									value={banDays}
-									disabled={saving || !triggerBan}
-									onChange={(event,) => {
-										const days = parseInt(event.target.value, 10,)
-										if (!isNaN(days,) && days >= 1 && days <= 999) { setBanDays(days,) }
-									}}
-								/>
-								<span>days</span>
-							</>
-						)}
+						<span className={invalidBanDays ? css.error : undefined}>
+							<span>Issue Ban{targetIsMod ? ' (user is a mod)' : ' for'}</span>
+							{!targetIsMod && (
+								<>
+									<input
+										type="number"
+										className={`${css.banDaysInput} toolbox-input ${
+											invalidBanDays ? css.error : ''
+										}`}
+										min={1}
+										max={999}
+										value={banDays}
+										disabled={saving || !triggerBan}
+										onChange={(event,) => {
+											const days = parseInt(event.target.value, 10,)
+											if (!isNaN(days,) && validBanDuration(days,)) {
+												setInvalidBanDays(false,)
+												setBanDays(days,)
+											}
+										}}
+									/>
+									<span>days</span>
+									{invalidBanDays && <>
+										{' '}
+										<sup>* Invalid ban duration</sup>
+									</>}
+								</>
+							)}
+						</span>
 					</label>
 				)}
 				{error && <span className={css.error}>{error}</span>}
-				<ActionButton type="button" primary disabled={saving} onClick={() => void handleSave()}>
+				<ActionButton
+					type="button"
+					primary
+					disabled={saving || invalidBanDays}
+					onClick={() => void handleSave()}
+				>
 					{saving ? 'Saving...' : `Save for /r/${subreddit}`}
 				</ActionButton>
 			</div>
