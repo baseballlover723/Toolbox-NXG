@@ -12,7 +12,7 @@ import {mountPopup,} from '../../../util/ui/reactMount'
 import type {ResolvedBanDefaults, SavedBanMacro,} from '../../shared/banMacros/schema'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 import {defaultNoteLabelValueToLabelType,} from '../../shared/modnotes/schema'
-import {defaultTabIndex, visibleTabs,} from '../schema'
+import {defaultTabIndex, tabLayout, visibleTabs,} from '../schema'
 import css from './NativeModLogPopup.module.css'
 import {NativeNoteComposer,} from './NativeNoteComposer'
 
@@ -57,6 +57,7 @@ export function NativeModLogPopup ({
 	const defaultNoteLabel = useSetting(nativeModLog, 'defaultNoteLabel', 'none',)
 	const showAiSummaries = !!useSetting(nativeModLog, 'showAiSummaries', false,)
 	const showModActions = !!useSetting(nativeModLog, 'showModActions', true,)
+	const notesTabLayout = selectorOptionKey(useSetting(nativeModLog, 'notesTabLayout', 'cards',),)
 
 	const tabs = visibleTabs(showModActions,)
 	// A selector setting reads back as either the derived key or the raw display
@@ -86,6 +87,7 @@ export function NativeModLogPopup ({
 								subreddit={subreddit}
 								hideAiSummaries={!showAiSummaries}
 								{...(tab.filter !== undefined && {filter: tab.filter,})}
+								{...(tabLayout(tab, notesTabLayout,) === 'table' && {layout: 'table',})}
 							/>
 						</div>
 					),

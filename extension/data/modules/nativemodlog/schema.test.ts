@@ -3,7 +3,7 @@
 import {describe, expect, it,} from 'vitest'
 
 import type {ModNote,} from '../shared/modnotes/schema'
-import {defaultTabIndex, isEntryVisible, visibleTabs,} from './schema'
+import {defaultTabIndex, isEntryVisible, tabLayout, visibleTabs,} from './schema'
 
 function makeEntry (overrides: Partial<ModNote> = {},): ModNote {
 	return {
@@ -62,5 +62,21 @@ describe('defaultTabIndex', () => {
 
 	it('falls back to the first tab when the preferred one is hidden', () => {
 		expect(defaultTabIndex(visibleTabs(false,), 'mod_actions',),).toBe(0,)
+	})
+})
+
+describe('tabLayout', () => {
+	const [allActivity, notes,] = visibleTabs(true,)
+
+	it('switches the Notes tab to a table when the setting asks for one', () => {
+		expect(tabLayout(notes!, 'table',),).toBe('table',)
+	})
+
+	it('leaves the Notes tab on its default cards otherwise', () => {
+		expect(tabLayout(notes!, 'cards',),).toBeUndefined()
+	})
+
+	it('never changes the other tabs', () => {
+		expect(tabLayout(allActivity!, 'table',),).toBeUndefined()
 	})
 })

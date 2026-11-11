@@ -59,3 +59,12 @@ export function defaultTabIndex (tabs: readonly ModLogTab[], preferred: string,)
 	const index = tabs.findIndex((tab,) => tab.key === preferred)
 	return index === -1 ? 0 : index
 }
+
+/**
+ * Layout for a popup tab's entry list. Only the Notes tab is configurable: it defaults to cards,
+ * and the `notesTabLayout` setting can switch it to the table the other tabs use. Returns
+ * undefined to leave the list on its own default.
+ */
+export function tabLayout (tab: ModLogTab, notesTabLayout: string,): 'table' | undefined {
+	return tab.key === 'notes' && notesTabLayout === 'table' ? 'table' : undefined
+}

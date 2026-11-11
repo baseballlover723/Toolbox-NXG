@@ -31,6 +31,14 @@ export const settings = defineSettings(
 			default: 'none',
 		},
 		{
+			id: 'notesTabLayout',
+			sharedPolicy: 'raw',
+			description: 'Layout of the Notes tab in the native mod log popup (Table matches the other tabs)',
+			type: 'selector',
+			values: ['Cards', 'Table',] as const,
+			default: 'cards',
+		},
+		{
 			id: 'banWithBanLabel',
 			sharedPolicy: 'raw',
 			type: 'boolean',
