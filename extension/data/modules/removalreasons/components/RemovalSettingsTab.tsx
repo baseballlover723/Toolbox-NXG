@@ -6,6 +6,7 @@ import {utils,} from '../../../framework/moduleIds'
 import {CheckboxInput,} from '../../../shared/controls/CheckboxInput'
 import {EnforcementModeRadio,} from '../../../shared/controls/EnforcementModeRadio'
 import {TextInput,} from '../../../shared/controls/NormalInput'
+import {SelectInput,} from '../../../shared/controls/SelectInput'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
 import {TokenChips,} from '../../../shared/controls/TokenChips'
 import {positiveTextFeedback,} from '../../../store/feedback'
@@ -17,7 +18,45 @@ import {
 	substitutionTokens,
 } from '../../../util/wiki/schemas/shared/tokens'
 import {makeDeliveryOption,} from '../../shared/removalReasons/DeliveryOption'
+import {type HeaderFooterScope, headerFooterScopes,} from '../schema'
 import css from './RemovalSettingsTab.module.css'
+
+/** Display labels for each header/footer scope choice. */
+const scopeLabels: Record<HeaderFooterScope, string> = {
+	all: 'Posts and comments',
+	posts: 'Posts only',
+	comments: 'Comments only',
+}
+
+/**
+ * Narrows a raw `<select>` value to a {@link HeaderFooterScope}.
+ * @param value The selected option value.
+ */
+function toScope (value: string,): HeaderFooterScope {
+	return headerFooterScopes.find((scope,) => scope === value) ?? 'all'
+}
+
+/** Props for the ScopeSelect component. */
+interface ScopeSelectProps {
+	/** Element id for the select, so its label can target it. */
+	id: string
+	/** The currently selected scope. */
+	value: HeaderFooterScope
+	/** Called with the newly selected scope. */
+	onChange: (scope: HeaderFooterScope,) => void
+}
+
+/** Renders the "Include on" picker that scopes a header or footer to posts and/or comments. */
+function ScopeSelect ({id, value, onChange,}: ScopeSelectProps,) {
+	return (
+		<div className={css.scopeRow}>
+			<label htmlFor={id}>Include on:</label>
+			<SelectInput id={id} value={value} onChange={(e,) => onChange(toScope(e.target.value,),)}>
+				{headerFooterScopes.map((scope,) => <option key={scope} value={scope}>{scopeLabels[scope]}</option>)}
+			</SelectInput>
+		</div>
+	)
+}
 
 /**
  * The restricted token set the removal-log post title supports, plus the
@@ -48,6 +87,8 @@ export function RemovalSettingsTab ({state, saveRef, onSave,}: Props,) {
 
 	const [header, setHeader,] = useState(rr.header ?? '',)
 	const [footer, setFooter,] = useState(rr.footer ?? '',)
+	const [headerScope, setHeaderScope,] = useState<HeaderFooterScope>(rr.headerScope ?? 'all',)
+	const [footerScope, setFooterScope,] = useState<HeaderFooterScope>(rr.footerScope ?? 'all',)
 	const [removalOption, setRemovalOption,] = useState(rr.removalOption ?? 'suggest',)
 	const [typeReply, setTypeReply,] = useState<string>(rr.typeReply ?? 'reply',)
 	const [typeStickied, setTypeStickied,] = useState(!!rr.typeStickied,)
@@ -72,10 +113,15 @@ export function RemovalSettingsTab ({state, saveRef, onSave,}: Props,) {
 	function handleSave () {
 		if (!state.subreddit) { return }
 
+		// The scopes are dropped rather than written as 'all', so a config whose mods never
+		// touch them stays byte-identical to one saved before the setting existed.
+		const {headerScope: _oldHeaderScope, footerScope: _oldFooterScope, ...rest} = rr
 		state.config.removalReasons = {
-			...rr,
+			...rest,
 			header,
 			footer,
+			...(headerScope !== 'all' ? {headerScope,} : {}),
+			...(footerScope !== 'all' ? {footerScope,} : {}),
 			removalOption,
 			typeReply,
 			typeStickied,
@@ -129,6 +175,7 @@ export function RemovalSettingsTab ({state, saveRef, onSave,}: Props,) {
 						onChange={(e,) => setHeader(e.target.value,)}
 					/>
 				</TokenChips>
+				<ScopeSelect id="rr-header-scope" value={headerScope} onChange={setHeaderScope} />
 				<label className={css.fieldLabel} htmlFor="rr-footer">Footer</label>
 				<TokenChips tokens={substitutionTokens} inputRef={footerRef} onChange={setFooter}>
 					<TextareaInput
@@ -140,6 +187,7 @@ export function RemovalSettingsTab ({state, saveRef, onSave,}: Props,) {
 						onChange={(e,) => setFooter(e.target.value,)}
 					/>
 				</TokenChips>
+				<ScopeSelect id="rr-footer-scope" value={footerScope} onChange={setFooterScope} />
 				<p className={css.tokenHint}>
 					Focus a field above to see the tokens it supports; hover a token for what it inserts.
 				</p>

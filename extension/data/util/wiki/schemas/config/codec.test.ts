@@ -236,6 +236,19 @@ describe('encodeClassicConfig native reason sync', () => {
 		expect(config.removalReasons.nativeSync?.enabled,).toBe(true,)
 	})
 
+	it('strips the NXG-only header and footer scopes', () => {
+		const config = v2Config({
+			removalReasons: {reasons: [], header: 'Hi', headerScope: 'posts', footerScope: 'comments',},
+		},)
+
+		const classic = encodeClassicConfig(config,)
+
+		expect(classic.removalReasons.headerScope,).toBeUndefined()
+		expect(classic.removalReasons.footerScope,).toBeUndefined()
+		expect(classic.removalReasons.header,).toBe('Hi',)
+		expect(config.removalReasons.headerScope,).toBe('posts',)
+	})
+
 	it('writes an empty reasons list when every reason is synced', () => {
 		const config = v2Config({
 			removalReasons: {

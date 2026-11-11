@@ -154,3 +154,13 @@
 	composes: warning;
 	margin: var(--toolbox-sp-8) 0 0;
 }
+
+/* "Include on" scope picker under the header and footer textareas */
+.scopeRow {
+	display: flex;
+	align-items: center;
+	gap: var(--toolbox-sp-7);
+	margin-top: var(--toolbox-sp-4);
+	font-size: var(--toolbox-fs-11);
+	color: var(--toolbox-text-secondary);
+}

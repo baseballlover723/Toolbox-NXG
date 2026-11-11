@@ -96,6 +96,8 @@ function buildOverlayData (baseData: OverlayBaseData, response: RemovalReasonsCo
 		logReason: response.logreason ?? '',
 		header: response.header ?? '',
 		footer: response.footer ?? '',
+		...(response.headerScope ? {headerScope: response.headerScope,} : {}),
+		...(response.footerScope ? {footerScope: response.footerScope,} : {}),
 		logSub: response.logsub ?? '',
 		logTitle: (response.logtitle ?? '') || defaultLogTitle,
 		removalOption: response.removalOption ?? '',

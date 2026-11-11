@@ -91,6 +91,10 @@ export function encodeClassicConfig (
 	// NXG-only native removal reason sync state; 6.x has no concept of it.
 	delete classic.removalReasons?.nativeSync
 
+	// NXG-only header/footer post/comment scoping; 6.x always applies both everywhere.
+	delete classic.removalReasons?.headerScope
+	delete classic.removalReasons?.footerScope
+
 	// Guarded throughout: callers normally pass a normalized config, but the
 	// down-convert must never throw on a partial object (e.g. a config a mod
 	// hand-edited on the wiki between normalize and save).

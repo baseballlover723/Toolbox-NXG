@@ -51,6 +51,9 @@ export const LEGACY_OWNED_FIELDS = [
 	'banMacros',
 ] as const satisfies ReadonlyArray<keyof ToolboxConfig>
 
+/** Keys the legacy mirror never carries, which therefore never count as a difference from it. */
+const nxgOnlyKeys = new Set(['id', 'suggestedReasons', 'nativeSync', 'headerScope', 'footerScope',],)
+
 /**
  * Deep structural equality for plain JSON-ish values, ignoring object key
  * order and any `id` properties (the legacy v1 mirror strips ids, so they
@@ -68,7 +71,8 @@ function deepEqualIgnoringIds (a: unknown, b: unknown,): boolean {
 		// mirror and the reconcile fires on every read, clobbering it). `id`s are stripped by the
 		// legacy round-trip. Synced reasons are excluded from the mirror too, but they are whole array
 		// entries rather than keys - `legacyOwnedFieldsEqual` filters those out before comparing.
-		const ignored = (key: string,) => key === 'id' || key === 'suggestedReasons' || key === 'nativeSync'
+		// The header/footer scopes are NXG-only for the same reason.
+		const ignored = (key: string,) => nxgOnlyKeys.has(key,)
 		const aKeys = Object.keys(a,).filter((key,) => !ignored(key,))
 		const bKeys = Object.keys(b,).filter((key,) => !ignored(key,))
 		if (aKeys.length !== bKeys.length) { return false }
@@ -155,6 +159,9 @@ export function adoptLegacyConfigFields (nxg: ToolboxConfig, legacy: ToolboxConf
 	if (nxg.removalReasons.nativeSync) {
 		adopted.removalReasons.nativeSync = structuredClone(nxg.removalReasons.nativeSync,)
 	}
+	// And the header/footer post/comment scopes, so a 6.x edit to the header text keeps its scope.
+	if (nxg.removalReasons.headerScope) { adopted.removalReasons.headerScope = nxg.removalReasons.headerScope }
+	if (nxg.removalReasons.footerScope) { adopted.removalReasons.footerScope = nxg.removalReasons.footerScope }
 	// Reasons synced from Reddit are excluded from the mirror, so the wholesale replace dropped
 	// them; they are re-appended below and keep the ids they already have. They must therefore be
 	// held out of the id pool as well: a legacy-adopted reason whose title and text happen to

@@ -1,7 +1,25 @@
 /** Tests for the removal reasons display-mode and ban-default helpers. */
 import {describe, expect, it,} from 'vitest'
 
-import {defaultRemovalBan, fallbackBanDays, isDrawerDisplayMode, resolveDisplayMode,} from './schema'
+import {appliesToKind, defaultRemovalBan, fallbackBanDays, isDrawerDisplayMode, resolveDisplayMode,} from './schema'
+
+describe('appliesToKind', () => {
+	it('includes everywhere when unscoped or scoped to all', () => {
+		expect(appliesToKind(undefined, 'submission',),).toBe(true,)
+		expect(appliesToKind(undefined, 'comment',),).toBe(true,)
+		expect(appliesToKind('all', 'comment',),).toBe(true,)
+	})
+
+	it('limits a posts scope to submissions', () => {
+		expect(appliesToKind('posts', 'submission',),).toBe(true,)
+		expect(appliesToKind('posts', 'comment',),).toBe(false,)
+	})
+
+	it('limits a comments scope to comments', () => {
+		expect(appliesToKind('comments', 'submission',),).toBe(false,)
+		expect(appliesToKind('comments', 'comment',),).toBe(true,)
+	})
+})
 
 describe('resolveDisplayMode', () => {
 	it('follows the setting when the classic look is off', () => {

@@ -38,6 +38,28 @@ export function resolveDisplayMode (
 }
 
 /**
+ * Which kinds of removal the configured header or footer is included on by default.
+ * Absent means `'all'`, the behavior before this setting existed.
+ */
+export type HeaderFooterScope = 'all' | 'posts' | 'comments'
+
+/** Every valid {@link HeaderFooterScope}, for sanitizing hand-edited configs and rendering choices. */
+export const headerFooterScopes: readonly HeaderFooterScope[] = ['all', 'posts', 'comments',]
+
+/**
+ * Returns true when a header/footer with the given scope should start included for a
+ * removal of the given kind. Only the default is decided here - the moderator can still
+ * toggle it per removal.
+ * @param scope The configured scope; absent means `'all'`.
+ * @param kind The thing kind, `'submission'` or `'comment'`.
+ */
+export function appliesToKind (scope: HeaderFooterScope | undefined, kind: string,) {
+	if (scope === 'posts') { return kind !== 'comment' }
+	if (scope === 'comments') { return kind === 'comment' }
+	return true
+}
+
+/**
  * The removal-reasons configuration block stored in the subreddit's toolbox wiki config.
  * All fields except `reasons` are optional because older configs may omit them.
  */
@@ -48,6 +70,13 @@ export interface RemovalReasonsConfig {
 	header?: string
 	/** Markdown appended to every removal message. */
 	footer?: string
+	/**
+	 * Which removals the header is included on by default. NXG-only; stripped from the
+	 * legacy v1 mirror in `encodeClassicConfig`, so 6.x keeps applying it everywhere.
+	 */
+	headerScope?: HeaderFooterScope
+	/** Which removals the footer is included on by default. NXG-only, like `headerScope`. */
+	footerScope?: HeaderFooterScope
 	/**
 	 * Name of another subreddit whose removal reasons to use instead.
 	 * Resolved recursively by `getRemovalReasons`.
@@ -228,6 +257,10 @@ export interface RemovalReasonsData {
 	header: string
 	/** Footer markdown appended to the message. */
 	footer: string
+	/** Which removals start with the header included; absent means all. */
+	headerScope?: HeaderFooterScope
+	/** Which removals start with the footer included; absent means all. */
+	footerScope?: HeaderFooterScope
 	/** Log subreddit name, if removal logging is configured. */
 	logSub: string
 	/** Title template for the log post. */

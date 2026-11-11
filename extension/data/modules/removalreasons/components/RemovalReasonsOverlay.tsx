@@ -59,6 +59,7 @@ import {findUnresolvedMacros, nativeMacroTokens,} from '../nativeMacros'
 import {freezeRemovalParams,} from '../proposalAdapter'
 
 import {
+	appliesToKind,
 	fallbackBanDays,
 	isDrawerDisplayMode,
 	type NoteDestination,
@@ -422,11 +423,17 @@ export function RemovalReasonsOverlay ({
 	const [actionLockComment, setActionLockComment,] = useState(
 		seededFromIntent ? !!seededFromIntent.actionLockComment : initialLockComment,
 	)
+	// The configured scope only picks the starting state; a captured proposal keeps whatever
+	// the trainee chose, and the checkboxes stay visible so a mod can override either way.
 	const [includeHeader, setIncludeHeader,] = useState(
-		seededFromIntent ? (seededFromIntent.includeHeader ?? true) : true,
+		seededFromIntent
+			? (seededFromIntent.includeHeader ?? true)
+			: appliesToKind(data.headerScope, data.kind,),
 	)
 	const [includeFooter, setIncludeFooter,] = useState(
-		seededFromIntent ? (seededFromIntent.includeFooter ?? true) : true,
+		seededFromIntent
+			? (seededFromIntent.includeFooter ?? true)
+			: appliesToKind(data.footerScope, data.kind,),
 	)
 	const [logReasonText, setLogReasonText,] = useState(seededFromIntent?.logReasonText ?? (data.logReason || ''),)
 

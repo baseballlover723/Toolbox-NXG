@@ -336,6 +336,27 @@ describe('RemovalReasonsOverlay', () => {
 		expect(container.textContent,).not.toContain('From /r/testsub',)
 	})
 
+	it('starts a posts-only header unchecked on a comment', () => {
+		renderOverlay({kind: 'comment', headerScope: 'posts',},)
+
+		expect(container.querySelector<HTMLInputElement>('input[aria-label="Include header"]',)?.checked,).toBe(false,)
+		expect(container.textContent,).not.toContain('Hello testuser',)
+	})
+
+	it('starts a posts-only header checked on a post', () => {
+		renderOverlay({kind: 'submission', headerScope: 'posts',},)
+
+		expect(container.querySelector<HTMLInputElement>('input[aria-label="Include header"]',)?.checked,).toBe(true,)
+		expect(container.textContent,).toContain('Hello testuser',)
+	})
+
+	it('starts a comments-only footer unchecked on a post', () => {
+		renderOverlay({footerScope: 'comments',},)
+
+		expect(container.querySelector<HTMLInputElement>('input[aria-label="Include footer"]',)?.checked,).toBe(false,)
+		expect(container.querySelector<HTMLInputElement>('input[aria-label="Include header"]',)?.checked,).toBe(true,)
+	})
+
 	it('renders the flair text badge on reason cards but not class or template metadata', () => {
 		renderOverlay({}, 'Popup', [{
 			text: 'Rule reason',
@@ -811,11 +832,12 @@ describe('RemovalReasonsOverlay (seeded from a proposal)', () => {
 	async function renderSeeded (
 		seededFromIntent: RemovalReasonsOverlayPreseed,
 		acceptGate?: RemovalAcceptGate,
+		dataOverride: Partial<RemovalReasonsData> = {},
 	) {
 		await act(async () => {
 			root.render(
 				<RemovalReasonsOverlay
-					data={{...data,}}
+					data={{...data, ...dataOverride,}}
 					visibleReasons={[idReason,]}
 					displayMode="Popup"
 					settings={settings}
@@ -859,6 +881,16 @@ describe('RemovalReasonsOverlay (seeded from a proposal)', () => {
 				b.textContent?.includes('Request second opinion',)
 			),
 		).toBe(false,)
+	})
+
+	it('keeps a captured header choice over the configured scope', async () => {
+		await renderSeeded(
+			{reasons: [{id: 'r1', text: 'Rule reason',},], reasonType: 'reply', includeHeader: true,},
+			{claim: vi.fn(), release: vi.fn(),},
+			{kind: 'comment', headerScope: 'posts',},
+		)
+
+		expect(container.querySelector<HTMLInputElement>('input[aria-label="Include header"]',)?.checked,).toBe(true,)
 	})
 
 	it('drops a captured reason that no longer exists, selecting nothing (no throw)', async () => {

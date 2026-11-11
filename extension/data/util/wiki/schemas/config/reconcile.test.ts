@@ -752,6 +752,53 @@ const fixedPointCases: Array<[string, Record<string, unknown>,]> = [
 	},],
 ]
 
+describe('header and footer scopes across the legacy mirror', () => {
+	/** A config whose header is scoped to posts and footer to comments. */
+	function nxgWithScopes () {
+		return makeConfig({
+			removalReasons: {
+				reasons: [{id: 'reason01', title: 'Spam', text: 'no spam',},],
+				header: 'Hi {author}',
+				headerScope: 'posts',
+				footer: 'Bye',
+				footerScope: 'comments',
+			},
+		},)
+	}
+
+	it('treats an untouched mirror as equal', () => {
+		const nxg = nxgWithScopes()
+		const mirror = encodeClassicConfig(nxg,) as unknown as Record<string, unknown>
+		normalizeConfig(mirror,)
+
+		expect(legacyOwnedFieldsEqual(nxg, mirror as unknown as ToolboxConfig,),).toBe(true,)
+	})
+
+	it('keeps the scopes when adopting a 6.x edit to the header', () => {
+		const nxg = nxgWithScopes()
+		const legacy = makeConfig({
+			removalReasons: {reasons: [{title: 'Spam', text: 'no spam',},], header: 'Hello {author}', footer: 'Bye',},
+		},)
+
+		const adopted = adoptLegacyConfigFields(nxg, legacy,)
+
+		expect(adopted.removalReasons.header,).toBe('Hello {author}',)
+		expect(adopted.removalReasons.headerScope,).toBe('posts',)
+		expect(adopted.removalReasons.footerScope,).toBe('comments',)
+	})
+
+	it('drops unrecognized and default scope values on normalize', () => {
+		const config: Record<string, unknown> = {
+			removalReasons: {reasons: [], headerScope: 'everything', footerScope: 'all',},
+		}
+		normalizeConfig(config,)
+
+		const removal = (config as unknown as ToolboxConfig).removalReasons
+		expect(removal.headerScope,).toBeUndefined()
+		expect(removal.footerScope,).toBeUndefined()
+	})
+})
+
 describe('legacy mirror round trip is a fixed point', () => {
 	it.each(fixedPointCases,)('reconciles as a no-op: %s', async (_name, partial,) => {
 		const nxg = makeConfig(partial,)

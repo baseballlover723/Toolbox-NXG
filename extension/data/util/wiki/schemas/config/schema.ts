@@ -532,6 +532,14 @@ export function normalizeConfig (configInput: unknown,): asserts configInput is 
 	coerceSuggestedReasons(config as ToolboxConfig,)
 	// nativeSync: NXG-only native removal reason sync state; sanitize hand-edited shapes.
 	coerceNativeSync(config as ToolboxConfig,)
+	// headerScope/footerScope: NXG-only; keep only a narrowing value. 'all' is the default, so it
+	// is dropped along with junk, keeping the stored form canonical.
+	for (const key of ['headerScope', 'footerScope',] as const) {
+		const scope: unknown = config.removalReasons[key]
+		if (scope !== undefined && scope !== 'posts' && scope !== 'comments') {
+			delete config.removalReasons[key]
+		}
+	}
 
 	// Array fields: coerce legacy empty-string (and any other non-array) to []
 	if (!Array.isArray(config.modMacros,)) { config.modMacros = [] }
