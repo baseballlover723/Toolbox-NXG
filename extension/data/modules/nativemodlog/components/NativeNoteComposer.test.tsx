@@ -8,6 +8,7 @@ const createModNote = vi.hoisted(() => vi.fn())
 const proposeOrBan = vi.hoisted(() => vi.fn())
 // Personal setting `banWithBanLabel`; undefined falls through to the hook's default.
 const banWithBanLabel = vi.hoisted(() => ({value: undefined as boolean | undefined,}))
+const banNoteDuration = vi.hoisted(() => ({value: undefined as string | null | undefined,}))
 
 vi.mock('../../../api/resources/modnotes', () => ({createModNote,}),)
 vi.mock('../../shared/proposals/gateway', () => ({proposeOrBan,}),)
@@ -15,8 +16,15 @@ vi.mock('../../../util/ui/reactMount', () => ({
 	classes: (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean,).join(' ',),
 }),)
 vi.mock('../../../util/ui/hooks', () => ({
-	useSetting: (_module: string, key: string, fallback: unknown,) =>
-		key === 'banWithBanLabel' && banWithBanLabel.value !== undefined ? banWithBanLabel.value : fallback,
+	useSetting: (_module: string, key: string, fallback: unknown,) => {
+		if (key === 'banWithBanLabel' && banWithBanLabel.value !== undefined) {
+			return banWithBanLabel.value
+		}
+		if (key === 'banNoteDuration' && banNoteDuration.value !== undefined) {
+			return banNoteDuration.value
+		}
+		return fallback
+	},
 }),)
 vi.mock('../../../store', () => ({default: {dispatch: vi.fn(), getState: vi.fn(), subscribe: vi.fn(),},}),)
 vi.mock('../../../store/feedback', () => ({positiveTextFeedback: vi.fn(),}),)
@@ -69,6 +77,7 @@ afterEach(() => {
 	}
 	document.body.innerHTML = ''
 	banWithBanLabel.value = undefined
+	banNoteDuration.value = undefined
 	vi.clearAllMocks()
 },)
 
@@ -263,5 +272,144 @@ describe('NativeNoteComposer', () => {
 
 		expect(host.querySelector<HTMLTextAreaElement>('textarea',)!.value,).toBe('Banned for {url}',)
 		expect(host.textContent,).toContain('{url} can',)
+	})
+
+	describe('banNoteDuration', () => {
+		it('sets ban days from a matching note duration regex', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '5d Toxicity',)
+
+			expect(host.querySelector('sup',),).toBeNull()
+			await click(findButton(host, 'Save for /r/testsub',),)
+
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
+				{permanent: false, days: 5, note: '5d Toxicity', message: '',},
+			)
+		})
+
+		it('resets ban days to the subreddit default when the note no longer matches', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({
+				defaultLabel: 'BAN',
+				banDefaults: {note: '', message: '', permanent: false, days: 3,},
+			},)
+
+			setNoteText(host, '5d Toxicity',)
+			setNoteText(host, 'No duration specified',)
+
+			expect(host.querySelector('sup',),).toBeNull()
+			await click(findButton(host, 'Save for /r/testsub',),)
+
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
+				{permanent: false, days: 3, note: 'No duration specified', message: '',},
+			)
+		})
+
+		it('uses the default ban duration when no regex is configured', async () => {
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({
+				defaultLabel: 'BAN',
+				banDefaults: {note: '', message: '', permanent: false, days: 3,},
+			},)
+
+			setNoteText(host, '5d Toxicity',)
+
+			expect(host.querySelector('sup',),).toBeNull()
+			await click(findButton(host, 'Save for /r/testsub',),)
+
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
+				{permanent: false, days: 3, note: '5d Toxicity', message: '',},
+			)
+		})
+
+		it.each([
+			{note: '0d zero duration', days: '0',},
+			{note: '1000d excessive duration', days: '1000',},
+		],)('flags invalid ban duration for $note"', async ({note, days,},) => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, note,)
+
+			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe(days,)
+			expect(host.querySelector('sup',)?.textContent,).toBe('* Invalid ban duration',)
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+
+			await click(findButton(host, 'Save for /r/testsub',),)
+
+			expect(createModNote,).not.toHaveBeenCalled()
+			expect(proposeOrBan,).not.toHaveBeenCalled()
+		},)
+
+		it('clears invalid ban duration when the note is corrected', async () => {
+			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+			createModNote.mockResolvedValue(undefined,)
+			proposeOrBan.mockResolvedValue(undefined,)
+			const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+			setNoteText(host, '1000d excessive duration',)
+			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe('1000',)
+			expect(host.querySelector('sup',)?.textContent,).toBe('* Invalid ban duration',)
+			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+
+			setNoteText(host, '5d Toxicity',)
+
+			expect(host.querySelector('sup',),).toBeNull()
+			await click(findButton(host, 'Save for /r/testsub',),)
+
+			expect(proposeOrBan,).toHaveBeenCalledWith(
+				{subreddit: 'testsub', itemId: 'alice', itemKind: 'user', link: 'https://www.reddit.com/user/alice',},
+				{permanent: false, days: 5, note: '5d Toxicity', message: '',},
+			)
+		})
+
+		describe(String.raw`^\s*(\d+)d\s+ Regex tests`, () => {
+			it.each([
+				'reason 7d',
+				'7d',
+				'7dreason',
+				'7d-reason',
+				'7d_reason',
+				'-7d reason',
+				'+7d reason',
+				'1.5d reason',
+				'7 d reason',
+				'seven d reason',
+				'd reason',
+				'７d reason',
+				'7dd reason',
+			],)(`%s doesn't match regex`, async (note,) => {
+				banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
+				const {host,} = renderComposer({
+					defaultLabel: 'BAN',
+					banDefaults: {note: '', message: '', permanent: false, days: 3,},
+				},)
+
+				setNoteText(host, note,)
+
+				expect(host.querySelector('sup',),).toBeNull()
+				await click(findButton(host, 'Save for /r/testsub',),)
+
+				expect(proposeOrBan,).toHaveBeenCalledWith(
+					{
+						subreddit: 'testsub',
+						itemId: 'alice',
+						itemKind: 'user',
+						link: 'https://www.reddit.com/user/alice',
+					},
+					{permanent: false, days: 3, note, message: '',},
+				)
+			},)
+		},)
 	})
 })
