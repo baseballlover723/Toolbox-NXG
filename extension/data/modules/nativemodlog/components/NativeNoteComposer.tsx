@@ -65,6 +65,7 @@ export function NativeNoteComposer ({
 }: NativeNoteComposerProps,) {
 	// Whether choosing Ban / Permaban turns the ban option on (a personal setting, on by default).
 	const banWithBanLabel = !!useSetting(nativeModLog, 'banWithBanLabel', true,)
+	const banNoteDurationRegexStr = useSetting(nativeModLog, 'banNoteDuration', null,)
 	const defaultBanDays = banDefaults?.days ?? 7
 	const defaultBanMessage = banDefaults?.message ?? ''
 	const inputRef = useRef<HTMLInputElement>(null,)
@@ -74,6 +75,7 @@ export function NativeNoteComposer ({
 	const [error, setError,] = useState<string | undefined>()
 	const [triggerBan, setTriggerBan,] = useState(banWithBanLabel,)
 	const [banDays, setBanDays,] = useState(defaultBanDays,)
+	const [banNoteDurationRegex, setBanNoteDurationRegex,] = useState<RegExp | undefined>()
 	const [banMessage, setBanMessage,] = useState(defaultBanMessage,)
 
 	// Using autoFocus would make the page jump; focus manually without scrolling instead.
@@ -87,11 +89,18 @@ export function NativeNoteComposer ({
 		setTriggerBan(banWithBanLabel,)
 		setBanDays(defaultBanDays,)
 		setBanMessage(defaultBanMessage,)
-	}, [selectedLabel, banWithBanLabel, defaultBanDays, defaultBanMessage,],)
+		setBanNoteDurationRegex(banNoteDurationRegexStr ? new RegExp(banNoteDurationRegexStr, 'i',) : undefined,)
+	}, [selectedLabel, banWithBanLabel, defaultBanDays, defaultBanMessage, banNoteDurationRegexStr,],)
 
 	// Whether the chosen label offers a ban at all; the subreddit can turn this off for every mod.
 	const offersBan = isBanLabel(selectedLabel,) && !banDisabled
 	const showBanFields = offersBan && triggerBan && !targetIsMod
+
+	useEffect(() => {
+		if (selectedLabel !== 'BAN' || !banNoteDurationRegex) { return }
+		const match = banNoteDurationRegex?.exec(noteText,)
+		setBanDays(match ? Number(match[1],) : defaultBanDays,)
+	}, [selectedLabel, banNoteDurationRegex, noteText, defaultBanDays,],)
 
 	async function handleSave () {
 		const text = noteText.trim()

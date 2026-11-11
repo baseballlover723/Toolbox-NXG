@@ -47,6 +47,14 @@ export const settings = defineSettings(
 				'Turn on the ban option when choosing the Ban or Permaban label for a new native note (off: tick it to ban)',
 		},
 		{
+			id: 'banNoteDuration',
+			sharedPolicy: 'raw',
+			type: 'text',
+			default: '',
+			advanced: true,
+			description: 'Regex to automatically extract a ban duration (in days) from the mod note',
+		},
+		{
 			id: 'showAiSummaries',
 			sharedPolicy: 'raw',
 			type: 'boolean',
