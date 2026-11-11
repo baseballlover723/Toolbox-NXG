@@ -976,6 +976,32 @@ describe('createRemovalReasonsHandlers', () => {
 		})
 	})
 
+	describe('buttons that only say "remove"', () => {
+		/** Clicks a shreddit button with the given markup and reports whether the click was swallowed. */
+		async function clickButtonIn (html: string,) {
+			platform.isOldReddit = false
+			document.body.innerHTML = html
+			const event = makeClick(document.querySelector('button',)!,)
+			await createRemovalReasonsHandlers(handlerSettings,).handleClick(event,)
+			return event
+		}
+
+		it('leaves a Devvit app\'s "Remove content" button in a dialog alone', async () => {
+			const event = await clickButtonIn('<dialog open><form><button>Remove content</button></form></dialog>',)
+
+			expect(event.preventDefault,).not.toHaveBeenCalled()
+			expect(event.stopImmediatePropagation,).not.toHaveBeenCalled()
+			expect(showRemovalReasonsOverlay,).not.toHaveBeenCalled()
+		})
+
+		it('leaves a "remove" button that is not on any post or comment alone', async () => {
+			const event = await clickButtonIn('<div><button>Remove content</button></div>',)
+
+			expect(event.preventDefault,).not.toHaveBeenCalled()
+			expect(showRemovalReasonsOverlay,).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('removal option', () => {
 		/** Old Reddit remove-click on a post whose subreddit config has the given removal settings. */
 		async function clickRemoveWithSettings (removalReasons: Record<string, unknown>,) {

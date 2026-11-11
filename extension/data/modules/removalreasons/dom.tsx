@@ -75,6 +75,25 @@ type OverlayBaseData = Pick<
 >
 
 /**
+ * Containers whose buttons belong to someone else's UI - a Devvit app's form, a Reddit
+ * dialog - so a button in one is never a native remove control, whatever its text says.
+ */
+const foreignButtonContainers = 'dialog, [role="dialog"], form'
+
+/**
+ * Whether a light-DOM button whose text mentions removing is really a native remove
+ * control: it has to sit on a post or comment we can identify, outside any dialog or
+ * form. The click handler swallows the click once it claims a button, so claiming one
+ * that isn't ours breaks it - a Devvit app's "Remove content" button did nothing at all.
+ * @param button The button that was clicked.
+ */
+function isNativeRemoveButton (button: Element,): boolean {
+	if (button.closest(foreignButtonContainers,)) { return false }
+	const thing = isOldReddit ? getThingOld(button,) : getThingShreddit(button,)
+	return !!(thing ?? button.closest('.toolbox-comment, .toolbox-submission',))
+}
+
+/**
  * Merges fetched thing data with a subreddit's removal-reasons config into the overlay's
  * `RemovalReasonsData`. Preserves each reason's persistent `id` (needed to round-trip a
  * proposal's selection back into the overlay on Edit & Accept).
@@ -1104,7 +1123,7 @@ export function createRemovalReasonsHandlers ({
 					&& !button.closest('.toolbox-react-light-host',)
 				) {
 					const text = button.textContent ?? ''
-					if (/\bremov(e|al)\b/i.test(text,)) {
+					if (/\bremov(e|al)\b/i.test(text,) && isNativeRemoveButton(button,)) {
 						element = button
 					}
 				}
