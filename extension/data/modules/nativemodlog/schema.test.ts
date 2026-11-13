@@ -133,9 +133,16 @@ describe('banDaysFromNote', () => {
 	it('says nothing when an optional group took no part in the match', () => {
 		expect(banDaysFromNote('ban', /ban(?: (\d+))?/,),).toEqual({kind: 'none',},)
 	})
-	it.each(['0d', '1000d',],)('flags %s as outside 1-999 days', (note,) => {
-		expect(banDaysFromNote(note, pattern,),).toEqual({kind: 'invalid', text: note.slice(0, -1,),},)
+	it('flags 0d as no ban length', () => {
+		expect(banDaysFromNote('0d', pattern,),).toEqual({kind: 'invalid', text: '0',},)
+	})
+	it.each([1000, 1500, 36500,],)('reports %d days as longer than Reddit allows', (days,) => {
+		expect(banDaysFromNote(`${days}d`, pattern,),).toEqual({kind: 'overMax', days,},)
 	},)
+	it('flags a number too large to read back exactly', () => {
+		const digits = '99999999999999999999'
+		expect(banDaysFromNote(`${digits}d`, pattern,),).toEqual({kind: 'invalid', text: digits,},)
+	})
 	it('flags a match that is not plain digits', () => {
 		expect(banDaysFromNote('ban 5d', /ban (\S+)/,),).toEqual({kind: 'invalid', text: '5d',},)
 	})

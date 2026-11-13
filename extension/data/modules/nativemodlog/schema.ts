@@ -96,6 +96,11 @@ export function compileBanDurationPattern (pattern: unknown,): RegExp | 'invalid
 export type NoteBanDays =
 	| {kind: 'none'}
 	| {kind: 'days'; days: number}
+	/**
+	 * A whole number of days longer than Reddit allows. The note may record it, but the ban
+	 * itself can be at most `maxBanDays`, and only once the mod has confirmed that.
+	 */
+	| {kind: 'overMax'; days: number}
 	/** The pattern matched, but not a ban length Reddit accepts; `text` is what it matched. */
 	| {kind: 'invalid'; text: string}
 
@@ -125,7 +130,8 @@ function findDaysText (note: string, pattern: RegExp,): DaysText | undefined {
 
 /**
  * Reads a ban length from a note. The pattern's first capture group holds the days (the whole
- * match when it has no group), and it must be plain digits for a 1-999 day ban.
+ * match when it has no group), and it must be plain digits: 1-999 is a ban length, and more
+ * than 999 is `overMax` (a note can say it, a ban cannot be that long).
  * @param note The note text.
  * @param pattern A pattern from `compileBanDurationPattern`.
  */
@@ -134,7 +140,10 @@ export function banDaysFromNote (note: string, pattern: RegExp,): NoteBanDays {
 	if (!found) { return {kind: 'none',} }
 	const {text,} = found
 	const days = /^\d+$/.test(text,) ? Number(text,) : NaN
-	return isValidBanDays(days,) ? {kind: 'days', days,} : {kind: 'invalid', text,}
+	if (isValidBanDays(days,)) { return {kind: 'days', days,} }
+	// Safe integers only, so the number shown back to the mod is exactly what the note says.
+	if (Number.isSafeInteger(days,) && days > maxBanDays) { return {kind: 'overMax', days,} }
+	return {kind: 'invalid', text,}
 }
 
 /**

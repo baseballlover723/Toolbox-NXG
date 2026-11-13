@@ -355,7 +355,6 @@ describe('NativeNoteComposer', () => {
 
 		it.each([
 			{note: '0d zero duration', days: '0',},
-			{note: '1000d excessive duration', days: '1000',},
 		],)('flags invalid ban duration for $note', async ({note, days,},) => {
 			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
 			const {host,} = renderComposer({defaultLabel: 'BAN',},)
@@ -378,8 +377,8 @@ describe('NativeNoteComposer', () => {
 			proposeOrBan.mockResolvedValue(undefined,)
 			const {host,} = renderComposer({defaultLabel: 'BAN',},)
 
-			setNoteText(host, '1000d excessive duration',)
-			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe('1000',)
+			setNoteText(host, '0d zero duration',)
+			expect(host.querySelector<HTMLInputElement>('input[type="number"]',)!.value,).toBe('0',)
 			expect(host.textContent,).toContain('(must be a whole number of days from 1 to 999)',)
 			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
 
@@ -410,13 +409,124 @@ describe('NativeNoteComposer', () => {
 			)
 		})
 
+		describe('a note longer than Reddit allows', () => {
+			const pattern = String.raw`^\s*(\d+)d\s+`
+			const overMaxHint = '(note says 1500; Reddit allows at most 999)'
+
+			function daysInput (host: HTMLElement,) {
+				return host.querySelector<HTMLInputElement>('input[type="number"]',)!
+			}
+
+			it('blocks saving until the mod confirms the shorter ban, showing what the note says', async () => {
+				banNoteDuration.value = pattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+
+				expect(daysInput(host,).value,).toBe('1500',)
+				expect(daysInput(host,).getAttribute('aria-invalid',),).toBe('true',)
+				expect(host.textContent,).toContain(overMaxHint,)
+				expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+				await click(findButton(host, 'Save for /r/testsub',),)
+				expect(createModNote,).not.toHaveBeenCalled()
+				expect(proposeOrBan,).not.toHaveBeenCalled()
+			})
+
+			it('says why when Enter is pressed before confirming', async () => {
+				banNoteDuration.value = pattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+				await act(async () => {
+					noteInput(host,).dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true,},),)
+					await Promise.resolve()
+				},)
+
+				expect(host.textContent,).toContain('Reddit bans for at most 999 days',)
+				expect(createModNote,).not.toHaveBeenCalled()
+			})
+
+			it('bans for 999 days once confirmed, keeping the note as written', async () => {
+				banNoteDuration.value = pattern
+				createModNote.mockResolvedValue(undefined,)
+				proposeOrBan.mockResolvedValue(undefined,)
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+				await click(findButton(host, 'Ban for 999 days',),)
+
+				expect(daysInput(host,).value,).toBe('999',)
+				expect(noteInput(host,).value,).toBe('1500d ban evasion',)
+				expect(host.textContent,).toContain('(note says 1500; 999 is the most Reddit allows)',)
+				await click(findButton(host, 'Save for /r/testsub',),)
+
+				expect(createModNote,).toHaveBeenCalledWith(expect.objectContaining({note: '1500d ban evasion',},),)
+				expect(proposeOrBan,).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.objectContaining({permanent: false, days: 999, note: '1500d ban evasion',},),
+				)
+			})
+
+			it('asks again when the length in the note changes after confirming', async () => {
+				banNoteDuration.value = pattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+				await click(findButton(host, 'Ban for 999 days',),)
+				setNoteText(host, '2000d ban evasion',)
+
+				expect(daysInput(host,).value,).toBe('2000',)
+				expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+				expect(findButton(host, 'Ban for 999 days',),).toBeDefined()
+			})
+
+			it('asks again after switching label and back', async () => {
+				banNoteDuration.value = pattern
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+				await click(findButton(host, 'Ban for 999 days',),)
+				await click(findButton(host, 'Abuse Warning',),)
+				await click(findButton(host, 'Ban',),)
+
+				expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
+			})
+
+			it('rewrites the note when the mod types days instead of confirming', async () => {
+				banNoteDuration.value = pattern
+				createModNote.mockResolvedValue(undefined,)
+				proposeOrBan.mockResolvedValue(undefined,)
+				const {host,} = renderComposer({defaultLabel: 'BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+				setBanDays(host, '30',)
+
+				expect(noteInput(host,).value,).toBe('30d ban evasion',)
+				await click(findButton(host, 'Save for /r/testsub',),)
+				expect(proposeOrBan,).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.objectContaining({days: 30, note: '30d ban evasion',},),
+				)
+			})
+
+			it('does not apply to a Permaban, which has no day count', () => {
+				banNoteDuration.value = pattern
+				const {host,} = renderComposer({defaultLabel: 'PERMA_BAN',},)
+
+				setNoteText(host, '1500d ban evasion',)
+
+				expect(host.textContent,).not.toContain(overMaxHint,)
+				expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
+			})
+		})
+
 		it('lets the note be saved again once it no longer matches an invalid length', () => {
 			banNoteDuration.value = String.raw`^\s*(\d+)d\s+`
 			const {host,} = renderComposer({defaultLabel: 'BAN',},)
 
-			setNoteText(host, '1000d excessive duration',)
+			setNoteText(host, '0d zero duration',)
 			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(true,)
-			setNoteText(host, 'excessive duration',)
+			setNoteText(host, 'zero duration',)
 
 			expect(host.textContent,).not.toContain('(must be a whole number of days from 1 to 999)',)
 			expect(findButton(host, 'Save for /r/testsub',).disabled,).toBe(false,)
@@ -593,7 +703,7 @@ describe('NativeNoteComposer', () => {
 				expect(host.textContent,).toContain('(from note)',)
 			},)
 
-			it.each(['1.5d test', '1,5d test', '0d test', '1000d test',],)(
+			it.each(['1.5d test', '1,5d test', '0d test',],)(
 				'flags "%s" instead of using the default',
 				(note,) => {
 					banNoteDuration.value = documentedPattern
